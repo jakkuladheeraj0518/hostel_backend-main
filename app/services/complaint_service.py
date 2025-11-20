@@ -53,6 +53,7 @@ class ComplaintService:
         complaint = await self.repo.get_by_id(complaint_id)
         if not complaint:
             raise ValueError("Complaint not found")
+
         if complaint.status != ComplaintStatus.CLOSED:
             raise ValueError("Only closed complaints can be reopened")
 
@@ -86,16 +87,20 @@ class ComplaintService:
     # -------------------------------------------------------------------------
 
     async def update_complaint(self, complaint_id: int, data: ComplaintUpdate):
-        return await self.repo.update_fields(complaint_id, data)
+        """Fix: use dict(exclude_unset=True) to prevent overwriting with None."""
+        return await self.repo.update_fields(
+            complaint_id,
+            data.dict(exclude_unset=True)
+        )
 
     async def assign_complaint(self, complaint_id: int, data: ComplaintAssignment):
-        updates = data.dict()
+        updates = data.dict(exclude_unset=True)
         updates["status"] = ComplaintStatus.IN_PROGRESS
         updates["assigned_at"] = datetime.utcnow()
         return await self.repo.update(complaint_id, updates)
 
     async def resolve_complaint(self, complaint_id: int, data: ComplaintResolution):
-        updates = data.dict()
+        updates = data.dict(exclude_unset=True)
         updates["status"] = ComplaintStatus.RESOLVED
         updates["resolved_at"] = datetime.utcnow()
         return await self.repo.update(complaint_id, updates)
@@ -108,7 +113,8 @@ class ComplaintService:
         return await self.repo.update(complaint_id, updates)
 
     async def get_supervisor_performance(
-        self, supervisor_email: str,
+        self,
+        supervisor_email: str,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None
     ):
@@ -127,10 +133,24 @@ class ComplaintService:
         }
         return await self.repo.update(complaint_id, updates)
 
+    # -------------------------------------------------------------------------
+    # ANALYTICS FIX (must match schema)
+    # -------------------------------------------------------------------------
+
     async def get_analytics(
         self,
         hostel_name: Optional[str] = None,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None
     ):
-        return await self.repo.get_analytics(hostel_name, start_date, end_date)
+        """Fix: Ensure response matches ComplaintAnalytics schema exactly."""
+        raw = await self.repo.get_analytics(hostel_name, start_date, end_date)
+
+        return {
+            "total_complaints": raw.get("total_complaints", 0),
+            "open_complaints": raw.get("open_complaints", 0),
+            "resolved_complaints": raw.get("resolved_complaints", 0),
+            "average_resolution_time_hours": raw.get("average_resolution_time_hours", 0.0),
+            "category_distribution": raw.get("category_distribution", {}),
+            "status_distribution": raw.get("status_distribution", {})
+        }

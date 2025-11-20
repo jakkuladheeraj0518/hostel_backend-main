@@ -6709,3 +6709,84 @@ DETAIL:  Key (location_id)=(0) is not present in table "locations".
 2025-11-20 16:09:10,958 | INFO     | app | Elasticsearch ready.
 2025-11-20 16:09:10,972 | INFO     | app | BookingExpiryService started
 2025-11-20 16:09:11,033 | INFO     | app | Notification worker started.
+2025-11-20 18:21:32,464 | INFO     | app | Initializing database...
+2025-11-20 18:21:32,840 | INFO     | app | Database initialized.
+2025-11-20 18:21:32,842 | INFO     | app | Initializing Elasticsearch...
+2025-11-20 18:21:36,870 | INFO     | app | Elasticsearch ready.
+2025-11-20 18:21:36,885 | INFO     | app | BookingExpiryService started
+2025-11-20 18:21:36,946 | INFO     | app | Notification worker started.
+2025-11-20 18:33:27,606 | INFO     | app | Initializing database...
+2025-11-20 18:33:28,018 | INFO     | app | Database initialized.
+2025-11-20 18:33:28,019 | INFO     | app | Initializing Elasticsearch...
+2025-11-20 18:33:32,051 | INFO     | app | Elasticsearch ready.
+2025-11-20 18:33:32,065 | INFO     | app | BookingExpiryService started
+2025-11-20 18:33:32,126 | INFO     | app | Notification worker started.
+2025-11-20 18:45:10,510 | INFO     | app | Initializing database...
+2025-11-20 18:45:10,929 | INFO     | app | Database initialized.
+2025-11-20 18:45:10,929 | INFO     | app | Initializing Elasticsearch...
+2025-11-20 18:45:14,936 | INFO     | app | Elasticsearch ready.
+2025-11-20 18:45:14,952 | INFO     | app | BookingExpiryService started
+2025-11-20 18:45:15,035 | INFO     | app | Notification worker started.
+2025-11-20 18:48:47,939 | INFO     | app | Initializing database...
+2025-11-20 18:48:48,251 | INFO     | app | Database initialized.
+2025-11-20 18:48:48,251 | INFO     | app | Initializing Elasticsearch...
+2025-11-20 18:48:52,273 | INFO     | app | Elasticsearch ready.
+2025-11-20 18:48:52,289 | INFO     | app | BookingExpiryService started
+2025-11-20 18:48:52,372 | INFO     | app | Notification worker started.
+2025-11-20 18:53:05,359 | INFO     | app | Initializing database...
+2025-11-20 18:53:05,490 | INFO     | app | Database initialized.
+2025-11-20 18:53:05,490 | INFO     | app | Initializing Elasticsearch...
+2025-11-20 18:53:09,495 | INFO     | app | Elasticsearch ready.
+2025-11-20 18:53:09,511 | INFO     | app | BookingExpiryService started
+2025-11-20 18:53:09,586 | INFO     | app | Notification worker started.
+2025-11-20 18:56:28,332 | INFO     | app | Initializing database...
+2025-11-20 18:56:28,470 | INFO     | app | Database initialized.
+2025-11-20 18:56:28,470 | INFO     | app | Initializing Elasticsearch...
+2025-11-20 18:56:32,484 | INFO     | app | Elasticsearch ready.
+2025-11-20 18:56:32,503 | INFO     | app | BookingExpiryService started
+2025-11-20 18:56:32,595 | INFO     | app | Notification worker started.
+2025-11-20 18:59:01,153 | INFO     | app | Initializing database...
+2025-11-20 18:59:01,270 | INFO     | app | Database initialized.
+2025-11-20 18:59:01,270 | INFO     | app | Initializing Elasticsearch...
+2025-11-20 18:59:05,272 | INFO     | app | Elasticsearch ready.
+2025-11-20 18:59:05,288 | INFO     | app | BookingExpiryService started
+2025-11-20 18:59:05,371 | INFO     | app | Notification worker started.
+2025-11-20 19:02:31,188 | INFO     | app | Initializing database...
+2025-11-20 19:02:31,298 | INFO     | app | Database initialized.
+2025-11-20 19:02:31,299 | INFO     | app | Initializing Elasticsearch...
+2025-11-20 19:02:35,314 | INFO     | app | Elasticsearch ready.
+2025-11-20 19:02:35,330 | INFO     | app | BookingExpiryService started
+2025-11-20 19:02:35,380 | INFO     | app | Notification worker started.
+2025-11-20 19:03:33,295 | INFO     | app | Initializing database...
+2025-11-20 19:03:33,474 | INFO     | app | Database initialized.
+2025-11-20 19:03:33,478 | INFO     | app | Initializing Elasticsearch...
+2025-11-20 19:03:37,501 | INFO     | app | Elasticsearch ready.
+2025-11-20 19:03:37,515 | INFO     | app | BookingExpiryService started
+2025-11-20 19:03:37,598 | INFO     | app | Notification worker started.
+2025-11-20 19:05:01,491 | INFO     | app | Initializing database...
+2025-11-20 19:05:01,616 | INFO     | app | Database initialized.
+2025-11-20 19:05:01,616 | INFO     | app | Initializing Elasticsearch...
+2025-11-20 19:05:05,628 | INFO     | app | Elasticsearch ready.
+2025-11-20 19:05:05,645 | INFO     | app | BookingExpiryService started
+2025-11-20 19:05:05,696 | INFO     | app | Notification worker started.
+2025-11-20 19:10:05,761 | ERROR    | app | Error in _check_and_expire_bookings: (psycopg2.OperationalError) server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+
+[SQL: SELECT bookings.id AS bookings_id, bookings.visitor_id AS bookings_visitor_id, bookings.hostel_id AS bookings_hostel_id, bookings.room_id AS bookings_room_id, bookings.check_in AS bookings_check_in, bookings.check_out AS bookings_check_out, bookings.amount_paid AS bookings_amount_paid, bookings.status AS bookings_status, bookings.created_at AS bookings_created_at 
+FROM bookings 
+WHERE bookings.status = %(status_1)s AND bookings.created_at < %(created_at_1)s]
+[parameters: {'status_1': 'pending', 'created_at_1': datetime.datetime(2025, 11, 19, 13, 40, 5, 739928)}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-11-20 19:12:17,605 | INFO     | app | Initializing database...
+2025-11-20 19:12:18,484 | INFO     | app | Database initialized.
+2025-11-20 19:12:18,485 | INFO     | app | Initializing Elasticsearch...
+2025-11-20 19:12:22,509 | INFO     | app | Elasticsearch ready.
+2025-11-20 19:12:22,525 | INFO     | app | BookingExpiryService started
+2025-11-20 19:12:22,583 | INFO     | app | Notification worker started.
+2025-11-20 19:12:50,425 | INFO     | app | Initializing database...
+2025-11-20 19:12:50,553 | INFO     | app | Database initialized.
+2025-11-20 19:12:50,553 | INFO     | app | Initializing Elasticsearch...
+2025-11-20 19:12:54,578 | INFO     | app | Elasticsearch ready.
+2025-11-20 19:12:54,594 | INFO     | app | BookingExpiryService started
+2025-11-20 19:12:54,778 | INFO     | app | Notification worker started.
