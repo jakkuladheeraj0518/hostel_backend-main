@@ -1,0 +1,149 @@
+from typing import List, Optional
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+
+from app.models.supervisors import Supervisor, AdminOverride
+from app.schemas.supervisors import SupervisorCreate, SupervisorUpdate
+
+
+def create_supervisor(db: Session, sup_in: SupervisorCreate) -> Supervisor:
+    obj = Supervisor(**sup_in.dict())
+    db.add(obj)
+    db.commit()
+    db.refresh(obj)
+    _log(db, obj.employee_id, "create", f"created supervisor {obj.employee_id}")
+    return obj
+
+
+def get_supervisor(db: Session, employee_id: str) -> Optional[Supervisor]:
+    return db.query(Supervisor).filter(
+        Supervisor.employee_id == employee_id
+    ).first()
+
+
+def list_supervisors(
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    name: Optional[str] = None,
+    role: Optional[str] = None,
+    department: Optional[str] = None
+) -> List[Supervisor]:
+
+    query = db.query(Supervisor)
+
+    if name:
+        query = query.filter(Supervisor.supervisor_name.ilike(f"%{name}%"))
+    if role:
+        query = query.filter(Supervisor.role == role)
+    if department:
+        query = query.filter(Supervisor.department == department)
+
+    return query.order_by(Supervisor.employee_id).offset(skip).limit(limit).all()
+
+
+def update_supervisor(db: Session, employee_id: str, sup_in: SupervisorUpdate) -> Optional[Supervisor]:
+    obj = get_supervisor(db, employee_id)
+    if not obj:
+        return None
+    
+    for field, value in sup_in.dict(exclude_unset=True).items():
+        setattr(obj, field, value)
+
+    db.add(obj)
+    db.commit()
+    db.refresh(obj)
+
+    _log(db, employee_id, "update", "updated supervisor")
+    return obj
+
+
+def delete_supervisor(db: Session, employee_id: str) -> bool:
+    obj = get_supervisor(db, employee_id)
+    if not obj:
+        return False
+
+    db.delete(obj)
+    db.commit()
+
+    _log(db, employee_id, "delete", "deleted supervisor")
+    return True
+
+
+def assign_hostel(db: Session, employee_id: str, hostel_id: str) -> None:
+    db.execute(
+        text("INSERT INTO supervisor_hostels (employee_id, hostel_id) VALUES (:eid, :hid)"),
+        {"eid": employee_id, "hid": hostel_id}
+    )
+    db.commit()
+
+    _log(db, employee_id, "assign_hostel", f"assigned to hostel {hostel_id}")
+
+
+def list_hostels(db: Session, employee_id: str) -> List[dict]:
+    rows = db.execute(
+        text("SELECT id, hostel_id FROM supervisor_hostels WHERE employee_id = :eid"),
+        {"eid": employee_id}
+    )
+    return [dict(r._mapping) for r in rows]
+
+
+# ------- Logging -------
+
+def _log(db: Session, employee_id: str, action: str, details: str) -> None:
+    db.execute(
+        text("""
+            INSERT INTO supervisor_activity (employee_id, action, details)
+            VALUES (:eid, :action, :details)
+        """),
+        {"eid": employee_id, "action": action, "details": details}
+    )
+    db.commit()
+
+
+def list_activity(db: Session, employee_id: str) -> List[dict]:
+    rows = db.execute(
+        text("""
+            SELECT id, action, details, created_at
+            FROM supervisor_activity
+            WHERE employee_id = :eid
+            ORDER BY created_at DESC
+        """),
+        {"eid": employee_id}
+    )
+    return [dict(r._mapping) for r in rows]
+
+
+# ------- Admin Overrides -------
+
+def create_admin_override(db: Session, admin_employee_id: str, target_supervisor_id: Optional[str],
+                          action: str, details: Optional[str]) -> AdminOverride:
+
+    o = AdminOverride(
+        admin_employee_id=admin_employee_id,
+        target_supervisor_id=target_supervisor_id,
+        action=action,
+        details=details
+    )
+    db.add(o)
+    db.commit()
+    db.refresh(o)
+    return o
+
+
+def admin_override_assign_supervisor_hostel(db: Session, admin_employee_id: str,
+                                            target_supervisor_id: str, new_hostel_id: str) -> None:
+
+    create_admin_override(
+        db,
+        admin_employee_id,
+        target_supervisor_id,
+        "assign_hostel",
+        f"Assigned to {new_hostel_id}"
+    )
+
+    db.execute(
+        text("INSERT INTO supervisor_hostels (employee_id, hostel_id) VALUES (:eid, :hid)"),
+        {"eid": target_supervisor_id, "hid": new_hostel_id}
+    )
+    db.commit()

@@ -1,0 +1,49 @@
+"""
+Enum for roles, permissions
+"""
+from enum import Enum
+from app.core.roles import Role
+from app.core.permissions import Permission
+
+
+class UserRole(str, Enum):
+    """User role enumeration"""
+    SUPERADMIN = Role.SUPERADMIN
+    ADMIN = Role.ADMIN
+    SUPERVISOR = Role.SUPERVISOR
+    STUDENT = Role.STUDENT
+    VISITOR = Role.VISITOR
+
+
+class UserPermission(str, Enum):
+    """User permission enumeration"""
+    CREATE_USER = Permission.CREATE_USER
+    READ_USER = Permission.READ_USER
+    UPDATE_USER = Permission.UPDATE_USER
+    DELETE_USER = Permission.DELETE_USER
+    CREATE_HOSTEL = Permission.CREATE_HOSTEL
+    READ_HOSTEL = Permission.READ_HOSTEL
+    UPDATE_HOSTEL = Permission.UPDATE_HOSTEL
+    DELETE_HOSTEL = Permission.DELETE_HOSTEL
+    SWITCH_SESSION = Permission.SWITCH_SESSION
+    VIEW_SESSION = Permission.VIEW_SESSION
+    VIEW_AUDIT = Permission.VIEW_AUDIT
+    CREATE_AUDIT = Permission.CREATE_AUDIT
+    MANAGE_PERMISSIONS = Permission.MANAGE_PERMISSIONS
+    ASSIGN_ROLE = Permission.ASSIGN_ROLE
+    EXPORT_AUDIT = Permission.EXPORT_AUDIT
+    EXPORT_REPORTS = Permission.EXPORT_REPORTS
+    MANAGE_SUBSCRIPTIONS = Permission.MANAGE_SUBSCRIPTIONS
+    VIEW_PAYMENTS = Permission.VIEW_PAYMENTS
+    MANAGE_PAYMENTS = Permission.MANAGE_PAYMENTS
+    MANAGE_SUPERVISORS = Permission.MANAGE_SUPERVISORS
+    MANAGE_HOSTEL_CONFIG = Permission.MANAGE_HOSTEL_CONFIG
+    MANAGE_ATTENDANCE = Permission.MANAGE_ATTENDANCE
+    MANAGE_COMPLAINTS = Permission.MANAGE_COMPLAINTS
+    MANAGE_MAINTENANCE = Permission.MANAGE_MAINTENANCE
+    MANAGE_ANNOUNCEMENTS = Permission.MANAGE_ANNOUNCEMENTS
+    INITIATE_BOOKING = Permission.INITIATE_BOOKING
+    CREATE_REGISTRATION = Permission.CREATE_REGISTRATION
+    VIEW_OWN_PROFILE = Permission.VIEW_OWN_PROFILE
+    VIEW_HOSTEL_ANNOUNCEMENTS = Permission.VIEW_HOSTEL_ANNOUNCEMENTS
+

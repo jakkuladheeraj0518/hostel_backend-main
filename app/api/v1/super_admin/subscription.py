@@ -1,0 +1,60 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from app.core.database import get_db
+from app import  schemas, services
+
+router = APIRouter(prefix="/subscriptions", tags=["Subscriptions"])
+
+# ───────────────────────────────────────────────────────────────
+# PLANS
+# ───────────────────────────────────────────────────────────────
+@router.post("/plans", response_model=schemas.SubscriptionPlanResponse)
+def create_plan(plan: schemas.SubscriptionPlanCreate, db: Session = Depends(get_db)):
+    return services.subscription_service.create_plan_service(db, plan)
+
+
+@router.get("/plans", response_model=list[schemas.SubscriptionPlanResponse])
+def list_plans(db: Session = Depends(get_db)):
+    return services.subscription_service.list_plans_service(db)
+
+
+# ───────────────────────────────────────────────────────────────
+# SUBSCRIPTIONS
+# ───────────────────────────────────────────────────────────────
+@router.post("/", response_model=schemas.SubscriptionResponse)
+def create_subscription(subscription: schemas.SubscriptionCreate, db: Session = Depends(get_db)):
+    try:
+        return services.subscription_service.create_subscription_service(db, subscription)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/", response_model=list[schemas.SubscriptionResponse])
+def list_subscriptions(db: Session = Depends(get_db)):
+    return services.subscription_service.list_subscriptions_service(db)
+
+
+# ───────────────────────────────────────────────────────────────
+# PAYMENTS
+# ───────────────────────────────────────────────────────────────
+@router.post("/payments", response_model=schemas.PaymentResponse)
+def create_payment(payment: schemas.PaymentCreate, db: Session = Depends(get_db)):
+    return services.subscription_service.create_payment_service(db, payment)
+
+
+@router.get("/payments", response_model=list[schemas.PaymentResponse])
+def list_payments(subscription_id: str = None, db: Session = Depends(get_db)):
+    return services.subscription_service.list_payments_service(db, subscription_id)
+
+
+# ───────────────────────────────────────────────────────────────
+# CHANGES
+# ───────────────────────────────────────────────────────────────
+@router.post("/changes", response_model=schemas.SubscriptionChangeResponse)
+def create_change(change: schemas.SubscriptionChangeCreate, db: Session = Depends(get_db)):
+    return services.subscription_service.create_change_service(db, change)
+
+
+@router.get("/changes/{subscription_id}", response_model=list[schemas.SubscriptionChangeResponse])
+def list_changes(subscription_id: str, db: Session = Depends(get_db)):
+    return services.subscription_service.list_changes_service(db, subscription_id)

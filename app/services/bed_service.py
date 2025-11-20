@@ -1,0 +1,74 @@
+from typing import List, Optional
+from uuid import UUID
+from sqlalchemy.orm import Session
+
+from app.repositories.bed_repository import (
+    create_bed as repo_create_bed,
+    get_bed as repo_get_bed,
+    list_beds as repo_list_beds,
+    list_available_beds as repo_list_available_beds,
+    update_bed as repo_update_bed,
+    delete_bed as repo_delete_bed,
+    assign_bed_to_student as repo_assign_bed_to_student,
+    release_bed as repo_release_bed,
+    transfer_student_to_bed as repo_transfer_student_to_bed,
+    find_bed_by_room_and_bed_number as repo_find_bed_by_room_and_bed_number,
+)
+from app.schemas.beds import BedCreate, BedUpdate
+from app.models.beds import Bed
+
+
+def create_bed(db: Session, bed_in: BedCreate) -> Bed:
+    return repo_create_bed(db, bed_in)
+
+
+def get_bed(db: Session, bed_id: UUID) -> Optional[Bed]:
+    return repo_get_bed(db, bed_id)
+
+
+def list_beds(db: Session, skip: int = 0, limit: int = 100) -> List[Bed]:
+    return repo_list_beds(db, skip=skip, limit=limit)
+
+
+def list_available_beds(db: Session, room_number: Optional[str] = None, skip: int = 0, limit: int = 100) -> List[Bed]:
+    return repo_list_available_beds(db, room_number=room_number, skip=skip, limit=limit)
+
+
+def update_bed(db: Session, bed_id, bed_in: BedUpdate) -> Optional[Bed]:
+    bed = repo_get_bed(db, bed_id)
+    if not bed:
+        return None
+    return repo_update_bed(db, bed, bed_in)
+
+
+def delete_bed(db: Session, bed_id) -> bool:
+    bed = repo_get_bed(db, bed_id)
+    if not bed:
+        return False
+    repo_delete_bed(db, bed)
+    return True
+
+
+def assign_bed(db: Session, bed_id: int, student_id: str) -> Optional[Bed]:
+    bed = repo_get_bed(db, bed_id)
+    if not bed:
+        return None
+    return repo_assign_bed_to_student(db, bed, student_id)
+
+
+def release_bed(db: Session, bed_id: int) -> Optional[Bed]:
+    bed = repo_get_bed(db, bed_id)
+    if not bed:
+        return None
+    return repo_release_bed(db, bed)
+
+
+def transfer_student_bed(db: Session, student_id: str, new_bed_id: int) -> Optional[Bed]:
+    new_bed = repo_get_bed(db, new_bed_id)
+    if not new_bed:
+        return None
+    return repo_transfer_student_to_bed(db, student_id, new_bed)
+
+
+def find_bed_by_room_bed(db: Session, room_number: str, bed_number: str) -> Optional[Bed]:
+    return repo_find_bed_by_room_and_bed_number(db, room_number, bed_number)

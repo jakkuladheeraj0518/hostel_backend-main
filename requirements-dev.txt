@@ -1,0 +1,22 @@
+# Development and test dependencies
+# This file is intended for local development and CI/test pipelines.
+
+-r requirements.txt
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+
+# Linters / formatters
+black==24.9b0
+isort==5.12.0
+
+# Type checking (optional)
+mypy==1.10.0
+
+# Test HTTP client (already in runtime but pin here for stability)
+httpx==0.25.2
+
+# Optional: coverage reporting utilities
+coverage==7.2.7
