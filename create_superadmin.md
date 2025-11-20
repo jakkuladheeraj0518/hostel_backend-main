@@ -1,86 +1,138 @@
 # Create Super Admin
 
-This document explains how to create a Super Administrator account for the
-Hostel Management API. The repository includes utility scripts to create an
-idempotent Super Admin user for development or initial deployment.
+This document describes how to create (or ensure) a Super Administrator account
+for the Hostel Management backend. It documents the existing helper script
+`scripts/create_super_admin.py` and shows safe ways to run or customize it.
 
 ## Purpose
 
 - Quickly bootstrap a Super Admin account for local development or initial
   deployment.
-- The script is idempotent: running it multiple times will not create duplicate
-  accounts if an account with the same email or username already exists.
+- The shipped script is idempotent: if a Super Admin with the configured
+  email already exists, the script will upgrade that user to the Super Admin
+  role (and enable/verify the account) instead of creating a duplicate.
 
-## Prerequisites
-
-- A working Python environment (the project uses the same environment as the
-  app).
-- The project's dependencies installed (see `requirements.txt` or
-  `pyproject.toml`).
-- A reachable database and correct environment variables (e.g. `DATABASE_URL`).
-- The project root set as the current working directory when running the
-  scripts.
-
-## Script location
+## Where the script lives
 
 `scripts/create_super_admin.py`
 
-This script accepts CLI options for email, phone, username, password, and full
-name.
+The script is a simple standalone script that uses the repository's application
+code (database, repositories, services) to perform the operation. It contains
+hard-coded default credentials inside the file; to customize values either edit
+the file or use the alternative snippets below.
 
-## Recommended usage (PowerShell)
+## Prerequisites
 
-Run from the project root (Windows PowerShell):
+- Python 3.11+ recommended (works on 3.10 for most dependencies).
+- Project dependencies installed. From project root (PowerShell):
 
 ```powershell
-python -m scripts.create_super_admin `
-  '--email' 'you@example.com' `
-  '--phone' '9876543210' `
-  '--username' 'superadmin' `
-  '--password' 'Admin@123' `
-  '--full-name' 'Super Admin'
+python -m venv .venv; .\\.venv\\Scripts\\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
 ```
 
-Notes:
-
-- Use a secure password in production; the example password is for local/dev
-  convenience only.
-- If your DB requires environment variables (e.g., `DATABASE_URL`), ensure
-  those are set in your shell before running the script.
-
-## Verify the user
-
-- After the script completes you can verify the Super Admin exists by querying
-  the database (users table) or by authenticating using the API login endpoint.
-
-Example (login via API):
-
-1. POST to `/api/v1/auth/login` with email/username and password (or
-   `email_or_phone` as supported).
-2. If successful you'll receive access and refresh tokens. Use them to call
-   protected endpoints (SuperAdmin-only routes).
-
-## Troubleshooting
-
-- "Database connection" errors: check your env vars and that the DB server is
-  reachable.
-- "User already exists" behavior: the script is idempotent — it will not fail
-  if a user with the same email/username exists; it will print a message and
-  keep the existing user.
-- If you changed the User model, ensure Alembic migrations are applied:
+- Database reachable and `DATABASE_URL` (or other environment variables used by
+  your `app.config.Settings`) set in your shell or `.env` file.
+- Apply database migrations first if necessary:
 
 ```powershell
 alembic -c alembic.ini upgrade head
 ```
 
-## Security
+## Run the provided script (simple)
 
-- Do not store plaintext credentials in source control.
-- Remove or protect development accounts in production.
+
+From the project root run:
+
+```powershell
+python scripts/create_super_admin.py
+```
+
+Behavior:
+
+- If a user with the default script email exists the script will upgrade that
+  user to Super Admin (set role, mark active and verified) and exit.
+- If no user exists it will create a default `Hostel` row if none exists
+  (the project models require a hostel record for user creation), then create
+  a new user with the defaults bundled in the script.
+
+The script prints the email/username/password it used. Change those defaults
+before running in production.
+
+## Customize the defaults
+
+1) Quick and explicit: edit `scripts/create_super_admin.py` and change the
+   `SUPERADMIN_*` constants at the top.
+
+2) Safer programmatic approach: create a small one-off script that calls the
+   repository/service to create a user with your chosen values. Example (run
+   from project root while your virtualenv is active):
+
+```powershell
+python - <<'PY'
+from app.core.database import SessionLocal
+from app.services.auth_service import AuthService
+from app.schemas.user import UserCreate
+from app.core.roles import Role
+
+db = SessionLocal()
+try:
+    svc = AuthService(db)
+    user_create = UserCreate(
+        email="admin@example.com",
+        phone_number="9876543210",
+        username="superadmin",
+        password="Secur3P@ssw0rd",
+        full_name="Super Admin",
+        role=Role.SUPERADMIN.value,
+    )
+    created = svc.user_repo.create(user_create)
+    created.is_active = True
+    created.is_email_verified = True
+    created.is_phone_verified = True
+    db.commit()
+    print('Created:', created.email)
+finally:
+    db.close()
+PY
+```
+
+This lets you supply secure credentials without editing repository files or
+committing secrets to source control.
+
+## Verify the created user
+
+- Inspect the database `users` table using your preferred SQL client.
+- Or call the API login endpoint (e.g., POST `/api/v1/auth/login`) with the
+  created credentials to obtain tokens.
+
+## Troubleshooting
+
+- "Database connection" errors: confirm `DATABASE_URL` and that the DB server
+  is reachable from your environment.
+- "Import" errors when running the script: ensure you're running the script
+  from the project root with the virtualenv activated so Python finds the
+  `app` package.
+- If you changed models and see constraint errors, ensure migrations are
+  current and the database schema matches the models.
+
+## Security notes
+
+- Do not commit production credentials to source control.
+- Rotate default passwords used for initial bootstrapping.
+- Remove or secure development accounts on production systems.
 
 ## Automation
 
-- You can run the script as part of deployment automation to ensure a Super
-  Admin account exists.
+- You can include this script in deployment workflows, CI pipelines, or as
+  a post-deploy task, but prefer a secure, parameterized approach rather than
+  relying on hard-coded credentials.
 
 ---
+
+If you'd like, I can:
+
+- update `scripts/create_super_admin.py` to accept CLI flags (email/username/etc.)
+- or create a safe helper that reads values from environment variables.
+  Tell me which option you prefer and I will implement it.

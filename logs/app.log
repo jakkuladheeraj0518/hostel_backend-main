@@ -6790,3 +6790,44 @@ WHERE bookings.status = %(status_1)s AND bookings.created_at < %(created_at_1)s]
 2025-11-20 19:12:54,578 | INFO     | app | Elasticsearch ready.
 2025-11-20 19:12:54,594 | INFO     | app | BookingExpiryService started
 2025-11-20 19:12:54,778 | INFO     | app | Notification worker started.
+2025-11-20 19:52:55,456 | INFO     | app | Initializing database...
+2025-11-20 19:53:46,113 | INFO     | app | Initializing database...
+2025-11-20 19:53:46,644 | INFO     | app | Database initialized.
+2025-11-20 19:53:46,644 | INFO     | app | Initializing Elasticsearch...
+2025-11-20 19:53:50,670 | INFO     | app | Elasticsearch ready.
+2025-11-20 19:53:50,685 | INFO     | app | BookingExpiryService started
+2025-11-20 19:53:50,720 | INFO     | app | Notification worker started.
+2025-11-20 19:55:52,810 | INFO     | app | Initializing database...
+2025-11-20 19:55:54,586 | INFO     | app | Database initialized.
+2025-11-20 19:55:54,587 | INFO     | app | Initializing Elasticsearch...
+2025-11-20 19:55:58,608 | INFO     | app | Elasticsearch ready.
+2025-11-20 19:55:58,623 | INFO     | app | BookingExpiryService started
+2025-11-20 19:55:58,639 | INFO     | app | Notification worker started.
+2025-11-20 20:03:36,744 | INFO     | app | Initializing database...
+2025-11-20 20:03:36,970 | INFO     | app | Database initialized.
+2025-11-20 20:03:36,971 | INFO     | app | Initializing Elasticsearch...
+2025-11-20 20:03:40,980 | INFO     | app | Elasticsearch ready.
+2025-11-20 20:03:40,995 | INFO     | app | BookingExpiryService started
+2025-11-20 20:03:41,038 | INFO     | app | Notification worker started.
+2025-11-20 20:09:14,942 | INFO     | app | Initializing database...
+2025-11-20 20:09:15,298 | INFO     | app | Database initialized.
+2025-11-20 20:09:15,299 | INFO     | app | Initializing Elasticsearch...
+2025-11-20 20:09:19,306 | INFO     | app | Elasticsearch ready.
+2025-11-20 20:09:19,321 | INFO     | app | BookingExpiryService started
+2025-11-20 20:09:19,357 | INFO     | app | Notification worker started.
+2025-11-20 20:09:28,480 | INFO     | app | Initializing database...
+2025-11-20 20:09:28,781 | INFO     | app | Database initialized.
+2025-11-20 20:09:28,781 | INFO     | app | Initializing Elasticsearch...
+2025-11-20 20:09:32,784 | INFO     | app | Elasticsearch ready.
+2025-11-20 20:09:32,798 | INFO     | app | BookingExpiryService started
+2025-11-20 20:09:32,820 | INFO     | app | Notification worker started.
+2025-11-20 20:10:49,329 | INFO     | app | Initializing database...
+2025-11-20 20:10:49,735 | INFO     | app | Database initialized.
+2025-11-20 20:10:49,735 | INFO     | app | Initializing Elasticsearch...
+2025-11-20 20:10:53,748 | INFO     | app | Elasticsearch ready.
+2025-11-20 20:10:53,757 | INFO     | app | BookingExpiryService started
+2025-11-20 20:10:53,791 | INFO     | app | Notification worker started.
+2025-11-20 20:11:33,214 | INFO     | app.services.email_service | Email sent successfully to superadmin@gmail.com
+2025-11-20 20:11:33,215 | INFO     | app.services.password_reset_service | Password reset link for superadmin@gmail.com: http://localhost:3000/reset-password?token=hye2fMmiMLufrlkp-t7Pds96ZYyqrA2rAPcPk1zCzJA
+2025-11-20 20:11:33,215 | INFO     | app.services.password_reset_service | Hello Default Super Admin, We received a request to reset your password. Your password reset code is: ➡ 945631 Please enter this code on the password reset page: http://localhost:3000/reset-password?token=hye2fMmiMLufrlkp-t7Pds96ZYyqrA2rAPcPk1zCzJA Note: This code is valid for 15 minutes. If you did not request a password reset, you can safely ignore this email. With regards, Support Team
+2025-11-20 20:11:33,216 | INFO     | app.services.password_reset_service | Password reset link for superadmin@gmail.com: http://localhost:3000/reset-password?token=hye2fMmiMLufrlkp-t7Pds96ZYyqrA2rAPcPk1zCzJA

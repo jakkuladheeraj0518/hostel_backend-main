@@ -1,79 +1,53 @@
+# ==== CORE FRAMEWORK ====
+fastapi==0.115.0
+uvicorn[standard]==0.30.0
+starlette==0.37.2
 
-# Runtime requirements (pinned for reproducible environments)
-fastapi
-uvicorn
-SQLAlchemy
-alembic
-psycopg2-binary
-pydantic
-pydantic-settings
-python-jose[cryptography]
-passlib[bcrypt]
-python-multipart
-loguru
-httpx
-python-dotenv
-twilio
-elasticsearch==8.11.0
+# ==== DATABASE ====
+SQLAlchemy==2.0.31
+psycopg2-binary==2.9.9
+sqlmodel==0.0.18
+alembic==1.13.2
+
+# ==== PYDANTIC / SETTINGS ====
+pydantic==2.8.2
+pydantic-settings==2.2.1
+typing-extensions==4.12.2
+
+# ==== AUTH & SECURITY ====
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.9
+
+# ==== UTILITIES ====
+python-dotenv==1.0.1
+loguru==0.7.2
+email-validator==2.3.0
 httpx==0.25.2
+aiofiles==23.2.1
+
+# ==== DATA / SCIENTIFIC ====
 pandas==2.1.3
 numpy==1.26.2
 python-dateutil==2.8.2
-aiofiles
-reportlab
-openpyxl
 
-# Additional runtime helpers
-email-validator
+# ==== FILES / REPORTS ====
+reportlab==3.6.12
+openpyxl==3.1.5
+Pillow==10.4.0
+qrcode==7.4.2
 
-# Notes:
-# - Development/test dependencies (pytest, linters, formatters) are moved
-#   to `requirements-dev.txt` to keep runtime image lean.
-# - If you need to run locally with autoreload use the `[standard]` extra
-#   on `uvicorn` (already included above).
+# ==== CACHE / RATE LIMIT ====
+redis==4.5.4
+fastapi-limiter==0.1.6
 
-# FastAPI Framework
-fastapi==0.115.0
+# ==== THIRD-PARTY APIs ====
+twilio==8.10.0
+sendgrid==6.11.0
+razorpay==1.4.0
 
-# ASGI Server
-uvicorn[standard]==0.30.0
+# ==== SEARCH ====
+elasticsearch==8.11.0
 
-# Database ORM
-SQLAlchemy==2.0.31
-
-# PostgreSQL Driver
-psycopg2-binary==2.9.9
-
-# Pydantic Models
-pydantic==2.8.2
-pydantic-settings==2.2.1
-
-# Environment Variables
-python-dotenv==1.0.1
-
-# Alembic for DB migrations
-alembic==1.13.2
-
-# CORS & Middleware
-starlette==0.37.2
-
-# Optional — For Data Validation or Extra Tools
-typing-extensions==4.12.2
-
-# (Optional) if you later add password hashing, JWT, etc.
-passlib[bcrypt]==1.7.4
-python-jose==3.3.0
-
-fastapi>=0.95
-uvicorn[standard]>=0.20
-SQLAlchemy>=1.4
-pydantic>=1.10
-psycopg2-binary>=2.9
-reportlab>=3.6
-qrcode>=7.3
-Pillow>=9.0
-python-dotenv>=1.0
-razorpay
-sqlmodel
-fastapi_mail
-sendgrid
+# ==== EMAIL ====
+fastapi_mail==1.2.6
