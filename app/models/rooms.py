@@ -60,6 +60,7 @@ class Room(Base):
     room_capacity = Column(Integer, nullable=False, default=1)     # version 1
     total_beds = Column(Integer, nullable=False, default=1)        # version 2
     available_beds = Column(Integer, nullable=False, default=1)    # version 2
+    availability = Column(Integer, nullable=False, default=0)
 
     # Amenities
     amenities = Column(String(1000), nullable=True)

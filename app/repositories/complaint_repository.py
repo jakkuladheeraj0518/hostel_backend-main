@@ -54,7 +54,7 @@ class ComplaintRepository:
         return complaint
 
     async def update_fields(self, complaint_id: int, data):
-        updates = data.dict(exclude_unset=True)
+        updates = data if isinstance(data, dict) else data.dict(exclude_unset=True)
         return await self.update(complaint_id, updates)
 
     # -------------------------------------------------------------------------

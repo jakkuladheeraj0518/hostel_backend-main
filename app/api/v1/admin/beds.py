@@ -1,5 +1,4 @@
 from typing import List, Optional
-from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 import csv
@@ -44,23 +43,27 @@ def read_available_beds(room_number: Optional[str] = None, skip: int = 0, limit:
 
 
 @router.get("/{bed_id}", response_model=BedOut)
-def read_bed(bed_id: UUID, db: Session = Depends(get_db)):
+def read_bed(bed_id: int, db: Session = Depends(get_db)):
     bed = service_get_bed(db, bed_id)
     if not bed:
         raise HTTPException(status_code=404, detail="Bed not found")
+    if hasattr(bed, 'hostel_id'):
+        bed.hostel_id = str(bed.hostel_id) if bed.hostel_id is not None else None
     return bed
 
 
 @router.put("/{bed_id}", response_model=BedOut)
-def update_bed(bed_id: UUID, payload: BedUpdate, db: Session = Depends(get_db)):
+def update_bed(bed_id: int, payload: BedUpdate, db: Session = Depends(get_db)):
     updated = service_update_bed(db, bed_id, payload)
     if not updated:
         raise HTTPException(status_code=404, detail="Bed not found")
+    if hasattr(updated, 'hostel_id'):
+        updated.hostel_id = str(updated.hostel_id) if updated.hostel_id is not None else None
     return updated
 
 
 @router.delete("/{bed_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_bed(bed_id: UUID, db: Session = Depends(get_db)):
+def delete_bed(bed_id: int, db: Session = Depends(get_db)):
     ok = service_delete_bed(db, bed_id)
     if not ok:
         raise HTTPException(status_code=404, detail="Bed not found")

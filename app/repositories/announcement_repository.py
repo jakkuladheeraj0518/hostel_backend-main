@@ -28,13 +28,13 @@ class AnnouncementRepository:
 
     def list_all(self, limit: int = 100, offset: int = 0) -> List[Announcement]:
         stmt = select(Announcement).order_by(Announcement.created_at.desc()).offset(offset).limit(limit)
-        return list(self.session.exec(stmt))
+        return list(self.session.execute(stmt).scalars())
 
     def list_published(self, limit: int = 100, offset: int = 0) -> List[Announcement]:
         stmt = select(Announcement).where(Announcement.status == AnnouncementStatus.PUBLISHED).order_by(Announcement.created_at.desc()).offset(offset).limit(limit)
-        return list(self.session.exec(stmt))
+        return list(self.session.execute(stmt).scalars())
 
     def list_scheduled_due(self):
         from datetime import datetime
         stmt = select(Announcement).where(Announcement.status == AnnouncementStatus.SCHEDULED, Announcement.scheduled_date <= datetime.utcnow())
-        return list(self.session.exec(stmt))
+        return list(self.session.execute(stmt).scalars())

@@ -55,7 +55,13 @@ def list_rooms(
         like = f"%{amenities_like}%"
         query = query.filter(Room.amenities.ilike(like))
 
-    return query.order_by(Room.id).offset(skip).limit(limit).all()
+    rooms = query.order_by(Room.id).offset(skip).limit(limit).all()
+
+    # Ensure hostel_id is returned as a string
+    for room in rooms:
+        room.hostel_id = str(room.hostel_id)
+
+    return rooms
 
 
 def update_room(db: Session, room: Room, room_in: RoomUpdate) -> Room:

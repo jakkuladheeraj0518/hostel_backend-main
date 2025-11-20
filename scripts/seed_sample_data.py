@@ -1,6 +1,7 @@
 from app.core.database import SessionLocal
 from sqlalchemy import text
 from datetime import datetime, date
+from app.models.hostel import Hostel
 
 
 def seed_sample_data():
@@ -50,7 +51,11 @@ def seed_sample_data():
 
             ('CozyNest Hostel', 'Budget stay for students', '10 Hill St, Mumbai', 'Co-ed',
              'cozynest@example.com', '9876543214', 'WiFi, Breakfast', 'No parties',
-             '09:00', '22:00', 55, 40, 20000.00, 'public', FALSE, (SELECT id FROM locations WHERE city='Mumbai'))
+             '09:00', '22:00', 55, 40, 20000.00, 'public', FALSE, (SELECT id FROM locations WHERE city='Mumbai')),
+
+            ('Sample Hostel', 'A sample hostel for testing.', '123 Test Street', 'public',
+             'test@example.com', '1234567890', 'WiFi, Parking', 'No smoking',
+             '14:00:00', '10:00:00', 100, 50, 10000, 'public', FALSE, (SELECT id FROM locations WHERE city='Hyderabad'))
             ON CONFLICT DO NOTHING;
         """))
         db.commit()
@@ -139,5 +144,36 @@ def seed_sample_data():
         db.close()
 
 
+def seed_hostel():
+    db = SessionLocal()
+    try:
+        # Ensure hostel with id=6 exists
+        if not db.query(Hostel).filter(Hostel.id == 6).first():
+            hostel = Hostel(
+                id=6,
+                hostel_name="Sample Hostel",
+                description="A sample hostel for testing.",
+                full_address="123 Test Street",
+                hostel_type="public",
+                contact_email="test@example.com",
+                contact_phone="1234567890",
+                amenities="WiFi, Parking",
+                rules="No smoking",
+                check_in="14:00:00",
+                check_out="10:00:00",
+                total_beds=100,
+                current_occupancy=50,
+                monthly_revenue=10000,
+                visibility="public",
+                is_featured=False,
+                location_id=1
+            )
+            db.add(hostel)
+            db.commit()
+    finally:
+        db.close()
+
+
 if __name__ == "__main__":
     seed_sample_data()
+    seed_hostel()

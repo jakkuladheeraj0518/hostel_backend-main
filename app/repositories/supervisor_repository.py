@@ -119,6 +119,15 @@ def list_activity(db: Session, employee_id: str) -> List[dict]:
 def create_admin_override(db: Session, admin_employee_id: str, target_supervisor_id: Optional[str],
                           action: str, details: Optional[str]) -> AdminOverride:
 
+    # Validate that admin_employee_id exists in the supervisors table
+    admin_exists = db.execute(
+        text("SELECT 1 FROM supervisors WHERE employee_id = :admin_id"),
+        {"admin_id": admin_employee_id}
+    ).fetchone()
+
+    if not admin_exists:
+        raise ValueError(f"Admin employee ID {admin_employee_id} does not exist in the supervisors table.")
+
     o = AdminOverride(
         admin_employee_id=admin_employee_id,
         target_supervisor_id=target_supervisor_id,

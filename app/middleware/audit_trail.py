@@ -30,14 +30,16 @@ class AuditTrailMiddleware(BaseHTTPMiddleware):
             db = next(get_db())
             audit_repo = AuditRepository(db)
             audit_repo.create_audit_log(
-                user_id=getattr(request.state, "user_id"),
+                user_id=getattr(request.state, "user_id", None),
                 action=request.method,
                 resource=str(request.url.path),
                 hostel_id=getattr(request.state, "active_hostel_id", None),
                 ip_address=request.client.host if request.client else None,
                 user_agent=request.headers.get("user-agent"),
             )
-        except Exception:
+        except Exception as e:
+            # Log the exception for debugging
+            print(f"Audit logging failed: {e}")
             # Don't fail request if audit logging fails
             pass
         

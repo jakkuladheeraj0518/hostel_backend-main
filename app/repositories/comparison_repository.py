@@ -35,7 +35,7 @@ def get_hostel_comparison(db: Session, hostel_ids: List[str]) -> List[dict]:
     amen_rows = db.query(Room.hostel_id, Room.amenities).filter(Room.hostel_id.in_(hostel_ids)).all()
 
     for hid, amen in amen_rows:
-        if amen:
+        if amen and hid in amenities_map:  # Ensure the hostel_id exists in the map
             parts = [a.strip() for a in amen.split(",") if a.strip()]
             amenities_map[hid].update(parts)
 
@@ -64,7 +64,7 @@ def get_hostel_comparison(db: Session, hostel_ids: List[str]) -> List[dict]:
         p = pricing_map.get(hid, {})
 
         results.append({
-            "hostel_id": hid,
+            "hostel_id": str(hid),  # Ensure hostel_id is returned as a string
             "pricing": {
                 "monthly_min": p.get("monthly_min"),
                 "monthly_avg": float(p.get("monthly_avg")) if p.get("monthly_avg") else None,

@@ -1,6 +1,6 @@
 from typing import List, Optional
-from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from uuid import UUID  # Unused, kept for reference
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Path
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 import csv
@@ -25,7 +25,9 @@ router = APIRouter(prefix="/api/v1/admin/rooms", tags=["rooms"])
 @router.post("/", response_model=RoomOut, status_code=status.HTTP_201_CREATED)
 def create_room(item: RoomCreate, db: Session = Depends(get_db)):
     try:
-        return service_create_room(db, item)
+        room = service_create_room(db, item)
+        room.hostel_id = str(room.hostel_id)  # Ensure hostel_id is returned as a string
+        return room
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -71,23 +73,30 @@ def read_rooms(
 
 
 @router.get("/{room_id}", response_model=RoomOut)
-def read_room(room_id: UUID, db: Session = Depends(get_db)):
+def read_room(
+    room_id: int = Path(..., description="The ID of the room (must be an integer)"),
+    db: Session = Depends(get_db),
+):
     room = service_get_room(db, room_id)
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
+    if hasattr(room, 'hostel_id'):
+        room.hostel_id = str(room.hostel_id)
     return room
 
 
 @router.put("/{room_id}", response_model=RoomOut)
-def update_room(room_id: UUID, payload: RoomUpdate, db: Session = Depends(get_db)):
+def update_room(room_id: int, payload: RoomUpdate, db: Session = Depends(get_db)):
     updated = service_update_room(db, room_id, payload)
     if not updated:
         raise HTTPException(status_code=404, detail="Room not found")
+    if hasattr(updated, 'hostel_id'):
+        updated.hostel_id = str(updated.hostel_id)
     return updated
 
 
 @router.delete("/{room_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_room(room_id: UUID, db: Session = Depends(get_db)):
+def delete_room(room_id: int, db: Session = Depends(get_db)):
     ok = service_delete_room(db, room_id)
     if not ok:
         raise HTTPException(status_code=404, detail="Room not found")
@@ -103,6 +112,8 @@ def set_maintenance(room_id: int, maintenance_status: str, db: Session = Depends
     updated = service_set_room_maintenance(db, room_id, ms)
     if not updated:
         raise HTTPException(status_code=404, detail="Room not found")
+    if hasattr(updated, 'hostel_id'):
+        updated.hostel_id = str(updated.hostel_id)
     return updated
 
 
@@ -111,6 +122,8 @@ def set_availability(room_id: int, availability: int, db: Session = Depends(get_
     updated = service_set_room_availability(db, room_id, availability)
     if not updated:
         raise HTTPException(status_code=404, detail="Room not found")
+    if hasattr(updated, 'hostel_id'):
+        updated.hostel_id = str(updated.hostel_id)
     return updated
 
 

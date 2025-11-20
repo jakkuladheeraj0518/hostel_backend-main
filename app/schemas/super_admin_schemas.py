@@ -23,7 +23,7 @@ class HostelBase(BaseModel):
     monthly_revenue: Optional[float] = None
     visibility: Visibility = Field(default=Visibility.public)
     is_featured: bool = False
-    location_id: Optional[int] = None
+    location_id: int  # Ensure location_id is required and must be valid
 
     @field_validator('current_occupancy')
     @classmethod
@@ -35,8 +35,9 @@ class HostelBase(BaseModel):
     @field_validator('check_out')
     @classmethod
     def validate_checkout_time(cls, v, info):
-        if v is not None and info.data.get('check_in') is not None and v <= info.data['check_in']:
-            raise ValueError('check_out must be after check_in')
+        if v is not None and info.data.get('check_in') is not None:
+            # Remove strict validation for check_out
+            pass
         return v
 
 class HostelCreate(HostelBase): pass

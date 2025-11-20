@@ -1,5 +1,4 @@
 from typing import List, Optional
-from uuid import UUID
 from sqlalchemy.orm import Session
 
 from app.repositories.bed_repository import (
@@ -22,7 +21,7 @@ def create_bed(db: Session, bed_in: BedCreate) -> Bed:
     return repo_create_bed(db, bed_in)
 
 
-def get_bed(db: Session, bed_id: UUID) -> Optional[Bed]:
+def get_bed(db: Session, bed_id: int) -> Optional[Bed]:
     return repo_get_bed(db, bed_id)
 
 

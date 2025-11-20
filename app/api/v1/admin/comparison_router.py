@@ -16,9 +16,4 @@ def compare_hostels(payload: HostelComparisonRequest, db: Session = Depends(get_
     Compare up to N hostels (validated by schema). Returns pricing, amenities, counts.
     Endpoint kept under /api/v1/hostels/compare for backward compatibility.
     """
-    try:
-        # reuse the schema's validator to limit items (raise ValueError if invalid)
-        payload.validate_max_items()
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
     return service_compare_hostels(db, payload.hostel_ids)

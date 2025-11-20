@@ -1,5 +1,4 @@
 from typing import List, Optional
-from uuid import UUID
 from sqlalchemy.orm import Session
 from sqlalchemy import exc as sa_exc
 
@@ -26,7 +25,7 @@ def create_bed(db: Session, bed_in: BedCreate) -> Bed:
         raise
 
 
-def get_bed(db: Session, bed_id: UUID) -> Optional[Bed]:
+def get_bed(db: Session, bed_id: int) -> Optional[Bed]:
     return db.query(Bed).filter(Bed.id == bed_id).first()
 
 
