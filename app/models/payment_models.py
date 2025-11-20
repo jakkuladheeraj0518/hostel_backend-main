@@ -136,9 +136,9 @@ class Invoice(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     invoice_number = Column(String, unique=True, nullable=False, index=True)
-    user_id = Column(Integer, nullable=False)
-    hostel_id = Column(Integer, nullable=False)
-    user_id = Column(Integer, ForeignKey("customers.id"), nullable=False)  
+    #user_id = Column(Integer, nullable=False)
+    #hostel_id = Column(Integer, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)  
     hostel_id = Column(Integer, ForeignKey("hostels.id"), nullable=False)
     total_amount = Column(Float, nullable=False)
     paid_amount = Column(Float, default=0.0)
@@ -162,6 +162,8 @@ class Invoice(Base):
     receipts = relationship(
         "Receipt", back_populates="invoice", cascade="all, delete-orphan"
     )
+    user = relationship("User", back_populates="invoices") 
+    hostel = relationship("Hostel", back_populates="invoices")
     hostel = relationship("Hostel", back_populates="invoices")
     reminders = relationship("PaymentReminder", back_populates="invoice", cascade="all, delete-orphan")
 

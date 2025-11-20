@@ -7143,3 +7143,161 @@ DETAIL:  Key (location_id)=(0) is not present in table "locations".
 2025-11-20 22:20:36,770 | INFO     | app | Elasticsearch ready.
 2025-11-20 22:20:36,785 | INFO     | app | BookingExpiryService started
 2025-11-20 22:20:36,803 | INFO     | app | Notification worker started.
+2025-11-21 00:00:41,352 | INFO     | app | Initializing database...
+2025-11-21 00:00:43,022 | INFO     | app | Database initialized.
+2025-11-21 00:00:43,023 | INFO     | app | Initializing Elasticsearch...
+2025-11-21 00:00:47,038 | INFO     | app | Elasticsearch ready.
+2025-11-21 00:00:47,053 | INFO     | app | BookingExpiryService started
+2025-11-21 00:00:47,085 | INFO     | app | Notification worker started.
+2025-11-21 00:01:13,033 | INFO     | app | Initializing database...
+2025-11-21 00:01:13,242 | INFO     | app | Database initialized.
+2025-11-21 00:01:13,242 | INFO     | app | Initializing Elasticsearch...
+2025-11-21 00:01:17,262 | INFO     | app | Elasticsearch ready.
+2025-11-21 00:01:17,272 | INFO     | app | BookingExpiryService started
+2025-11-21 00:01:17,297 | INFO     | app | Notification worker started.
+2025-11-21 00:02:27,131 | INFO     | app | Initializing database...
+2025-11-21 00:02:27,342 | INFO     | app | Database initialized.
+2025-11-21 00:02:27,342 | INFO     | app | Initializing Elasticsearch...
+2025-11-21 00:02:31,356 | INFO     | app | Elasticsearch ready.
+2025-11-21 00:02:31,371 | INFO     | app | BookingExpiryService started
+2025-11-21 00:02:31,397 | INFO     | app | Notification worker started.
+2025-11-21 00:02:49,577 | INFO     | app | Initializing database...
+2025-11-21 00:02:49,777 | INFO     | app | Database initialized.
+2025-11-21 00:02:49,778 | INFO     | app | Initializing Elasticsearch...
+2025-11-21 00:02:53,793 | INFO     | app | Elasticsearch ready.
+2025-11-21 00:02:53,807 | INFO     | app | BookingExpiryService started
+2025-11-21 00:02:53,816 | INFO     | app | Notification worker started.
+2025-11-21 00:03:38,951 | INFO     | app | Initializing database...
+2025-11-21 00:03:39,176 | INFO     | app | Database initialized.
+2025-11-21 00:03:39,176 | INFO     | app | Initializing Elasticsearch...
+2025-11-21 00:03:43,185 | INFO     | app | Elasticsearch ready.
+2025-11-21 00:03:43,195 | INFO     | app | BookingExpiryService started
+2025-11-21 00:03:43,225 | INFO     | app | Notification worker started.
+2025-11-21 00:04:49,814 | INFO     | app | Initializing database...
+2025-11-21 00:04:50,042 | INFO     | app | Database initialized.
+2025-11-21 00:04:50,042 | INFO     | app | Initializing Elasticsearch...
+2025-11-21 00:04:54,056 | INFO     | app | Elasticsearch ready.
+2025-11-21 00:04:54,071 | INFO     | app | BookingExpiryService started
+2025-11-21 00:04:54,082 | ERROR    | app | Error in _check_and_expire_bookings: Could not determine join condition between parent/child tables on relationship User.payments - there are no foreign keys linking these tables.  Ensure that referencing columns are associated with a ForeignKey or ForeignKeyConstraint, or specify a 'primaryjoin' expression.
+2025-11-21 00:04:54,083 | INFO     | app | Notification worker started.
+2025-11-21 00:05:39,676 | INFO     | app | Initializing database...
+2025-11-21 00:05:40,083 | INFO     | app | Database initialized.
+2025-11-21 00:05:40,084 | INFO     | app | Initializing Elasticsearch...
+2025-11-21 00:05:44,103 | INFO     | app | Elasticsearch ready.
+2025-11-21 00:05:44,118 | INFO     | app | BookingExpiryService started
+2025-11-21 00:05:44,124 | ERROR    | app | Error in _check_and_expire_bookings: Could not determine join condition between parent/child tables on relationship User.payments - there are no foreign keys linking these tables.  Ensure that referencing columns are associated with a ForeignKey or ForeignKeyConstraint, or specify a 'primaryjoin' expression.
+2025-11-21 00:05:44,125 | INFO     | app | Notification worker started.
+2025-11-21 00:05:50,847 | INFO     | app | Initializing database...
+2025-11-21 00:05:51,078 | INFO     | app | Database initialized.
+2025-11-21 00:05:51,078 | INFO     | app | Initializing Elasticsearch...
+2025-11-21 00:05:55,089 | INFO     | app | Elasticsearch ready.
+2025-11-21 00:05:55,096 | INFO     | app | BookingExpiryService started
+2025-11-21 00:05:55,103 | ERROR    | app | Error in _check_and_expire_bookings: Could not determine join condition between parent/child tables on relationship User.payments - there are no foreign keys linking these tables.  Ensure that referencing columns are associated with a ForeignKey or ForeignKeyConstraint, or specify a 'primaryjoin' expression.
+2025-11-21 00:05:55,103 | INFO     | app | Notification worker started.
+2025-11-21 00:06:07,279 | INFO     | app | Initializing database...
+2025-11-21 00:06:07,556 | INFO     | app | Database initialized.
+2025-11-21 00:06:07,557 | INFO     | app | Initializing Elasticsearch...
+2025-11-21 00:06:11,568 | INFO     | app | Elasticsearch ready.
+2025-11-21 00:06:11,576 | INFO     | app | BookingExpiryService started
+2025-11-21 00:06:11,581 | ERROR    | app | Error in _check_and_expire_bookings: Mapper 'Mapper[Payment(payments)]' has no property 'user'.  If this property was indicated from other mappers or configure events, ensure registry.configure() has been called.
+2025-11-21 00:06:11,582 | INFO     | app | Notification worker started.
+2025-11-21 00:06:34,743 | INFO     | app | Initializing database...
+2025-11-21 00:06:34,962 | INFO     | app | Database initialized.
+2025-11-21 00:06:34,962 | INFO     | app | Initializing Elasticsearch...
+2025-11-21 00:06:38,978 | INFO     | app | Elasticsearch ready.
+2025-11-21 00:06:38,986 | ERROR    | app | Error in _check_and_expire_bookings: Mapper 'Mapper[Payment(payments)]' has no property 'user'.  If this property was indicated from other mappers or configure events, ensure registry.configure() has been called.
+2025-11-21 00:06:38,986 | INFO     | app | BookingExpiryService started
+2025-11-21 00:06:38,987 | INFO     | app | Notification worker started.
+2025-11-21 00:06:45,944 | INFO     | app | Initializing database...
+2025-11-21 00:06:46,252 | INFO     | app | Database initialized.
+2025-11-21 00:06:46,253 | INFO     | app | Initializing Elasticsearch...
+2025-11-21 00:06:50,278 | INFO     | app | Elasticsearch ready.
+2025-11-21 00:06:50,286 | INFO     | app | BookingExpiryService started
+2025-11-21 00:06:50,291 | ERROR    | app | Error in _check_and_expire_bookings: Could not determine join condition between parent/child tables on relationship User.invoices - there are no foreign keys linking these tables.  Ensure that referencing columns are associated with a ForeignKey or ForeignKeyConstraint, or specify a 'primaryjoin' expression.
+2025-11-21 00:06:50,292 | INFO     | app | Notification worker started.
+2025-11-21 00:08:07,565 | INFO     | app | Initializing database...
+2025-11-21 00:08:07,818 | INFO     | app | Database initialized.
+2025-11-21 00:08:07,820 | INFO     | app | Initializing Elasticsearch...
+2025-11-21 00:08:11,841 | INFO     | app | Elasticsearch ready.
+2025-11-21 00:08:11,853 | INFO     | app | BookingExpiryService started
+2025-11-21 00:08:11,861 | ERROR    | app | Error in _check_and_expire_bookings: Could not determine join condition between parent/child tables on relationship User.invoices - there are no foreign keys linking these tables.  Ensure that referencing columns are associated with a ForeignKey or ForeignKeyConstraint, or specify a 'primaryjoin' expression.
+2025-11-21 00:08:11,861 | INFO     | app | Notification worker started.
+2025-11-21 00:08:18,576 | INFO     | app | Initializing database...
+2025-11-21 00:08:18,780 | INFO     | app | Database initialized.
+2025-11-21 00:08:18,780 | INFO     | app | Initializing Elasticsearch...
+2025-11-21 00:08:22,798 | INFO     | app | Elasticsearch ready.
+2025-11-21 00:08:22,806 | INFO     | app | BookingExpiryService started
+2025-11-21 00:08:22,808 | ERROR    | app | Error in _check_and_expire_bookings: Mapper 'Mapper[Invoice(invoices)]' has no property 'user'.  If this property was indicated from other mappers or configure events, ensure registry.configure() has been called.
+2025-11-21 00:08:22,808 | INFO     | app | Notification worker started.
+2025-11-21 00:08:43,610 | INFO     | app | Initializing database...
+2025-11-21 00:08:43,818 | INFO     | app | Database initialized.
+2025-11-21 00:08:43,819 | INFO     | app | Initializing Elasticsearch...
+2025-11-21 00:08:47,836 | INFO     | app | Elasticsearch ready.
+2025-11-21 00:08:47,846 | INFO     | app | BookingExpiryService started
+2025-11-21 00:08:47,845 | ERROR    | app | Error in _check_and_expire_bookings: Mapper 'Mapper[Invoice(invoices)]' has no property 'user'.  If this property was indicated from other mappers or configure events, ensure registry.configure() has been called.
+2025-11-21 00:08:47,846 | INFO     | app | Notification worker started.
+2025-11-21 00:12:07,869 | INFO     | app | Initializing database...
+2025-11-21 00:12:08,080 | INFO     | app | Database initialized.
+2025-11-21 00:12:08,081 | INFO     | app | Initializing Elasticsearch...
+2025-11-21 00:12:12,094 | INFO     | app | Elasticsearch ready.
+2025-11-21 00:12:12,102 | ERROR    | app | Error in _check_and_expire_bookings: Mapper 'Mapper[Invoice(invoices)]' has no property 'user'.  If this property was indicated from other mappers or configure events, ensure registry.configure() has been called.
+2025-11-21 00:12:12,103 | INFO     | app | BookingExpiryService started
+2025-11-21 00:12:12,103 | INFO     | app | Notification worker started.
+2025-11-21 00:12:52,362 | INFO     | app | Initializing database...
+2025-11-21 00:12:52,565 | INFO     | app | Database initialized.
+2025-11-21 00:12:52,566 | INFO     | app | Initializing Elasticsearch...
+2025-11-21 00:12:56,581 | INFO     | app | Elasticsearch ready.
+2025-11-21 00:12:56,592 | ERROR    | app | Error in _check_and_expire_bookings: Mapper 'Mapper[Invoice(invoices)]' has no property 'user'.  If this property was indicated from other mappers or configure events, ensure registry.configure() has been called.
+2025-11-21 00:12:56,592 | INFO     | app | BookingExpiryService started
+2025-11-21 00:12:56,593 | INFO     | app | Notification worker started.
+2025-11-21 00:13:43,041 | INFO     | app | Initializing database...
+2025-11-21 00:13:43,259 | INFO     | app | Database initialized.
+2025-11-21 00:13:43,260 | INFO     | app | Initializing Elasticsearch...
+2025-11-21 00:13:47,276 | INFO     | app | Elasticsearch ready.
+2025-11-21 00:13:47,291 | INFO     | app | BookingExpiryService started
+2025-11-21 00:13:47,301 | ERROR    | app | Error in _check_and_expire_bookings: Mapper 'Mapper[Invoice(invoices)]' has no property 'user'.  If this property was indicated from other mappers or configure events, ensure registry.configure() has been called.
+2025-11-21 00:13:47,301 | INFO     | app | Notification worker started.
+2025-11-21 00:13:53,711 | INFO     | app | Initializing database...
+2025-11-21 00:13:53,966 | INFO     | app | Database initialized.
+2025-11-21 00:13:53,966 | INFO     | app | Initializing Elasticsearch...
+2025-11-21 00:13:57,990 | INFO     | app | Elasticsearch ready.
+2025-11-21 00:13:58,000 | ERROR    | app | Error in _check_and_expire_bookings: Mapper 'Mapper[Invoice(invoices)]' has no property 'user'.  If this property was indicated from other mappers or configure events, ensure registry.configure() has been called.
+2025-11-21 00:13:58,000 | INFO     | app | BookingExpiryService started
+2025-11-21 00:13:58,000 | INFO     | app | Notification worker started.
+2025-11-21 00:14:06,681 | INFO     | app | Initializing database...
+2025-11-21 00:14:06,910 | INFO     | app | Database initialized.
+2025-11-21 00:14:06,911 | INFO     | app | Initializing Elasticsearch...
+2025-11-21 00:14:10,916 | INFO     | app | Elasticsearch ready.
+2025-11-21 00:14:10,925 | INFO     | app | BookingExpiryService started
+2025-11-21 00:14:10,927 | ERROR    | app | Error in _check_and_expire_bookings: Mapper 'Mapper[Invoice(invoices)]' has no property 'user'.  If this property was indicated from other mappers or configure events, ensure registry.configure() has been called.
+2025-11-21 00:14:10,927 | INFO     | app | Notification worker started.
+2025-11-21 00:19:23,614 | INFO     | app | Initializing database...
+2025-11-21 00:19:23,843 | INFO     | app | Database initialized.
+2025-11-21 00:19:23,843 | INFO     | app | Initializing Elasticsearch...
+2025-11-21 00:19:27,847 | INFO     | app | Elasticsearch ready.
+2025-11-21 00:19:27,857 | INFO     | app | BookingExpiryService started
+2025-11-21 00:19:27,888 | INFO     | app | Notification worker started.
+2025-11-21 00:24:44,046 | INFO     | app | Initializing database...
+2025-11-21 00:24:45,946 | INFO     | app | Database initialized.
+2025-11-21 00:24:45,946 | INFO     | app | Initializing Elasticsearch...
+2025-11-21 00:24:49,956 | INFO     | app | Elasticsearch ready.
+2025-11-21 00:24:49,971 | INFO     | app | BookingExpiryService started
+2025-11-21 00:24:50,008 | INFO     | app | Notification worker started.
+2025-11-21 00:25:52,848 | INFO     | app | Initializing database...
+2025-11-21 00:25:53,076 | INFO     | app | Database initialized.
+2025-11-21 00:25:53,076 | INFO     | app | Initializing Elasticsearch...
+2025-11-21 00:25:57,097 | INFO     | app | Elasticsearch ready.
+2025-11-21 00:25:57,112 | INFO     | app | BookingExpiryService started
+2025-11-21 00:25:57,145 | INFO     | app | Notification worker started.
+2025-11-21 00:34:08,423 | INFO     | app | Initializing database...
+2025-11-21 00:34:08,807 | INFO     | app | Database initialized.
+2025-11-21 00:34:08,808 | INFO     | app | Initializing Elasticsearch...
+2025-11-21 00:34:12,832 | INFO     | app | Elasticsearch ready.
+2025-11-21 00:34:12,848 | INFO     | app | BookingExpiryService started
+2025-11-21 00:34:12,880 | INFO     | app | Notification worker started.
+2025-11-21 00:40:59,382 | INFO     | app | Initializing database...
+2025-11-21 00:41:01,159 | INFO     | app | Database initialized.
+2025-11-21 00:41:01,160 | INFO     | app | Initializing Elasticsearch...
+2025-11-21 00:41:05,185 | INFO     | app | Elasticsearch ready.
+2025-11-21 00:41:05,200 | INFO     | app | BookingExpiryService started
+2025-11-21 00:41:05,222 | INFO     | app | Notification worker started.

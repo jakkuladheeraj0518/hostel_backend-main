@@ -46,7 +46,7 @@ class PaymentVerification(BaseModel):
 class CreateOrderRequest(BaseModel):
     amount: float
     currency: str = "INR"
-    user_id: int
+    #user_id: int
     hostel_id: int
     description: Optional[str] = None
 

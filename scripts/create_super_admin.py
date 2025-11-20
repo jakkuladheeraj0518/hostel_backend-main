@@ -60,7 +60,7 @@ def main():
         if not hostel:
             print("🏠 No hostel found. Creating default hostel...")
             # `hostel_name` is required by the Hostels table (not-null). Provide it here.
-            hostel = Hostel(hostel_name="Default Hostel", name="Default Hostel", address="Auto-created by create_super_admin")
+            hostel = Hostel(hostel_name="Default Hostel", name="Default Hostel", full_address="Auto-created by create_super_admin")
             db.add(hostel)
             try:
                 db.commit()

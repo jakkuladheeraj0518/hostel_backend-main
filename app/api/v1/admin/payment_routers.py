@@ -1,40 +1,27 @@
-# from fastapi import APIRouter, Depends, HTTPException
-# from sqlalchemy.orm import Session
-# from app.schemas.payment_schemas import PaymentCreate, RazorpayOrderResponse
-# from app.services.payment_services import PaymentService
-# from app.database import get_db
-# from app.config import settings
-
-# router = APIRouter(prefix="/payments", tags=["Payments"])
-
-# @router.post("/razorpay/create-order", response_model=RazorpayOrderResponse)
-# def create_order(payment: PaymentCreate, db: Session = Depends(get_db)):
-#     record = PaymentService.create_razorpay_order(payment, db)
-#     return RazorpayOrderResponse(
-#         order_id=record.order_id,
-#         gateway_order_id=record.gateway_order_id,
-#         amount=record.amount,
-#         currency=record.currency,
-#         key_id=settings.RAZORPAY_KEY_ID,
-#         payment_record_id=record.id
-#     )
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
-from app.core.database import SessionLocal
+from app.core.database import get_db
 from app.schemas.payment_schemas import CreateOrderRequest
 from app.services.payment_services import RazorpayService
+from app.core.security import get_current_user
+from app.models.user import User
 
 router = APIRouter(prefix="/payments/razorpay", tags=["Razorpay Payments"])
 
+
 @router.post("/create-order")
-def create_razorpay_order(request: CreateOrderRequest):
-    db: Session = SessionLocal()
+def create_razorpay_order(
+    request: CreateOrderRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)    # 🔥 FIXED
+):
     try:
-        result = RazorpayService.create_order(db=db, request=request)
-        return result
+        return RazorpayService.create_order(
+            db=db,
+            request=request,
+            current_user=current_user                  # 🔥 passes real user
+        )
     except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Payment creation failed: {str(e)}")
-    finally:
-        db.close()

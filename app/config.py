@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     # Database
     # NOTE: conflict markers were present here. Using a neutral placeholder value.
     # Replace this via environment variable or .env for your local password.
-    DATABASE_URL: str = "postgresql://postgres:12345678@localhost/hostelA"
+    DATABASE_URL: str = "postgresql://postgres:1234@localhost/hostelB"
     COMMISSION_RATE: float = 0.15
 
     ELASTICSEARCH_URL: Optional[str] = None
@@ -88,6 +88,8 @@ class Settings(BaseSettings):
 
     # API Keys
     API_KEY: Optional[str] = None
+    RAZORPAY_KEY_ID: Optional[str] = None
+    RAZORPAY_KEY_SECRET: Optional[str] = None
     GOOGLE_MAPS_API_KEY: Optional[str] = None
 
     # Password reset

@@ -39,5 +39,7 @@ class User(Base):
     admin_hostel_mappings = relationship("AdminHostelMapping", back_populates="admin")
     session_contexts = relationship("SessionContext", back_populates="user")
     password_reset_tokens = relationship("PasswordResetToken", back_populates="user")
+    payments = relationship("Payment", back_populates="user")
+    invoices = relationship("Invoice", back_populates="user")
 
     

@@ -46,6 +46,7 @@ class PaymentStatus(str, enum.Enum):
     succeeded = "succeeded"
     failed = "failed"
     refunded = "refunded"
+    initiated = "initiated"
     # SUCCESS = "success"
 
 
@@ -163,7 +164,7 @@ class Payment(Base):
     # Foreign Keys
     # -----------------------------------
     subscription_id = Column(String, ForeignKey("subscriptions.id", ondelete="CASCADE"), nullable=True)
-    user_id = Column(Integer, ForeignKey("customers.id"), nullable=True)         # MERGED
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)         # MERGED
     hostel_id = Column(Integer, ForeignKey("hostels.id"), nullable=False)        # FROM BOTH MODELS
 
     # -----------------------------------
@@ -207,8 +208,9 @@ class Payment(Base):
     # -----------------------------------
     # Relationships
     # -----------------------------------
-    subscription = relationship("Subscription", back_populates="payments")        # BASE MODEL
-    customer = relationship("Customer")                                           # MERGED
+    subscription = relationship("Subscription", back_populates="payments")
+    user = relationship("User", back_populates="payments")        # BASE MODEL
+    # customer = relationship("Customer")                                           # MERGED
     hostel = relationship("Hostel", back_populates="payments")                    # BOTH MODELS
 
     transactions = relationship(

@@ -220,10 +220,10 @@ app.include_router(fee_structure_configuration.router)
 app.include_router(payment_routes.router)
 
 from app.api.v1.admin import invoices, transactions, receipts, refunds
-app.include_router(invoices.router, prefix="/invoices")
-app.include_router(transactions.router, prefix="/transactions")
-app.include_router(receipts.router, prefix="/receipts")
-app.include_router(refunds.router, prefix="/refunds")
+app.include_router(invoices.router, prefix="/invoices",tags=["Invoices"]    )
+app.include_router(transactions.router, prefix="/transactions", tags=["Transactions"])
+app.include_router(receipts.router, prefix="/receipts", tags=["Receipts"])
+app.include_router(refunds.router, prefix="/refunds", tags=["Refunds"])
 
 from app.api.v1.admin.ledger_routes import router as ledger_router
 app.include_router(ledger_router)

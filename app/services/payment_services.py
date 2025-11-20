@@ -1,67 +1,25 @@
-# import json
-# from datetime import datetime
-# import razorpay
-# from fastapi import HTTPException
-# from sqlalchemy.orm import Session
-# from app.models.payment_models import Payment, Refund, PaymentStatus, PaymentGateway, PaymentMethod
-# from app.schemas.payment_schemas import PaymentCreate, RefundCreate
-# from app.utils.helpers import generate_order_id
-# from app.config import settings
-# from app.api.v1.routers.razorpay_client import razorpay_client
-
-
-# razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
-
-# class PaymentService:
-#     @staticmethod
-#     def create_razorpay_order(payment: PaymentCreate, db: Session):
-#         try:
-#             order_id = generate_order_id()
-#             razorpay_order = razorpay_client.order.create({
-#                 "amount": int(payment.amount * 100),
-#                 "currency": payment.currency,
-#                 "receipt": order_id,
-#                 "notes": payment.notes or {}
-#             })
-#             db_payment = Payment(
-#                 order_id=order_id,
-#                 gateway_order_id=razorpay_order["id"],
-#                 gateway=PaymentGateway.RAZORPAY,
-#                 amount=payment.amount,
-#                 currency=payment.currency,
-#                 status=PaymentStatus.INITIATED,
-#                 user_id=payment.user_id,
-#                 hostel_id=payment.hostel_id,
-#                 description=payment.description,
-#                 notes=json.dumps(payment.notes),
-#                 gateway_response=json.dumps(razorpay_order)
-#             )
-#             db.add(db_payment)
-#             db.commit()
-#             db.refresh(db_payment)
-#             return db_payment
-#         except Exception as e:
-#             db.rollback()
-#             raise HTTPException(status_code=500, detail=str(e))
 from fastapi import HTTPException
 from app.repositories.razorpay_repositorys import RazorpayRepository
 from app.models.subscription import Payment
+from app.models.subscription import PaymentStatus
+from app.models.user import User
 from datetime import datetime
-import razorpay, os, uuid
+import  os, uuid
+from app.core.razorpay_client import razorpay_client
 
 # ✅ Razorpay client setup
-razorpay_client = razorpay.Client(auth=(
-    os.getenv("RAZORPAY_KEY_ID"),
-    os.getenv("RAZORPAY_KEY_SECRET")
-))
+# razorpay_client = razorpay.Client(auth=(
+#     os.getenv("RAZORPAY_KEY_ID"),
+#     os.getenv("RAZORPAY_KEY_SECRET")
+# ))
 
 class RazorpayService:
     @staticmethod
-    def create_order(db, request):
+    def create_order(db, request, current_user):
         # ✅ Validate user
-        user = RazorpayRepository.get_user_by_id(db, request.user_id)
-        if not user:
-            raise HTTPException(status_code=400, detail="Invalid user_id: User does not exist")
+        # user = RazorpayRepository.get_user_by_id(db, request.user_id)
+        # if not user:
+        #     raise HTTPException(status_code=400, detail="Invalid user_id: User does not exist")
 
         # ✅ Validate hostel
         hostel = RazorpayRepository.get_hostel_by_id(db, request.hostel_id)
@@ -74,7 +32,7 @@ class RazorpayService:
             "currency": request.currency,
             "receipt": f"rcpt_{uuid.uuid4().hex[:8]}",
             "notes": {
-                "user_id": request.user_id,
+                "user_id":current_user.id,
                 "hostel_id": request.hostel_id,
                 "description": request.description
             },
@@ -90,8 +48,9 @@ class RazorpayService:
             gateway="razorpay",
             amount=request.amount,
             currency=request.currency,
-            status="initiated",
-            user_id=request.user_id,
+            status="pending",
+            user_id=current_user.id,
+            # user_id=request.user_id,
             hostel_id=request.hostel_id,
             description=request.description,
             created_at=datetime.utcnow()
