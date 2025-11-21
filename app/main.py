@@ -12,7 +12,14 @@ from fastapi.staticfiles import StaticFiles
 from app.config import settings
 from app.core.logger import setup_logger
 from app.core.database import init_db
-from app.core.elasticsearch import init_elasticsearch_indices
+
+# Optional elasticsearch import
+try:
+    from app.core.elasticsearch import init_elasticsearch_indices
+    ELASTICSEARCH_AVAILABLE = True
+except ImportError:
+    ELASTICSEARCH_AVAILABLE = False
+    print("⚠️  Elasticsearch not available - search features will be disabled")
 
 from app.services.booking_expiry_service import BookingExpiryService
 from app.core.database import SessionLocal
@@ -162,9 +169,13 @@ async def startup_event():
     init_db()
     logger.info("Database initialized.")
 
-    logger.info("Initializing Elasticsearch...")
-    init_elasticsearch_indices()
-    logger.info("Elasticsearch ready.")
+    # Initialize Elasticsearch if available
+    if ELASTICSEARCH_AVAILABLE:
+        logger.info("Initializing Elasticsearch...")
+        init_elasticsearch_indices()
+        logger.info("Elasticsearch ready.")
+    else:
+        logger.warning("Elasticsearch not available - skipping initialization")
 
     # ⭐ Start expiry service
     expiry = BookingExpiryService(SessionLocal)

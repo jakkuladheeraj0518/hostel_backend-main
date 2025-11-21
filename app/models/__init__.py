@@ -19,9 +19,11 @@ from app.models.password_reset import PasswordResetToken
 # Complaint Models
 from app.models.complaint import Complaint, ComplaintNote
 
+# Attendance Model
+from app.models.attendance import Attendance
+
 # Report & Analytics Models
 from app.models.reports import (
-    Attendance,
     FinancialTransaction,
     HostelBooking,
     HostelProfileView,

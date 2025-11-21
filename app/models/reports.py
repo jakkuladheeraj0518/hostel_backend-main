@@ -2,18 +2,8 @@ from sqlalchemy import Column, Integer, String, DateTime, Date, Numeric, Boolean
 from datetime import datetime
 from app.core.database import Base
 
-class Attendance(Base):
-    __tablename__ = "attendance"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    hostel_id = Column(Integer, nullable=False, index=True)
-    student_id = Column(Integer, nullable=False, index=True)
-    student_name = Column(String(255))
-    date = Column(Date, nullable=False, index=True)
-    is_present = Column(Boolean, default=True)
-    marked_by = Column(String(255))
-    marked_at = Column(DateTime, default=datetime.utcnow)
-    notes = Column(Text)
+# Attendance model moved to app/models/attendance.py for better organization
+# Import it from there if needed: from app.models.attendance import Attendance
 
 class FinancialTransaction(Base):
     __tablename__ = "financial_transactions"

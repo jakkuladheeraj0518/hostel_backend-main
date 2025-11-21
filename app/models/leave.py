@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import ForeignKey, String, Date
 from datetime import date
-from app.models import Base
+from app.core.database import Base
 
 class LeaveRequest(Base):
     __tablename__ = "leave_requests"

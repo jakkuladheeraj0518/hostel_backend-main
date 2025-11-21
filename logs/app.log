@@ -7313,3 +7313,17 @@ DETAIL:  Key (location_id)=(0) is not present in table "locations".
 2025-11-21 07:43:55,794 | INFO     | app | Elasticsearch ready.
 2025-11-21 07:43:55,801 | INFO     | app | BookingExpiryService started
 2025-11-21 07:43:55,818 | INFO     | app | Notification worker started.
+2025-11-21 12:48:37,839 | WARNING  | app.services.sms_service | Twilio not installed. Install with: pip install twilio
+2025-11-21 12:50:19,092 | WARNING  | app.services.sms_service | Twilio not installed. Install with: pip install twilio
+2025-11-21 12:50:54,799 | WARNING  | app.services.sms_service | Twilio not installed. Install with: pip install twilio
+2025-11-21 12:52:23,718 | WARNING  | app.services.sms_service | Twilio not installed. Install with: pip install twilio
+2025-11-21 12:53:08,908 | WARNING  | app.services.sms_service | Twilio not installed. Install with: pip install twilio
+2025-11-21 12:53:59,283 | WARNING  | app.services.sms_service | Twilio not installed. Install with: pip install twilio
+2025-11-21 13:08:47,135 | WARNING  | app.services.sms_service | Twilio not installed. Install with: pip install twilio
+2025-11-21 13:13:23,768 | WARNING  | app.services.sms_service | Twilio not installed. Install with: pip install twilio
+2025-11-21 13:14:12,437 | WARNING  | app.services.sms_service | Twilio not installed. Install with: pip install twilio
+2025-11-21 13:14:15,014 | WARNING  | app.services.sms_service | Twilio not installed. Install with: pip install twilio
+2025-11-21 13:14:18,903 | WARNING  | app.services.sms_service | Twilio not installed. Install with: pip install twilio
+2025-11-21 13:14:21,620 | WARNING  | app.services.sms_service | Twilio not installed. Install with: pip install twilio
+2025-11-21 13:14:24,098 | WARNING  | app.services.sms_service | Twilio not installed. Install with: pip install twilio
+2025-11-21 13:15:55,022 | WARNING  | app.services.sms_service | Twilio not installed. Install with: pip install twilio
