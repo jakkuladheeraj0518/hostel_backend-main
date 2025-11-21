@@ -3,6 +3,7 @@ from sqlalchemy import text, and_, or_
 from typing import List, Tuple
 from app.schemas.search import HostelSearchFilters, HostelSearchSort, HostelSearchResult
 import math
+from decimal import Decimal
 
 class SearchService:
     
@@ -111,21 +112,21 @@ class SearchService:
 
             hostels.append({
                 'id': r.get('id'),
-                'name': r.get('hostel_name'),
-                'description': r.get('description'),
-                'location': r.get('full_address'),
-                'city': r.get('city'),
-                'area': None,
-                'pincode': None,
-                'latitude': None,
-                'longitude': None,
-                'gender': None,
-                'contact_phone': r.get('contact_phone'),
-                'contact_email': r.get('contact_email'),
+                'name': r.get('hostel_name') or "",
+                'description': r.get('description') or "",
+                'location': r.get('full_address') or "",
+                'city': r.get('city') or "",
+                'area': r.get('area') if r.get('area') is not None else "",
+                'pincode': r.get('pincode') if r.get('pincode') is not None else "",
+                'latitude': r.get('latitude'),
+                'longitude': r.get('longitude'),
+                'gender': r.get('gender') or "",
+                'contact_phone': r.get('contact_phone') or "",
+                'contact_email': r.get('contact_email') or "",
                 'available_beds': available_beds,
                 'total_beds': total_beds,
-                'price_range_min': None,
-                'price_range_max': None,
+                'price_range_min': Decimal(0),
+                'price_range_max': Decimal(0),
                 'rating': 0.0,
                 'review_count': 0,
                 'amenities': amenities_list,

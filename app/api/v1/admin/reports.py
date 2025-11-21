@@ -144,10 +144,10 @@ def get_student_demographics(hostel_id: int, db: Session = Depends(get_db)):
     # This would require a students table - simplified version
     result = db.execute(text("""
         SELECT 
-            COUNT(DISTINCT student_id) as total_students
+            COUNT(DISTINCT user_id) as total_students
         FROM attendance
         WHERE hostel_id = :hostel_id
-        AND date >= CURRENT_DATE - INTERVAL '30 days'
+        AND attendance_date >= CURRENT_DATE - INTERVAL '30 days'
     """), {'hostel_id': hostel_id}).first()
     
     return {

@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     # Database
     # NOTE: conflict markers were present here. Using a neutral placeholder value.
     # Replace this via environment variable or .env for your local password.
-    DATABASE_URL: str = "postgresql://postgres:1234@localhost/hostelB"
+    DATABASE_URL: str = "postgresql://postgres:dheeraj123@localhost/hostelB"
     COMMISSION_RATE: float = 0.15
 
     ELASTICSEARCH_URL: Optional[str] = None
