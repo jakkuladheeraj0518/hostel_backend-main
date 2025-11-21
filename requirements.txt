@@ -18,6 +18,7 @@ typing-extensions==4.12.2
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.9
+PyJWT==2.10.1
 
 # ==== UTILITIES ====
 python-dotenv==1.0.1
@@ -25,6 +26,8 @@ loguru==0.7.2
 email-validator==2.3.0
 httpx==0.25.2
 aiofiles==23.2.1
+requests==2.32.5
+dnspython==2.8.0
 
 # ==== DATA / SCIENTIFIC ====
 pandas==2.1.3
@@ -40,6 +43,8 @@ qrcode==7.4.2
 # ==== CACHE / RATE LIMIT ====
 redis==4.5.4
 fastapi-limiter==0.1.6
+slowapi==0.1.9
+limits==5.6.0
 
 # ==== THIRD-PARTY APIs ====
 twilio==8.10.0
@@ -51,3 +56,9 @@ elasticsearch==8.11.0
 
 # ==== EMAIL ====
 fastapi_mail==1.2.6
+
+# ==== ADDITIONAL DEPENDENCIES (from integrate) ====
+watchfiles==1.1.1
+PyYAML==6.0.3
+Mako==1.3.10
+wrapt==2.0.1
