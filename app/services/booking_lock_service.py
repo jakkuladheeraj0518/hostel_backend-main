@@ -28,7 +28,8 @@ class BookingLockService:
         try:
             conflict = db.query(Booking).filter(
                 Booking.room_id == room_id,
-                Booking.status.in_([BookingStatus.confirmed, BookingStatus.pending]),
+                # FIX: Use .value to compare strings in the DB
+                Booking.status.in_([BookingStatus.confirmed.value, BookingStatus.pending.value]),
                 Booking.check_in < check_out,
                 Booking.check_out > check_in
             ).first()
@@ -46,4 +47,3 @@ class BookingLockService:
         Placeholder for explicit unlock logic if needed.
         """
         pass
-

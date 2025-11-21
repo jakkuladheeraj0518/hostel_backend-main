@@ -77,8 +77,9 @@ class BookingExpiryService:
             expiry_threshold = datetime.utcnow() - timedelta(hours=24)
             
             # Find pending bookings that are older than 24 hours
+            # FIX: Use .value to ensure we compare String to String
             expired_bookings = db.query(Booking).filter(
-                Booking.status == BookingStatus.pending,
+                Booking.status == BookingStatus.pending.value,
                 Booking.created_at < expiry_threshold
             ).all()
             
@@ -87,7 +88,8 @@ class BookingExpiryService:
                 
                 for booking in expired_bookings:
                     try:
-                        booking.status = BookingStatus.cancelled
+                        # FIX: Use .value for assignment as well
+                        booking.status = BookingStatus.cancelled.value
                         db.add(booking)
                         logger.info(f"Expired booking {booking.id}")
                     except Exception as e:
@@ -116,7 +118,8 @@ class BookingExpiryService:
         try:
             booking = db.query(Booking).filter(Booking.id == booking_id).first()
             if booking:
-                booking.status = BookingStatus.cancelled
+                # FIX: Use .value
+                booking.status = BookingStatus.cancelled.value
                 db.add(booking)
                 db.commit()
                 db.refresh(booking)

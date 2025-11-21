@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 2025-11-16 20:43:54,128 | INFO     | app | Creating database tables automatically...
 2025-11-16 20:43:55,240 | INFO     | app | ✓ All database tables created successfully!
 2025-11-16 20:44:13,460 | INFO     | app | Creating database tables automatically...
@@ -7427,3 +7428,12 @@ DETAIL:  Key (location_id)=(0) is not present in table "locations".
 2025-11-21 15:09:04,088 | INFO     | app | Elasticsearch ready.
 2025-11-21 15:09:04,104 | INFO     | app | BookingExpiryService started
 2025-11-21 15:09:04,185 | INFO     | app | Notification worker started.
+=======
+2025-11-21 14:49:40,833 | INFO     | app | Initializing database...
+2025-11-21 14:51:17,286 | INFO     | app | Initializing database...
+2025-11-21 14:51:18,685 | INFO     | app | Database initialized.
+2025-11-21 14:51:18,688 | INFO     | app | Initializing Elasticsearch...
+2025-11-21 14:51:18,692 | INFO     | app | Elasticsearch ready.
+2025-11-21 14:51:18,715 | INFO     | app | BookingExpiryService started
+2025-11-21 14:51:18,807 | INFO     | app | Notification worker started.
+>>>>>>> Stashed changes

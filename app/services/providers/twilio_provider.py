@@ -1,12 +1,7 @@
 import os
 from typing import Optional, Dict, Any
 
-try:
-    from twilio.rest import Client
-    TWILIO_AVAILABLE = True
-except ImportError:
-    TWILIO_AVAILABLE = False
-    Client = None
+from twilio.rest import Client
 
 from app.services.providers.base_provider import ProviderInterface
 

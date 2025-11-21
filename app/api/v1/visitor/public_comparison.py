@@ -21,7 +21,7 @@ def compare_hostels(
     Compare up to 4 hostels and return essential details:
     - Basic info
     - Amenities
-    - Pricing (min/max/average)
+    - Pricing (min/max/average price)
     - City / location
     - Room types
     - Availability summary
@@ -52,18 +52,7 @@ def compare_hostels(
         # Fetch rooms of hostel
         rooms = db.query(Room).filter(Room.hostel_id == hostel.id).all()
 
-        # -------------------------------
-        # FIXED PRICING EXTRACTION LOGIC
-        # -------------------------------
-        prices = []
-        for r in rooms:
-            if r.monthly_price:
-                prices.append(r.monthly_price)
-            if r.quarterly_price:
-                prices.append(r.quarterly_price)
-            if r.annual_price:
-                prices.append(r.annual_price)
-
+        prices = [r.price for r in rooms if r.price is not None]
         available_beds = sum(r.available_beds for r in rooms)
         available_rooms = len([r for r in rooms if r.available_beds > 0])
 
@@ -77,7 +66,7 @@ def compare_hostels(
             except Exception:
                 amenities_list = hostel.amenities.split(",")
 
-        # Computed score
+        # Computed score (simple logic)
         hostel_score = 0
         if prices:
             hostel_score += 50
@@ -95,21 +84,21 @@ def compare_hostels(
             "gender_type": hostel.gender_type,
             "amenities": amenities_list,
 
-            # Pricing summary
+            # Pricing
             "min_price": min(prices) if prices else None,
             "max_price": max(prices) if prices else None,
             "avg_price": round(sum(prices) / len(prices), 2) if prices else None,
 
             # Rooms & Availability
             "total_rooms": len(rooms),
-            "room_types": list({r.room_type.value for r in rooms}),
+            "room_types": list({r.room_type for r in rooms}),
             "available_beds": available_beds,
             "available_rooms": available_rooms,
 
             # Scoring
             "hostel_score": hostel_score,
 
-            # Dummy distance (until GPS added)
+            # Dummy location score until real GPS support
             "distance_dummy_km": 1.0,
         }
 

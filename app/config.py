@@ -24,9 +24,13 @@ env_path = Path(__file__).parent.parent / ".env"
 
 class Settings(BaseSettings):
     # Database
+<<<<<<< Updated upstream
     # NOTE: conflict markers were present here. Using a neutral placeholder value.
     # Replace this via environment variable or .env for your local password.
     DATABASE_URL: str = "postgresql://postgres:dheeraj123@localhost/hostelB"
+=======
+    DATABASE_URL: str = "postgresql://postgres:abhi8851013k@localhost/hostelB"
+>>>>>>> Stashed changes
     COMMISSION_RATE: float = 0.15
 
     ELASTICSEARCH_URL: Optional[str] = None
@@ -146,14 +150,54 @@ def get_db():
 def init_db():
     """
     Initialize database by creating all tables.
-    Seed data removed as requested.
-    """
-    # Import models so metadata can detect them
-    from app.models import (
-        user, hostel, admin_hostel_mapping,
-        session_context, permission, audit_log,
-        refresh_token, approval_request, password_reset,
-        complaint, reports
-    )
 
+    We must import every model module so SQLAlchemy registers all
+    mappers before calling Base.metadata.create_all().
+    """
+
+    # Core / user & auth
+    import app.models.user
+    import app.models.hostel
+    import app.models.admin
+    import app.models.admin_hostel_mapping
+    import app.models.session_context
+    import app.models.permission
+    import app.models.audit_log
+    import app.models.refresh_token
+    import app.models.approval_request
+    import app.models.password_reset
+
+    # Rooms / beds / students / supervisors
+    import app.models.rooms
+    import app.models.beds
+    import app.models.students
+    import app.models.supervisors
+
+    # Booking & waitlist
+    import app.models.booking
+    import app.models.waitlist
+
+    # Finance / payments / subscriptions / fee structure
+    import app.models.fee_structure_models
+    import app.models.payment_models
+    import app.models.payment
+    import app.models.subscription
+
+    # Mess menu, announcements, notifications
+    import app.models.mess_menu
+    import app.models.announcement
+    import app.models.notification
+
+    # Reports & analytics
+    import app.models.reports
+    import app.models.report_models
+    import app.models.shift_coordination_models
+
+    # NOTE: We intentionally do NOT import app.models.search here
+    # because it defines another AdminHostelMapping with the same
+    # __tablename__ ("admin_hostel_mappings"), causing a duplicate
+    # table error. The real mapping used by the app is in
+    # app.models.admin_hostel_mapping.
+
+    # Finally, create all tables
     Base.metadata.create_all(bind=engine)

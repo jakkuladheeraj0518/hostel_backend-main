@@ -1,14 +1,8 @@
 import os
 from typing import Optional, Dict, Any
 
-try:
-    from sendgrid import SendGridAPIClient
-    from sendgrid.helpers.mail import Mail
-    SENDGRID_AVAILABLE = True
-except ImportError:
-    SENDGRID_AVAILABLE = False
-    SendGridAPIClient = None
-    Mail = None
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 from app.services.providers.base_provider import ProviderInterface
 

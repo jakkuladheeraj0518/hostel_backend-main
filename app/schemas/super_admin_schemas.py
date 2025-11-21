@@ -62,10 +62,12 @@ class HostelUpdate(BaseModel):
 
 class HostelUpsert(HostelBase):
     id: Optional[int] = None
+    location_id: Optional[int] = None
 
 class HostelResponse(HostelBase):
     id: int
     created_at: datetime
+    location_id: Optional[int] = None
     class Config:
         from_attributes = True
 

@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+venv/
+env/
+.venv/
+
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+logs/
+*.log
+
+# Uploads / Static user content
+uploads/
+invoices/
+receipts/
+student_docs/
+
+# SQLite (if used locally for testing)
+*.sqlite
+*.sqlite3
+*.db
+
+# Pytest / Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Celery
+celerybeat-schedule
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# System
+.DS_Store
+Thumbs.db

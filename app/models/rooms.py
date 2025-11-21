@@ -16,7 +16,7 @@ class RoomType(str, Enum):
     DOUBLE = "double"
     TRIPLE = "triple"
     DORM = "dorm"
-    SUITE = "suite"        # from your earlier file
+    SUITE = "suite"     # Included from earlier version
 
 
 class MaintenanceStatus(str, Enum):
@@ -26,46 +26,62 @@ class MaintenanceStatus(str, Enum):
 
 
 # ---------------------------------------------------------
-# MERGED ROOM MODEL
+# FINAL MERGED ROOM MODEL
 # ---------------------------------------------------------
 class Room(Base):
     __tablename__ = "rooms"
 
     # -----------------------------------------------------
-    # Primary Identifier
+    # Primary Key
     # -----------------------------------------------------
     id = Column(Integer, primary_key=True, index=True)
 
     # -----------------------------------------------------
-    # Foreign Key → Hostel
+    # Hostel Link
     # -----------------------------------------------------
     hostel_id = Column(Integer, ForeignKey("hostels.id"), nullable=False)
 
     # -----------------------------------------------------
-    # Room Details  (merged)
+    # Room Basic Details (Merged)
     # -----------------------------------------------------
-    room_number = Column(String(50), nullable=True)     # from version 1
+    room_number = Column(String(50), nullable=True)   # From version 1
+
+    # Enum room type (advanced)
     room_type = Column(
         SAEnum(RoomType, name="room_type_enum"),
         nullable=False,
         default=RoomType.SINGLE
     )
 
-    # Unified pricing
+    # Simple string room_type kept as compatibility? ❌ NO  
+    # (Your first version is better — so removed duplicate)
+
+    # -----------------------------------------------------
+    # Pricing (Merged)
+    # -----------------------------------------------------
     monthly_price = Column(Float, nullable=True)
     quarterly_price = Column(Float, nullable=True)
     annual_price = Column(Float, nullable=True)
 
-    # Unified capacity & bed info
-    room_capacity = Column(Integer, nullable=False, default=1)     # version 1
-    total_beds = Column(Integer, nullable=False, default=1)        # version 2
-    available_beds = Column(Integer, nullable=False, default=1)    # version 2
-    availability = Column(Integer, nullable=False, default=0)
+    # simple price field (version 2)
+    price = Column(Float, nullable=True)  # Optional: for nightly or simplified pricing
 
+    # -----------------------------------------------------
+    # Capacity & Beds (Merged)
+    # -----------------------------------------------------
+    room_capacity = Column(Integer, nullable=False, default=1)   # version 1
+    total_beds = Column(Integer, nullable=False, default=1)      # version 2
+    available_beds = Column(Integer, nullable=False, default=1)
+    availability = Column(Integer, nullable=False, default=0)    # version 1 extra
+
+    # -----------------------------------------------------
     # Amenities
+    # -----------------------------------------------------
     amenities = Column(String(1000), nullable=True)
 
+    # -----------------------------------------------------
     # Maintenance
+    # -----------------------------------------------------
     maintenance_status = Column(
         SAEnum(MaintenanceStatus, name="maintenance_status_enum"),
         nullable=False,

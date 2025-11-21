@@ -6,8 +6,6 @@ from app.core.database import get_db
 from app.models.booking import Booking, BookingStatus
 from app.models.rooms import Room
 from app.services.booking_service import BookingService   # ⭐ REQUIRED IMPORT
-from app.schemas.booking import BookingUpdate
-
 
 router = APIRouter(prefix="/calendar", tags=["Calendar"])
 
@@ -42,9 +40,9 @@ def room_calendar(room_id: int, db: Session = Depends(get_db)):
     for b in bookings:
         days = generate_date_range(b.check_in.date(), b.check_out.date())
 
-        if b.status == BookingStatus.confirmed:
+        if b.status == BookingStatus.confirmed.value:
             booked_dates.extend(days)
-        elif b.status == BookingStatus.pending:
+        elif b.status == BookingStatus.pending.value:
             pending_dates.extend(days)
 
     return {
@@ -83,7 +81,7 @@ def hostel_calendar(hostel_id: int, db: Session = Depends(get_db)):
         for b in bookings:
             days = generate_date_range(b.check_in.date(), b.check_out.date())
 
-            if b.status == BookingStatus.confirmed:
+            if b.status == BookingStatus.confirmed.value:
                 booked_dates.extend(days)
             elif b.status == BookingStatus.pending:
                 pending_dates.extend(days)
@@ -165,12 +163,11 @@ def apply_drag_drop(
     - Uses BookingService.admin_modify_booking()
     """
 
-    updates = BookingUpdate(
-    room_id=new_room_id,
-    check_in=new_check_in,
-    check_out=new_check_out
-)
-
+    updates = {
+        "room_id": new_room_id,
+        "check_in": new_check_in,
+        "check_out": new_check_out
+    }
 
     updated = BookingService.admin_modify_booking(
         db=db,

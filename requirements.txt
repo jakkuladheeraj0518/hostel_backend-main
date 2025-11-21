@@ -1,64 +1,59 @@
-# ==== CORE FRAMEWORK ====
+# FastAPI & Server
 fastapi==0.115.0
 uvicorn[standard]==0.30.0
 starlette==0.37.2
 
-# ==== DATABASE ====
+# Database & ORM
 SQLAlchemy==2.0.31
 psycopg2-binary==2.9.9
 sqlmodel==0.0.18
 alembic==1.13.2
 
-# ==== PYDANTIC / SETTINGS ====
+# Validation & Settings
 pydantic==2.8.2
 pydantic-settings==2.2.1
 typing-extensions==4.12.2
+email-validator>=2.0.0
 
-# ==== AUTH & SECURITY ====
+# Auth & Security
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.9
-PyJWT==2.10.1
 
-# ==== UTILITIES ====
+# Environment
 python-dotenv==1.0.1
-loguru==0.7.2
-email-validator==2.3.0
-httpx==0.25.2
-aiofiles==23.2.1
-requests==2.32.5
-dnspython==2.8.0
 
-# ==== DATA / SCIENTIFIC ====
-pandas==2.1.3
-numpy==1.26.2
+# Logging
+loguru==0.7.2
+
+# Async / HTTP
+httpx==0.27.2
+aiofiles==23.2.1
+
+# Data Processing
+pandas==2.2.2
+numpy==1.26.4
 python-dateutil==2.8.2
 
-# ==== FILES / REPORTS ====
-reportlab==3.6.12
-openpyxl==3.1.5
+# File Handling
 Pillow==10.4.0
+openpyxl==3.1.5
+reportlab==3.6.12
 qrcode==7.4.2
 
-# ==== CACHE / RATE LIMIT ====
-redis==4.5.4
+# Redis & Rate Limiting
+redis==5.0.1
 fastapi-limiter==0.1.6
-slowapi==0.1.9
-limits==5.6.0
 
-# ==== THIRD-PARTY APIs ====
+# Email & SMS APIs
 twilio==8.10.0
 sendgrid==6.11.0
-razorpay==1.4.0
 
-# ==== SEARCH ====
-elasticsearch==8.11.0
+# Payment Gateway
+razorpay==1.4.2
 
-# ==== EMAIL ====
-fastapi_mail==1.2.6
+# Elasticsearch
+elasticsearch==8.14.0
 
-# ==== ADDITIONAL DEPENDENCIES (from integrate) ====
-watchfiles==1.1.1
-PyYAML==6.0.3
-Mako==1.3.10
-wrapt==2.0.1
+# FastAPI Email (UPDATED to fix install error)
+fastapi-mail>=1.4.1

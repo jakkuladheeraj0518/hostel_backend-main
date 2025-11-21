@@ -10,6 +10,10 @@ from app.services.refund_service import RefundService
 from app.services.waitlist_service import WaitlistService
 
 
+from sqlalchemy.orm import Session
+from app.models.booking import BookingRequest, BookingStatus
+from app.schemas.booking_schema import BookingCreate
+
 class BookingService:
 
     # ---------------------------------------------------------
@@ -20,11 +24,10 @@ class BookingService:
 
         # 1️⃣ Lock the room row
         locked_room = BookingLockService.lock_room(db, data.room_id)
-        
         if not locked_room:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Room not found or is currently locked by another transaction"
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Room is being booked by another user. Please try again."
             )
 
         # 2️⃣ Check double booking safely
@@ -61,7 +64,7 @@ class BookingService:
         if not booking:
             raise HTTPException(404, "Booking not found")
 
-        if booking.status in [BookingStatus.cancelled, BookingStatus.rejected]:
+        if booking.status in [BookingStatus.cancelled.value, BookingStatus.rejected.value]:
             raise HTTPException(400, "Cannot modify cancelled/rejected booking")
 
         # If changing room or dates → check overlap
@@ -89,7 +92,7 @@ class BookingService:
         if not booking:
             raise HTTPException(404, "Booking not found")
 
-        if booking.status in [BookingStatus.cancelled, BookingStatus.rejected]:
+        if booking.status in [BookingStatus.cancelled.value, BookingStatus.rejected.value]:
             return booking  # already cancelled
 
         # ⭐ Calculate refund
@@ -99,7 +102,7 @@ class BookingService:
         )
 
         # ⭐ Cancel booking
-        booking.status = BookingStatus.cancelled
+        booking.status = BookingStatus.cancelled.value
         db.commit()
         db.refresh(booking)
 
@@ -128,7 +131,7 @@ class BookingService:
         if not booking:
             raise HTTPException(404, "Booking not found")
 
-        booking.status = BookingStatus.confirmed
+        booking.status = BookingStatus.confirmed.value
         db.commit()
         db.refresh(booking)
         return booking
@@ -193,3 +196,32 @@ class BookingService:
         except Exception as e:
             db.rollback()
             raise HTTPException(500, f"Admin modification failed: {str(e)}")
+
+def create_booking(db: Session, user_id: int, booking_data: BookingCreate):
+    booking = BookingRequest(
+        user_id=user_id,
+        full_name=booking_data.full_name,
+        phone_number=booking_data.phone_number,
+        email=booking_data.email,
+        id_type=booking_data.id_type,
+        id_number=booking_data.id_number,
+        id_document=booking_data.id_document,
+        emergency_contact_name=booking_data.emergency_contact_name,
+        emergency_contact_number=booking_data.emergency_contact_number,
+        emergency_contact_relation=booking_data.emergency_contact_relation,
+        special_requirements=booking_data.special_requirements,
+    )
+    db.add(booking)
+    db.commit()
+    db.refresh(booking)
+    return booking
+
+
+def update_booking_status(db: Session, booking_id: int, status: BookingStatus):
+    booking = db.query(BookingRequest).filter(BookingRequest.id == booking_id).first()
+    if not booking:
+        return None
+    booking.status = status
+    db.commit()
+    db.refresh(booking)
+    return booking

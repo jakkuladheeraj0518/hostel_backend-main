@@ -59,6 +59,10 @@ class UserRepository(BaseRepository):
         except Exception:
             hostel_id = None
 
+        # Ensure 'name' is populated since it's nullable=False in the DB model
+        # Use full_name if available, else fallback to username
+        user_name_val = user_data.full_name or user_data.username
+
         db_user = User(
             email=user_data.email,
             phone_number=getattr(user_data, 'phone_number', None),
@@ -66,8 +70,10 @@ class UserRepository(BaseRepository):
             username=user_data.username,
             hashed_password=hashed_password,
             full_name=user_data.full_name,
+            name=user_name_val,  # FIX: Explicitly set the required 'name' field
             role=user_data.role,
-            hostel_id=hostel_id
+            hostel_id=hostel_id,
+            is_active=getattr(user_data, 'is_active', False) # Default to False if not specified, logic handles auto-activation
         )
         self.db.add(db_user)
         try:

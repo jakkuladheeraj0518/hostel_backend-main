@@ -10,6 +10,8 @@ class BookingStatus(str, Enum):
     rejected = "rejected"
 
 
+
+
 class BookingCreate(BaseModel):
     visitor_id: int
     hostel_id: int
@@ -18,15 +20,30 @@ class BookingCreate(BaseModel):
     check_out: datetime
     amount_paid: float = 0   # Required for model
 
+# Add BookingCreateSchema alias for compatibility
+class BookingCreateSchema(BookingCreate):
+    pass
+
+
 
 class BookingUpdate(BaseModel):
     check_in: datetime | None = None
     check_out: datetime | None = None
     room_id: int | None = None
 
+# Add BookingUpdateSchema alias for compatibility
+class BookingUpdateSchema(BookingUpdate):
+    pass
+
+
 
 class BookingStatusUpdate(BaseModel):
     status: BookingStatus
+
+# Add BookingStatusUpdateSchema alias for compatibility
+class BookingStatusUpdateSchema(BookingStatusUpdate):
+    pass
+
 
 
 class BookingResponse(BaseModel):
@@ -41,3 +58,7 @@ class BookingResponse(BaseModel):
 
     class Config:
         from_attributes = True   # Pydantic v2 replacement for orm_mode
+
+# Add BookingResponseSchema alias for compatibility
+class BookingResponseSchema(BookingResponse):
+    pass

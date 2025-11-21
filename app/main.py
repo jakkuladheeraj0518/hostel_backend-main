@@ -9,17 +9,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.staticfiles import StaticFiles
 
+
 from app.config import settings
 from app.core.logger import setup_logger
 from app.core.database import init_db
-
-# Optional elasticsearch import
-try:
-    from app.core.elasticsearch import init_elasticsearch_indices
-    ELASTICSEARCH_AVAILABLE = True
-except ImportError:
-    ELASTICSEARCH_AVAILABLE = False
-    print("⚠️  Elasticsearch not available - search features will be disabled")
+from app.core.elasticsearch import init_elasticsearch_indices
 
 from app.services.booking_expiry_service import BookingExpiryService
 from app.core.database import SessionLocal
@@ -76,6 +70,9 @@ from app.api.v1.student import announcement as student_announcement
 # Visitor Routers
 from app.api.v1.visitor.bookings import router as visitor_booking_router
 from app.api.v1.visitor.public_comparison import router as visitor_compare_router
+
+# ⭐ MISSING FROM YOUR OFFICIAL MAIN — NOW ADDED
+from app.api.v1.visitor import auth_router, booking_router, payment_routers, simple_payment_router
 
 # Admin Routers
 from app.api.v1.admin.bookings import router as admin_booking_router
@@ -169,13 +166,9 @@ async def startup_event():
     init_db()
     logger.info("Database initialized.")
 
-    # Initialize Elasticsearch if available
-    if ELASTICSEARCH_AVAILABLE:
-        logger.info("Initializing Elasticsearch...")
-        init_elasticsearch_indices()
-        logger.info("Elasticsearch ready.")
-    else:
-        logger.warning("Elasticsearch not available - skipping initialization")
+    logger.info("Initializing Elasticsearch...")
+    init_elasticsearch_indices()
+    logger.info("Elasticsearch ready.")
 
     # ⭐ Start expiry service
     expiry = BookingExpiryService(SessionLocal)
@@ -197,6 +190,12 @@ app.include_router(admin_complaints.router, prefix="/api/v1")
 app.include_router(admin_reports.router, prefix="/api/v1")
 app.include_router(super_admin_reports.router, prefix="/api/v1")
 app.include_router(visitor_search.router, prefix="/api/v1")
+
+# ⭐ Added Visitor Authentication/Booking/Payment Routers
+app.include_router(auth_router.router, prefix="/api/v1/auth", tags=["Authentication"])
+app.include_router(booking_router.router, prefix="/api/v1/bookings", tags=["Bookings"])
+app.include_router(payment_routers.router, prefix="/api/v1/payments", tags=["Payments"])
+app.include_router(simple_payment_router.router, prefix="/api/v1/simple-payments", tags=["SimplePayments"])
 
 # Super-admin
 app.include_router(hostels.router)
@@ -231,7 +230,7 @@ app.include_router(fee_structure_configuration.router)
 app.include_router(payment_routes.router)
 
 from app.api.v1.admin import invoices, transactions, receipts, refunds
-app.include_router(invoices.router, prefix="/invoices",tags=["Invoices"]    )
+app.include_router(invoices.router, prefix="/invoices", tags=["Invoices"])
 app.include_router(transactions.router, prefix="/transactions", tags=["Transactions"])
 app.include_router(receipts.router, prefix="/receipts", tags=["Receipts"])
 app.include_router(refunds.router, prefix="/refunds", tags=["Refunds"])

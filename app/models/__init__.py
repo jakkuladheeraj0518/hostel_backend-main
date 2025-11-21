@@ -1,10 +1,9 @@
-
 """
 Database models
 """
 
 # Core Models
-from app.models.user import User
+from app.models.user import User, OTP
 from app.models.rooms import Room
 from app.models.admin import Admin, AdminHostelAssignment
 from app.models.hostel import Hostel
@@ -16,41 +15,23 @@ from app.models.refresh_token import RefreshToken
 from app.models.approval_request import ApprovalRequest
 from app.models.password_reset import PasswordResetToken
 
+# Booking Models (Ensure BookingRequest is here)
+from app.models.booking import Booking, BookingRequest
+
 # Complaint Models
 from app.models.complaint import Complaint, ComplaintNote
 
-# Attendance Model
-from app.models.attendance import Attendance
-
 # Report & Analytics Models
 from app.models.reports import (
+    Attendance,
     FinancialTransaction,
     HostelBooking,
     HostelProfileView,
     SearchQuery,
 )
 
-__all__ = [
-    "User",
-    "Hostel",
-    "AdminHostelMapping",
-    "SessionContext",
-    "Permission",
-    "RolePermission",
-    "AuditLog",
-    "RefreshToken",
-    "ApprovalRequest",
-    "PasswordResetToken",
-    "Complaint",
-    "ComplaintNote",
-    "Attendance",
-    "FinancialTransaction",
-    "HostelBooking",
-    "HostelProfileView",
-    "SearchQuery",
-]
+# Fee & Payment Models
 from app.models.fee_structure_models import (
-    # Hostel,
     FeePlan,
     SecurityDeposit,
     MessCharge,
@@ -61,9 +42,33 @@ from app.models.payment_models import Invoice, Transaction, Receipt, RefundReque
 from app.models.payment_models import Customer, PaymentWebhook, Refund
 from app.models.subscription import Payment
 
+# Supervisors
+from app.models.supervisors import Supervisor, SupervisorHostel, SupervisorActivity, AdminOverride
+
 __all__ = [
+    "User",
+    "OTP",
     "Hostel",
     "Room",
+    "Admin",
+    "AdminHostelAssignment",
+    "AdminHostelMapping",
+    "SessionContext",
+    "Permission",
+    "RolePermission",
+    "AuditLog",
+    "RefreshToken",
+    "ApprovalRequest",
+    "PasswordResetToken",
+    "Booking",
+    "BookingRequest",  # Added
+    "Complaint",
+    "ComplaintNote",
+    "Attendance",
+    "FinancialTransaction",
+    "HostelBooking",
+    "HostelProfileView",
+    "SearchQuery",
     "FeePlan",
     "SecurityDeposit",
     "MessCharge",
@@ -77,5 +82,8 @@ __all__ = [
     "Payment",
     "PaymentWebhook",
     "Refund",
+    "Supervisor",
+    "SupervisorHostel",
+    "SupervisorActivity",
+    "AdminOverride"
 ]
- 

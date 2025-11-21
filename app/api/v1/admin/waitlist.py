@@ -1,65 +1,113 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from datetime import datetime
+from typing import List, Optional
 
+# ✔ FIX 1 — correct dependency import
 from app.dependencies import get_db
-from app.core.auth import admin_required    # 🔐 Admin Authentication
 
-from app.models.waitlist import Waitlist
+from app.models.waitlist import Waitlist as WaitlistModel
 from app.models.rooms import Room
 from app.models.booking import Booking, BookingStatus
+
+# ✔ FIX 2 — required for SOW-based locking
 from app.services.booking_lock_service import BookingLockService
 
-from app.schemas.waitlist import WaitlistResponse, PromoteResponse
+from app.schemas.waitlist import (
+    WaitlistCreate,
+    WaitlistResponse,
+    PromoteResponse,
+)
+
+router = APIRouter(prefix="/waitlist", tags=["Waitlist"])
 
 
-router = APIRouter(prefix="/admin/waitlist", tags=["Admin Waitlist"])
+def is_room_available_for_range(db: Session, room_id: int, check_in: datetime, check_out: datetime) -> bool:
+    conflict = (
+        db.query(Booking)
+        .filter(
+            Booking.room_id == room_id,
+            Booking.status == BookingStatus.confirmed.value,
+            Booking.check_in < check_out,
+            Booking.check_out > check_in,
+        )
+        .first()
+    )
+    return conflict is None
 
 
-# ---------------------------------------------------------
-# Admin List Entire Waitlist
-# ---------------------------------------------------------
-@router.get("/", response_model=list[WaitlistResponse], dependencies=[Depends(admin_required)])
-def list_waitlist(hostel_id: int | None = None, room_type: str | None = None, db: Session = Depends(get_db)):
-    q = db.query(Waitlist)
-    if hostel_id:
-        q = q.filter(Waitlist.hostel_id == hostel_id)
-    if room_type:
-        q = q.filter(Waitlist.room_type == room_type)
+@router.post("/", response_model=WaitlistResponse, status_code=status.HTTP_201_CREATED)
+def add_to_waitlist(payload: WaitlistCreate, db: Session = Depends(get_db)):
+    exists = (
+        db.query(WaitlistModel)
+        .filter(
+            WaitlistModel.hostel_id == payload.hostel_id,
+            WaitlistModel.room_type == payload.room_type,
+            WaitlistModel.visitor_id == payload.visitor_id,
+        )
+        .first()
+    )
+    if exists:
+        raise HTTPException(status_code=400, detail="Visitor already on waitlist for this room type")
 
-    q = q.order_by(Waitlist.priority.asc(), Waitlist.created_at.asc())
+    top = (
+        db.query(WaitlistModel)
+        .filter(
+            WaitlistModel.hostel_id == payload.hostel_id,
+            WaitlistModel.room_type == payload.room_type,
+        )
+        .order_by(WaitlistModel.priority.desc())
+        .first()
+    )
+    next_priority = (top.priority + 1) if top else 1
+
+    wl = WaitlistModel(
+        hostel_id=payload.hostel_id,
+        room_type=payload.room_type,
+        visitor_id=payload.visitor_id,
+        priority=next_priority,
+        created_at=datetime.utcnow(),
+    )
+
+    db.add(wl)
+    db.commit()
+    db.refresh(wl)
+    return wl
+
+
+@router.get("/", response_model=List[WaitlistResponse])
+def list_waitlist(hostel_id: Optional[int] = None, room_type: Optional[str] = None, db: Session = Depends(get_db)):
+    q = db.query(WaitlistModel)
+    if hostel_id is not None:
+        q = q.filter(WaitlistModel.hostel_id == hostel_id)
+    if room_type is not None:
+        q = q.filter(WaitlistModel.room_type == room_type)
+
+    q = q.order_by(WaitlistModel.priority.asc(), WaitlistModel.created_at.asc())
     return q.all()
 
 
-# ---------------------------------------------------------
-# Admin Remove From Waitlist
-# ---------------------------------------------------------
-@router.delete("/{waitlist_id}", status_code=204, dependencies=[Depends(admin_required)])
+@router.delete("/{waitlist_id}", status_code=status.HTTP_204_NO_CONTENT)
 def remove_from_waitlist(waitlist_id: int, db: Session = Depends(get_db)):
-    wl = db.query(Waitlist).filter(Waitlist.id == waitlist_id).first()
+    wl = db.query(WaitlistModel).filter(WaitlistModel.id == waitlist_id).first()
     if not wl:
-        raise HTTPException(404, "Waitlist entry not found")
+        raise HTTPException(status_code=404, detail="Waitlist entry not found")
 
     db.delete(wl)
     db.commit()
     return None
 
 
-# ---------------------------------------------------------
-# Admin Promote Waitlist Entry → Assign Booking
-# ---------------------------------------------------------
-@router.post("/{waitlist_id}/promote", response_model=PromoteResponse, dependencies=[Depends(admin_required)])
-def promote_waitlist_entry(waitlist_id: int, target_room_id: int | None = None, db: Session = Depends(get_db)):
-
-    wl = db.query(Waitlist).filter(Waitlist.id == waitlist_id).first()
+@router.post("/{waitlist_id}/promote", response_model=PromoteResponse)
+def promote_waitlist_entry(waitlist_id: int, target_room_id: Optional[int] = None, db: Session = Depends(get_db)):
+    wl = db.query(WaitlistModel).filter(WaitlistModel.id == waitlist_id).first()
     if not wl:
-        raise HTTPException(404, "Waitlist entry not found")
+        raise HTTPException(status_code=404, detail="Waitlist entry not found")
 
-    # Determine target rooms
     if target_room_id:
-        candidate_rooms = db.query(Room).filter(Room.id == target_room_id).all()
+        candidate_rooms = db.query(Room).filter(Room.id == target_room_id, Room.hostel_id == wl.hostel_id).all()
         if not candidate_rooms:
-            raise HTTPException(404, "Target room not found")
+            raise HTTPException(status_code=404, detail="Target room not found in the same hostel")
     else:
         candidate_rooms = (
             db.query(Room)
@@ -74,7 +122,9 @@ def promote_waitlist_entry(waitlist_id: int, target_room_id: int | None = None, 
 
     for room in candidate_rooms:
 
+        # ✔ FIX 3 — use your project's official lock service
         locked_room = BookingLockService.lock_room(db, room.id)
+
         if not locked_room:
             continue
 
@@ -89,38 +139,37 @@ def promote_waitlist_entry(waitlist_id: int, target_room_id: int | None = None, 
             db.query(Booking)
             .filter(
                 Booking.room_id == locked_room.id,
-                Booking.status == BookingStatus.confirmed,
+                Booking.status == BookingStatus.confirmed.value,
                 Booking.check_in < check_out,
                 Booking.check_out > check_in,
             )
             .first()
         )
-
         if conflict:
             reason = "Conflicting booking exists"
             continue
 
         try:
-            booking = Booking(
+            new_booking = Booking(
                 visitor_id=wl.visitor_id,
                 hostel_id=wl.hostel_id,
                 room_id=locked_room.id,
                 check_in=check_in,
                 check_out=check_out,
                 amount_paid=0.0,
-                status=BookingStatus.confirmed,
+                status=BookingStatus.confirmed.value,
                 created_at=datetime.utcnow(),
             )
 
-            db.add(booking)
+            db.add(new_booking)
             locked_room.available_beds -= 1
             db.delete(wl)
 
             db.commit()
-            db.refresh(booking)
+            db.refresh(new_booking)
 
-            created_booking = booking
             promoted = True
+            created_booking = new_booking
             reason = "Promoted"
             break
 
@@ -130,7 +179,7 @@ def promote_waitlist_entry(waitlist_id: int, target_room_id: int | None = None, 
             continue
 
     if not promoted:
-        raise HTTPException(400, f"Could not promote: {reason or 'No room available'}")
+        raise HTTPException(status_code=400, detail=f"Could not promote entry: {reason or 'No room available'}")
 
     return PromoteResponse(
         promoted=True,

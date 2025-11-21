@@ -8,14 +8,7 @@ from app.api.v1.auth import (
     login_enhanced, password_reset, password_strength, me
 )
 from app.api.v1.admin import session as admin_session, audit, permissions, rbac, hostels, approvals, admins
-from app.api.v1.supervisor import (
-    audit as supervisor_audit, 
-    permissions as supervisor_permissions,
-    # approvals as supervisor_approvals,  # TODO: Empty file, implement later
-    dashboard as supervisor_dashboard,
-    attendance as supervisor_attendance,
-    leave_management as supervisor_leave
-)
+from app.api.v1.supervisor import audit as supervisor_audit, permissions as supervisor_permissions, approvals as supervisor_approvals
 from app.api.v1.super_admin import dashboard
 # ...existing code...
 
@@ -46,10 +39,7 @@ api_router.include_router(dashboard.router)
 # Supervisor routes
 api_router.include_router(supervisor_audit.router, prefix="/supervisor", tags=["supervisor"])
 api_router.include_router(supervisor_permissions.router, prefix="/supervisor", tags=["supervisor"])
-# api_router.include_router(supervisor_approvals.router, prefix="/supervisor", tags=["supervisor"])  # TODO: Empty file
-api_router.include_router(supervisor_dashboard.router, prefix="/supervisor", tags=["supervisor"])
-api_router.include_router(supervisor_attendance.router, prefix="/supervisor", tags=["supervisor"])
-api_router.include_router(supervisor_leave.router, prefix="/supervisor", tags=["supervisor"])
+api_router.include_router(supervisor_approvals.router, prefix="/supervisor", tags=["supervisor"])
 
 # Visitor routes have been disabled by admin request
 
