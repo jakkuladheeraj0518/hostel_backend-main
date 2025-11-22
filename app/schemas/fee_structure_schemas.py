@@ -19,7 +19,7 @@ class HostelCreate(HostelBase):
 class HostelRead(HostelBase):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # -------- Fee Plan --------
 class FeePlanBase(BaseModel):
@@ -36,7 +36,7 @@ class FeePlanCreate(FeePlanBase):
 class FeePlanRead(FeePlanBase):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # -------- Security Deposit --------
 class SecurityDepositBase(BaseModel):
@@ -51,7 +51,7 @@ class SecurityDepositCreate(SecurityDepositBase):
 class SecurityDepositRead(SecurityDepositBase):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # -------- Mess Charge --------
 class MessChargeBase(BaseModel):
@@ -67,7 +67,7 @@ class MessChargeCreate(MessChargeBase):
 class MessChargeRead(MessChargeBase):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # -------- Additional Service --------
 class AdditionalServiceBase(BaseModel):
@@ -83,4 +83,4 @@ class AdditionalServiceCreate(AdditionalServiceBase):
 class AdditionalServiceRead(AdditionalServiceBase):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True

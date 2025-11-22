@@ -182,6 +182,7 @@ async def startup_event():
 # ---------------------------------------------------------------------------
 
 # Core routers
+app.include_router(auth_router.router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(api_router, prefix="/api/v1")
 app.include_router(student_complaints.router, prefix="/api/v1")
 app.include_router(supervisor_complaints.router, prefix="/api/v1")
@@ -192,7 +193,6 @@ app.include_router(super_admin_reports.router, prefix="/api/v1")
 app.include_router(visitor_search.router, prefix="/api/v1")
 
 # ⭐ Added Visitor Authentication/Booking/Payment Routers
-app.include_router(auth_router.router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(booking_router.router, prefix="/api/v1/bookings", tags=["Bookings"])
 app.include_router(payment_routers.router, prefix="/api/v1/payments", tags=["Payments"])
 app.include_router(simple_payment_router.router, prefix="/api/v1/simple-payments", tags=["SimplePayments"])

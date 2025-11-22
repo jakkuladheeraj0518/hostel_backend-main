@@ -24,13 +24,7 @@ env_path = Path(__file__).parent.parent / ".env"
 
 class Settings(BaseSettings):
     # Database
-<<<<<<< Updated upstream
-    # NOTE: conflict markers were present here. Using a neutral placeholder value.
-    # Replace this via environment variable or .env for your local password.
-    DATABASE_URL: str = "postgresql://postgres:dheeraj123@localhost/hostelB"
-=======
-    DATABASE_URL: str = "postgresql://postgres:abhi8851013k@localhost/hostelB"
->>>>>>> Stashed changes
+    DATABASE_URL: str = "postgresql://postgres:123456789@localhost/hostelB"
     COMMISSION_RATE: float = 0.15
 
     ELASTICSEARCH_URL: Optional[str] = None

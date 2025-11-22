@@ -23,7 +23,7 @@ class NotificationOut(BaseModel):
     sent: bool
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class TemplateCreate(BaseModel):
@@ -42,7 +42,7 @@ class TemplateOut(BaseModel):
     created_at: Optional[datetime]   # ✅ FIXED
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ProviderStatus(BaseModel):

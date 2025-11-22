@@ -57,7 +57,7 @@ class BookingResponse(BaseModel):
     amount_paid: float
 
     class Config:
-        from_attributes = True   # Pydantic v2 replacement for orm_mode
+        from_attributes = True   # Pydantic v2 replacement for from_attributes
 
 # Add BookingResponseSchema alias for compatibility
 class BookingResponseSchema(BookingResponse):

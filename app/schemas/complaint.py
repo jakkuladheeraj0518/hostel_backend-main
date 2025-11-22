@@ -118,7 +118,7 @@ class ComplaintResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        from_attributes = True  # Replaces orm_mode in Pydantic v2
+        from_attributes = True  # Replaces from_attributes in Pydantic v2
 
 
 class ComplaintAttachmentResponse(BaseModel):

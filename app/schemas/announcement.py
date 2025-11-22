@@ -28,7 +28,7 @@ class AnnouncementRead(BaseModel):
     approved: bool
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class AnnouncementUpdate(BaseModel):
     announcement_title: Optional[str] = None
