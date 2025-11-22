@@ -109,7 +109,7 @@ class SubscriptionResponse(SubscriptionBase):
 # ───────────────────────────────────────────────────────────────
 # PAYMENT SCHEMAS
 # ───────────────────────────────────────────────────────────────
-class PaymentBase(BaseModel):
+class organizationPaymentBase(BaseModel):
     subscription_id: str
     amount: float
     currency: str = "USD"
@@ -120,11 +120,13 @@ class PaymentBase(BaseModel):
     description: Optional[str] = None
 
 
-class PaymentCreate(PaymentBase):
+
+
+class organizationPaymentCreate(organizationPaymentBase):
     paid_at: Optional[datetime] = None
 
 
-class PaymentResponse(PaymentBase):
+class organizationPaymentResponse(organizationPaymentBase):
     id: str
     paid_at: Optional[datetime]
     failed_at: Optional[datetime] = None

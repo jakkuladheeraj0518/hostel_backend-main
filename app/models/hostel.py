@@ -113,6 +113,14 @@ class Hostel(Base):
     services = relationship("AdditionalService", back_populates="hostel", cascade="all, delete")
 
     payments = relationship("Payment", back_populates="hostel", cascade="all, delete")
+    # Separate relationship for subscription/organization payments
+    # `organizationPayment.hostel` uses back_populates="organization_payments"
+    organization_payments = relationship(
+        "organizationPayment",
+        back_populates="hostel",
+        cascade="all, delete-orphan",
+    )
+    
     invoices = relationship("Invoice", back_populates="hostel")
 
     reminder_config = relationship(

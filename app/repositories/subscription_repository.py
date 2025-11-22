@@ -49,13 +49,13 @@ def list_subscriptions(db: Session) -> List[subscription_models.Subscription]:
 # ───────────────────────────────────────────────────────────────
 # PAYMENT REPOSITORY
 # ───────────────────────────────────────────────────────────────
-def create_payment(db: Session, payment: schemas.PaymentCreate):
+def create_payment(db: Session, payment: schemas.organizationPaymentCreate):
     payment_data = payment.dict(by_alias=True, exclude_unset=True)
     # Handle metadata separately since it's an aliased field
     if hasattr(payment, 'metadata_') and payment.metadata_ is not None:
         payment_data['metadata_'] = payment.metadata_
     
-    db_payment = subscription_models.Payment(**payment_data)
+    db_payment = subscription_models.organizationPayment(**payment_data)
     db.add(db_payment)
     db.commit()
     db.refresh(db_payment)
@@ -67,9 +67,9 @@ def create_payment(db: Session, payment: schemas.PaymentCreate):
 
 
 def list_payments(db: Session, subscription_id: Optional[str] = None):
-    query = db.query(subscription_models.Payment)
+    query = db.query(subscription_models.organizationPayment)
     if subscription_id:
-        query = query.filter(subscription_models.Payment.subscription_id == subscription_id)
+        query = query.filter(subscription_models.organizationPayment.subscription_id == subscription_id)
     payments = query.all()
     # Convert SQLAlchemy metadata to dict or None
     for payment in payments:

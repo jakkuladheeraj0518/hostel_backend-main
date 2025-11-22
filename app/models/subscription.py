@@ -117,37 +117,48 @@ class Subscription(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     plan = relationship("SubscriptionPlan", back_populates="subscriptions")
+    # Relationship to organization-level payments (subscription billing)
+    organization_payments = relationship(
+        "organizationPayment",
+        back_populates="subscription",
+        cascade="all, delete-orphan",
+    )
+    # Relationship to generic payments (Payment model)
     payments = relationship("Payment", back_populates="subscription", cascade="all, delete-orphan")
     changes = relationship("SubscriptionChange", back_populates="subscription", cascade="all, delete-orphan")
 
 
-# class Payment(Base):
-#     __tablename__ = "payments"
+class organizationPayment(Base):
+    __tablename__ = "organization_payments"
 
-#     id = Column(String, primary_key=True, default=lambda: f"pay_{uuid.uuid4().hex[:8]}")
-#     subscription_id = Column(String, ForeignKey('subscriptions.id', ondelete='CASCADE'), nullable=False)
+    id = Column(String, primary_key=True, default=lambda: f"pay_{uuid.uuid4().hex[:8]}")
+    subscription_id = Column(String, ForeignKey('subscriptions.id', ondelete='CASCADE'), nullable=False)
 
-#     hostel_id = Column(Integer, ForeignKey("hostels.id"))        # ADDED
-#     hostel = relationship("Hostel", back_populates="payments")
+    hostel_id = Column(Integer, ForeignKey("hostels.id"))        # ADDED
+    # This relationship should not use the generic 'payments' back_populates
+    # because `Hostel.payments` refers to the `Payment` model. Use a
+    # distinct attribute name on `Hostel` so the back_populates pair matches.
+    hostel = relationship("Hostel", back_populates="organization_payments")
 
-#     amount = Column(Numeric(10, 2), nullable=False)
-#     currency = Column(String, default="USD")
-#     status = Column(SQLEnum(PaymentStatus, name="payment_status"), default=PaymentStatus.pending)
-#     payment_type = Column(SQLEnum(PaymentType, name="payment_type"), default=PaymentType.subscription)
+    amount = Column(Numeric(10, 2), nullable=False)
+    currency = Column(String, default="USD")
+    status = Column(SQLEnum(PaymentStatus, name="payment_status"), default=PaymentStatus.pending)
+    payment_type = Column(SQLEnum(PaymentType, name="payment_type"), default=PaymentType.subscription)
 
-#     payment_method = Column(String)
-#     payment_method_last4 = Column(String)
+    payment_method = Column(String)
+    payment_method_last4 = Column(String)
 
-#     description = Column(Text)
-#     metadata_ = Column('metadata', JSON)
+    description = Column(Text)
+    metadata_ = Column('metadata', JSON)
 
-#     paid_at = Column(DateTime, nullable=True)
-#     failed_at = Column(DateTime, nullable=True)
-#     refunded_at = Column(DateTime, nullable=True)
+    paid_at = Column(DateTime, nullable=True)
+    failed_at = Column(DateTime, nullable=True)
+    refunded_at = Column(DateTime, nullable=True)
 
-#     created_at = Column(DateTime, server_default=func.now())
+    created_at = Column(DateTime, server_default=func.now())
 
-#     subscription = relationship("Subscription", back_populates="payments")
+    # Link back to Subscription.organization_payments
+    subscription = relationship("Subscription", back_populates="organization_payments")
 
 class Payment(Base):
     __tablename__ = "payments"

@@ -7551,3 +7551,192 @@ DETAIL:  Key (location_id)=(0) is not present in table "locations".
 2025-11-22 10:29:58,336 | INFO     | app | Elasticsearch ready.
 2025-11-22 10:29:58,352 | INFO     | app | BookingExpiryService started
 2025-11-22 10:29:58,383 | INFO     | app | Notification worker started.
+2025-11-22 12:26:56,893 | INFO     | app | Initializing database...
+2025-11-22 13:11:55,031 | INFO     | app | Initializing database...
+2025-11-22 13:11:55,875 | INFO     | app | Database initialized.
+2025-11-22 13:11:55,876 | INFO     | app | Initializing Elasticsearch...
+2025-11-22 13:11:59,907 | INFO     | app | Elasticsearch ready.
+2025-11-22 13:11:59,923 | INFO     | app | BookingExpiryService started
+2025-11-22 13:12:00,264 | INFO     | app | Notification worker started.
+2025-11-22 13:18:09,377 | INFO     | app | Initializing database...
+2025-11-22 13:18:09,824 | INFO     | app | Database initialized.
+2025-11-22 13:18:09,825 | INFO     | app | Initializing Elasticsearch...
+2025-11-22 13:18:13,841 | INFO     | app | Elasticsearch ready.
+2025-11-22 13:18:13,856 | INFO     | app | BookingExpiryService started
+2025-11-22 13:18:13,936 | INFO     | app | Notification worker started.
+2025-11-22 13:31:16,676 | INFO     | app | Initializing database...
+2025-11-22 13:31:16,820 | INFO     | app | Database initialized.
+2025-11-22 13:31:16,821 | INFO     | app | Initializing Elasticsearch...
+2025-11-22 13:31:20,847 | INFO     | app | Elasticsearch ready.
+2025-11-22 13:31:20,862 | INFO     | app | BookingExpiryService started
+2025-11-22 13:31:20,955 | INFO     | app | Notification worker started.
+2025-11-22 13:31:26,303 | INFO     | app | Initializing database...
+2025-11-22 13:31:26,462 | INFO     | app | Database initialized.
+2025-11-22 13:31:26,463 | INFO     | app | Initializing Elasticsearch...
+2025-11-22 13:31:30,480 | INFO     | app | Elasticsearch ready.
+2025-11-22 13:31:30,496 | INFO     | app | BookingExpiryService started
+2025-11-22 13:31:30,574 | INFO     | app | Notification worker started.
+2025-11-22 13:31:46,555 | INFO     | app | Initializing database...
+2025-11-22 13:31:46,702 | INFO     | app | Database initialized.
+2025-11-22 13:31:46,703 | INFO     | app | Initializing Elasticsearch...
+2025-11-22 13:31:50,721 | INFO     | app | Elasticsearch ready.
+2025-11-22 13:31:50,737 | INFO     | app | BookingExpiryService started
+2025-11-22 13:31:50,784 | INFO     | app | Notification worker started.
+2025-11-22 13:33:46,481 | INFO     | app.api.v1.super_admin.admins | Creating admin with data: {'admin_name': 'nagendra', 'email': 'nagendrareddy1017@gmail.com', 'is_active': True}
+2025-11-22 13:33:46,524 | INFO     | app.api.v1.super_admin.admins | Admin created successfully: admin_name='nagendra' email='nagendrareddy1017@gmail.com' is_active=True id=3 joined_at=datetime.datetime(2025, 11, 22, 13, 33, 46, 487268, tzinfo=datetime.timezone(datetime.timedelta(seconds=19800)))
+2025-11-22 13:34:15,592 | INFO     | app.api.v1.super_admin.admins | Assigning hostel to admin 3 with data: {'permission_level': 'read', 'hostel_id': 3}
+2025-11-22 13:34:15,592 | INFO     | app.services.admin_service | Assigning hostel with permission level: read (type: <enum 'PermissionLevel'>)
+2025-11-22 13:34:15,597 | INFO     | app.repositories.admin_repository | Creating assignment with permission level: read
+2025-11-22 13:34:15,643 | INFO     | app.api.v1.super_admin.admins | Hostel assignment created successfully: permission_level=<PermissionLevel.read: 'read'> id=1 admin_id=3 hostel_id=3 assigned_at=datetime.datetime(2025, 11, 22, 13, 34, 15, 595618, tzinfo=datetime.timezone(datetime.timedelta(seconds=19800)))
+2025-11-22 13:34:27,538 | INFO     | app.api.v1.super_admin.admins | Assigning hostel to admin 3 with data: {'permission_level': 'admin', 'hostel_id': 3}
+2025-11-22 13:34:27,538 | INFO     | app.services.admin_service | Assigning hostel with permission level: admin (type: <enum 'PermissionLevel'>)
+2025-11-22 13:34:27,545 | INFO     | app.repositories.admin_repository | Creating assignment with permission level: admin
+2025-11-22 13:34:27,572 | ERROR    | app.repositories.admin_repository | Error in assign_hostel_to_admin: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "uq_admin_hostel_assignment"
+DETAIL:  Key (admin_id, hostel_id)=(3, 3) already exists.
+
+[SQL: INSERT INTO admin_hostel_assignments (admin_id, hostel_id, permission_level) VALUES (%(admin_id)s, %(hostel_id)s, %(permission_level)s) RETURNING admin_hostel_assignments.id, admin_hostel_assignments.assigned_at]
+[parameters: {'admin_id': 3, 'hostel_id': 3, 'permission_level': 'admin'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-11-22 13:34:27,575 | ERROR    | app.services.admin_service | Error in assign_hostel: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "uq_admin_hostel_assignment"
+DETAIL:  Key (admin_id, hostel_id)=(3, 3) already exists.
+
+[SQL: INSERT INTO admin_hostel_assignments (admin_id, hostel_id, permission_level) VALUES (%(admin_id)s, %(hostel_id)s, %(permission_level)s) RETURNING admin_hostel_assignments.id, admin_hostel_assignments.assigned_at]
+[parameters: {'admin_id': 3, 'hostel_id': 3, 'permission_level': 'admin'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-11-22 13:34:27,586 | ERROR    | app.api.v1.super_admin.admins | Error assigning hostel to admin: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "uq_admin_hostel_assignment"
+DETAIL:  Key (admin_id, hostel_id)=(3, 3) already exists.
+
+[SQL: INSERT INTO admin_hostel_assignments (admin_id, hostel_id, permission_level) VALUES (%(admin_id)s, %(hostel_id)s, %(permission_level)s) RETURNING admin_hostel_assignments.id, admin_hostel_assignments.assigned_at]
+[parameters: {'admin_id': 3, 'hostel_id': 3, 'permission_level': 'admin'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-11-22 13:38:37,237 | INFO     | app.api.v1.super_admin.admins | Assigning hostel to admin 3 with data: {'permission_level': 'write', 'hostel_id': 3}
+2025-11-22 13:38:37,239 | INFO     | app.services.admin_service | Assigning hostel with permission level: write (type: <enum 'PermissionLevel'>)
+2025-11-22 13:38:37,244 | INFO     | app.repositories.admin_repository | Creating assignment with permission level: write
+2025-11-22 13:38:37,248 | ERROR    | app.repositories.admin_repository | Error in assign_hostel_to_admin: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "uq_admin_hostel_assignment"
+DETAIL:  Key (admin_id, hostel_id)=(3, 3) already exists.
+
+[SQL: INSERT INTO admin_hostel_assignments (admin_id, hostel_id, permission_level) VALUES (%(admin_id)s, %(hostel_id)s, %(permission_level)s) RETURNING admin_hostel_assignments.id, admin_hostel_assignments.assigned_at]
+[parameters: {'admin_id': 3, 'hostel_id': 3, 'permission_level': 'write'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-11-22 13:38:37,249 | ERROR    | app.services.admin_service | Error in assign_hostel: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "uq_admin_hostel_assignment"
+DETAIL:  Key (admin_id, hostel_id)=(3, 3) already exists.
+
+[SQL: INSERT INTO admin_hostel_assignments (admin_id, hostel_id, permission_level) VALUES (%(admin_id)s, %(hostel_id)s, %(permission_level)s) RETURNING admin_hostel_assignments.id, admin_hostel_assignments.assigned_at]
+[parameters: {'admin_id': 3, 'hostel_id': 3, 'permission_level': 'write'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-11-22 13:38:37,252 | ERROR    | app.api.v1.super_admin.admins | Error assigning hostel to admin: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "uq_admin_hostel_assignment"
+DETAIL:  Key (admin_id, hostel_id)=(3, 3) already exists.
+
+[SQL: INSERT INTO admin_hostel_assignments (admin_id, hostel_id, permission_level) VALUES (%(admin_id)s, %(hostel_id)s, %(permission_level)s) RETURNING admin_hostel_assignments.id, admin_hostel_assignments.assigned_at]
+[parameters: {'admin_id': 3, 'hostel_id': 3, 'permission_level': 'write'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-11-22 13:39:45,166 | INFO     | app.api.v1.super_admin.admins | Bulk assigning hostels with data: {'admin_id': 3, 'hostel_ids': [5, 2], 'permission_level': 'read'}
+2025-11-22 13:39:45,181 | INFO     | app.services.admin_service | Bulk assigning with permission level: read (type: <enum 'PermissionLevel'>)
+2025-11-22 13:39:45,197 | INFO     | app.api.v1.super_admin.admins | Bulk assignment successful: success=True message='Successfully assigned 2 hostels to admin' assignments=[AdminHostelAssignmentResponse(permission_level=<PermissionLevel.read: 'read'>, id=4, admin_id=3, hostel_id=5, assigned_at=datetime.datetime(2025, 11, 22, 13, 39, 45, 179726, tzinfo=datetime.timezone(datetime.timedelta(seconds=19800)))), AdminHostelAssignmentResponse(permission_level=<PermissionLevel.read: 'read'>, id=5, admin_id=3, hostel_id=2, assigned_at=datetime.datetime(2025, 11, 22, 13, 39, 45, 179726, tzinfo=datetime.timezone(datetime.timedelta(seconds=19800))))]
+2025-11-22 13:50:47,268 | INFO     | app | Initializing database...
+2025-11-22 13:50:47,497 | INFO     | app | Database initialized.
+2025-11-22 13:50:47,498 | INFO     | app | Initializing Elasticsearch...
+2025-11-22 13:50:51,528 | INFO     | app | Elasticsearch ready.
+2025-11-22 13:50:51,540 | INFO     | app | BookingExpiryService started
+2025-11-22 13:50:51,634 | INFO     | app | Notification worker started.
+2025-11-22 13:50:58,047 | INFO     | app | Initializing database...
+2025-11-22 13:50:58,233 | INFO     | app | Database initialized.
+2025-11-22 13:50:58,233 | INFO     | app | Initializing Elasticsearch...
+2025-11-22 13:51:02,252 | INFO     | app | Elasticsearch ready.
+2025-11-22 13:51:02,268 | INFO     | app | BookingExpiryService started
+2025-11-22 13:51:02,314 | INFO     | app | Notification worker started.
+2025-11-22 13:51:09,712 | INFO     | app | Initializing database...
+2025-11-22 13:51:09,973 | INFO     | app | Database initialized.
+2025-11-22 13:51:09,973 | INFO     | app | Initializing Elasticsearch...
+2025-11-22 13:51:14,001 | INFO     | app | Elasticsearch ready.
+2025-11-22 13:51:14,015 | INFO     | app | BookingExpiryService started
+2025-11-22 13:51:14,031 | INFO     | app | Notification worker started.
+2025-11-22 14:04:57,748 | INFO     | app | Initializing database...
+2025-11-22 14:04:58,157 | INFO     | app | Database initialized.
+2025-11-22 14:04:58,158 | INFO     | app | Initializing Elasticsearch...
+2025-11-22 14:05:02,175 | INFO     | app | Elasticsearch ready.
+2025-11-22 14:05:02,191 | INFO     | app | BookingExpiryService started
+2025-11-22 14:05:02,264 | INFO     | app | Notification worker started.
+2025-11-22 14:05:02,851 | ERROR    | app | Error in _check_and_expire_bookings: reverse_property 'payments' on relationship organizationPayment.hostel references relationship Hostel.payments, which does not reference mapper Mapper[organizationPayment(organization_payments)]
+2025-11-22 14:10:02,962 | ERROR    | app | Error in _check_and_expire_bookings: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[organizationPayment(organization_payments)]'. Original exception was: reverse_property 'payments' on relationship organizationPayment.hostel references relationship Hostel.payments, which does not reference mapper Mapper[organizationPayment(organization_payments)]
+2025-11-22 14:15:03,001 | ERROR    | app | Error in _check_and_expire_bookings: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[organizationPayment(organization_payments)]'. Original exception was: reverse_property 'payments' on relationship organizationPayment.hostel references relationship Hostel.payments, which does not reference mapper Mapper[organizationPayment(organization_payments)]
+2025-11-22 14:20:03,041 | ERROR    | app | Error in _check_and_expire_bookings: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[organizationPayment(organization_payments)]'. Original exception was: reverse_property 'payments' on relationship organizationPayment.hostel references relationship Hostel.payments, which does not reference mapper Mapper[organizationPayment(organization_payments)]
+2025-11-22 14:25:03,133 | ERROR    | app | Error in _check_and_expire_bookings: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[organizationPayment(organization_payments)]'. Original exception was: reverse_property 'payments' on relationship organizationPayment.hostel references relationship Hostel.payments, which does not reference mapper Mapper[organizationPayment(organization_payments)]
+2025-11-22 14:30:03,341 | ERROR    | app | Error in _check_and_expire_bookings: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[organizationPayment(organization_payments)]'. Original exception was: reverse_property 'payments' on relationship organizationPayment.hostel references relationship Hostel.payments, which does not reference mapper Mapper[organizationPayment(organization_payments)]
+2025-11-22 15:14:58,646 | ERROR    | app | Error in _check_and_expire_bookings: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[organizationPayment(organization_payments)]'. Original exception was: reverse_property 'payments' on relationship organizationPayment.hostel references relationship Hostel.payments, which does not reference mapper Mapper[organizationPayment(organization_payments)]
+2025-11-22 15:19:58,771 | ERROR    | app | Error in _check_and_expire_bookings: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[organizationPayment(organization_payments)]'. Original exception was: reverse_property 'payments' on relationship organizationPayment.hostel references relationship Hostel.payments, which does not reference mapper Mapper[organizationPayment(organization_payments)]
+2025-11-22 15:22:08,159 | INFO     | app | Initializing database...
+2025-11-22 15:22:08,486 | INFO     | app | Database initialized.
+2025-11-22 15:22:08,486 | INFO     | app | Initializing Elasticsearch...
+2025-11-22 15:22:12,508 | INFO     | app | Elasticsearch ready.
+2025-11-22 15:22:12,524 | INFO     | app | BookingExpiryService started
+2025-11-22 15:22:12,617 | INFO     | app | Notification worker started.
+2025-11-22 15:22:12,663 | ERROR    | app | Error in _check_and_expire_bookings: reverse_property 'payments' on relationship organizationPayment.hostel references relationship Hostel.payments, which does not reference mapper Mapper[organizationPayment(organization_payments)]
+2025-11-22 15:22:19,618 | INFO     | app | Initializing database...
+2025-11-22 15:22:19,874 | INFO     | app | Database initialized.
+2025-11-22 15:22:19,875 | INFO     | app | Initializing Elasticsearch...
+2025-11-22 15:22:23,889 | INFO     | app | Elasticsearch ready.
+2025-11-22 15:22:23,904 | INFO     | app | BookingExpiryService started
+2025-11-22 15:22:23,983 | INFO     | app | Notification worker started.
+2025-11-22 15:22:24,004 | ERROR    | app | Error in _check_and_expire_bookings: reverse_property 'payments' on relationship organizationPayment.hostel references relationship Hostel.payments, which does not reference mapper Mapper[organizationPayment(organization_payments)]
+2025-11-22 15:27:19,657 | INFO     | app | Initializing database...
+2025-11-22 15:27:20,083 | INFO     | app | Database initialized.
+2025-11-22 15:27:20,084 | INFO     | app | Initializing Elasticsearch...
+2025-11-22 15:27:24,104 | INFO     | app | Elasticsearch ready.
+2025-11-22 15:27:24,116 | INFO     | app | BookingExpiryService started
+2025-11-22 15:27:24,208 | INFO     | app | Notification worker started.
+2025-11-22 15:27:24,303 | ERROR    | app | Error in _check_and_expire_bookings: reverse_property 'payments' on relationship organizationPayment.hostel references relationship Hostel.payments, which does not reference mapper Mapper[organizationPayment(organization_payments)]
+2025-11-22 15:32:24,456 | ERROR    | app | Error in _check_and_expire_bookings: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[organizationPayment(organization_payments)]'. Original exception was: reverse_property 'payments' on relationship organizationPayment.hostel references relationship Hostel.payments, which does not reference mapper Mapper[organizationPayment(organization_payments)]
+2025-11-22 15:34:16,917 | INFO     | app | Initializing database...
+2025-11-22 15:34:17,161 | INFO     | app | Database initialized.
+2025-11-22 15:34:17,161 | INFO     | app | Initializing Elasticsearch...
+2025-11-22 15:34:21,175 | INFO     | app | Elasticsearch ready.
+2025-11-22 15:34:21,191 | INFO     | app | BookingExpiryService started
+2025-11-22 15:34:21,268 | INFO     | app | Notification worker started.
+2025-11-22 15:34:21,341 | ERROR    | app | Error in _check_and_expire_bookings: reverse_property 'payments' on relationship organizationPayment.hostel references relationship Hostel.payments, which does not reference mapper Mapper[organizationPayment(organization_payments)]
+2025-11-22 15:34:28,476 | INFO     | app | Initializing database...
+2025-11-22 15:34:28,714 | INFO     | app | Database initialized.
+2025-11-22 15:34:28,715 | INFO     | app | Initializing Elasticsearch...
+2025-11-22 15:34:32,735 | INFO     | app | Elasticsearch ready.
+2025-11-22 15:34:32,750 | INFO     | app | BookingExpiryService started
+2025-11-22 15:34:32,812 | INFO     | app | Notification worker started.
+2025-11-22 15:34:32,876 | ERROR    | app | Error in _check_and_expire_bookings: reverse_property 'payments' on relationship organizationPayment.hostel references relationship Hostel.payments, which does not reference mapper Mapper[organizationPayment(organization_payments)]
+2025-11-22 15:39:28,858 | INFO     | app | Initializing database...
+2025-11-22 15:39:29,117 | INFO     | app | Database initialized.
+2025-11-22 15:39:29,119 | INFO     | app | Initializing Elasticsearch...
+2025-11-22 15:39:33,123 | INFO     | app | Elasticsearch ready.
+2025-11-22 15:39:33,138 | INFO     | app | BookingExpiryService started
+2025-11-22 15:39:33,216 | INFO     | app | Notification worker started.
+2025-11-22 15:39:33,433 | ERROR    | app | Error in _check_and_expire_bookings: reverse_property 'payments' on relationship Payment.subscription references relationship Subscription.payments, which does not reference mapper Mapper[Payment(payments)]
+2025-11-22 15:39:40,088 | INFO     | app | Initializing database...
+2025-11-22 15:39:40,343 | INFO     | app | Database initialized.
+2025-11-22 15:39:40,343 | INFO     | app | Initializing Elasticsearch...
+2025-11-22 15:39:44,359 | INFO     | app | Elasticsearch ready.
+2025-11-22 15:39:44,375 | INFO     | app | BookingExpiryService started
+2025-11-22 15:39:44,438 | INFO     | app | Notification worker started.
+2025-11-22 15:39:44,603 | ERROR    | app | Error in _check_and_expire_bookings: reverse_property 'payments' on relationship Payment.subscription references relationship Subscription.payments, which does not reference mapper Mapper[Payment(payments)]
+2025-11-22 15:39:51,575 | INFO     | app | Initializing database...
+2025-11-22 15:39:51,840 | INFO     | app | Database initialized.
+2025-11-22 15:39:51,841 | INFO     | app | Initializing Elasticsearch...
+2025-11-22 15:39:55,861 | INFO     | app | Elasticsearch ready.
+2025-11-22 15:39:55,874 | INFO     | app | BookingExpiryService started
+2025-11-22 15:39:55,936 | INFO     | app | Notification worker started.
+2025-11-22 15:39:56,121 | ERROR    | app | Error in _check_and_expire_bookings: reverse_property 'payments' on relationship Payment.subscription references relationship Subscription.payments, which does not reference mapper Mapper[Payment(payments)]
+2025-11-22 15:43:06,638 | INFO     | app | Initializing database...
+2025-11-22 15:43:06,923 | INFO     | app | Database initialized.
+2025-11-22 15:43:06,924 | INFO     | app | Initializing Elasticsearch...
+2025-11-22 15:43:10,945 | INFO     | app | Elasticsearch ready.
+2025-11-22 15:43:10,958 | INFO     | app | BookingExpiryService started
+2025-11-22 15:43:11,005 | INFO     | app | Notification worker started.
+2025-11-22 15:43:17,414 | INFO     | app | Initializing database...
+2025-11-22 15:43:17,675 | INFO     | app | Database initialized.
+2025-11-22 15:43:17,675 | INFO     | app | Initializing Elasticsearch...
+2025-11-22 15:43:21,706 | INFO     | app | Elasticsearch ready.
+2025-11-22 15:43:21,721 | INFO     | app | BookingExpiryService started
+2025-11-22 15:43:21,736 | INFO     | app | Notification worker started.
+2025-11-22 15:43:38,765 | INFO     | app | Initializing database...
+2025-11-22 15:43:39,043 | INFO     | app | Database initialized.
+2025-11-22 15:43:39,043 | INFO     | app | Initializing Elasticsearch...
+2025-11-22 15:43:43,062 | INFO     | app | Elasticsearch ready.
+2025-11-22 15:43:43,077 | INFO     | app | BookingExpiryService started
+2025-11-22 15:43:43,092 | INFO     | app | Notification worker started.

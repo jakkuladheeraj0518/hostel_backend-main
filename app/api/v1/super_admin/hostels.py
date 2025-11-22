@@ -24,6 +24,8 @@ def update_hostel(hostel_id: int, payload: HostelUpdate, db: Session = Depends(g
         raise HTTPException(status_code=404, detail="Hostel not found")
     update_data = payload.model_dump(exclude_unset=True)
     merged = {**existing, **update_data}
+    # Ensure we don't pass 'id' twice (merged may already contain 'id')
+    merged.pop('id', None)
     upsert = HostelUpsert(**merged, id=hostel_id)
     result = HostelService.upsert_hostel(db, upsert)
     if not result:

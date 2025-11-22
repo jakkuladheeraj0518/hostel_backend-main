@@ -22,7 +22,7 @@ def list_subscriptions_service(db: Session):
     return repositories.subscription_repository.list_subscriptions(db)
 
 
-def create_payment_service(db: Session, payment: schemas.PaymentCreate):
+def create_payment_service(db: Session, payment: schemas.organizationPaymentCreate):
     # stamp when payment was created/recorded
     payment.paid_at = datetime.utcnow()
 

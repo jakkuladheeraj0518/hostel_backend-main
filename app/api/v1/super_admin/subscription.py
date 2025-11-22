@@ -37,12 +37,12 @@ def list_subscriptions(db: Session = Depends(get_db)):
 # ───────────────────────────────────────────────────────────────
 # PAYMENTS
 # ───────────────────────────────────────────────────────────────
-@router.post("/payments", response_model=schemas.PaymentResponse)
-def create_payment(payment: schemas.PaymentCreate, db: Session = Depends(get_db)):
+@router.post("/Organisationpayments", response_model=schemas.organizationPaymentResponse)
+def create_payment(payment: schemas.organizationPaymentCreate, db: Session = Depends(get_db)):
     return services.subscription_service.create_payment_service(db, payment)
 
 
-@router.get("/payments", response_model=list[schemas.PaymentResponse])
+@router.get("/Organisationpayments", response_model=list[schemas.organizationPaymentResponse])
 def list_payments(subscription_id: str = None, db: Session = Depends(get_db)):
     return services.subscription_service.list_payments_service(db, subscription_id)
 
