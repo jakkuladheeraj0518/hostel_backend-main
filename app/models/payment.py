@@ -58,6 +58,17 @@ class BookingRefund(Base):
 
     payment = relationship("BookingPayment", back_populates="refunds")
 
+    # Backwards-compatibility accessors expected by response schemas
+    @property
+    def refund_id(self):
+        """Alias used by older schemas for refund identifier."""
+        return self.refund_reference
+
+    @property
+    def created_at(self):
+        """Alias mapping created_at to initiated_at for compatibility."""
+        return self.initiated_at
+
 
 # ---------------------------------------------------------
 # ⭐ Confirmation Model

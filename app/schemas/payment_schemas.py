@@ -50,20 +50,22 @@ class PaymentResponse(BaseModel):
 # =====================================================================
 # 🟦 BOOKING PAYMENT SCHEMAS (Visitor/Admin Booking Payments)
 # =====================================================================
-
 class BookingPaymentCreate(BaseModel):
     booking_id: int
+    user_id: Optional[int] = None
     payment_type: str
-    amount: float
+    amount: float = Field(gt=0)
     currency: str = "INR"
     payment_method: Optional[str] = None
     payment_gateway: Optional[str] = None
     description: Optional[str] = None
+    is_security_deposit: bool = False
 
 
 class BookingPaymentResponse(BaseModel):
-    id: Optional[int]
+    id: int
     booking_id: int
+    user_id: Optional[int]
     payment_reference: Optional[str]
     payment_type: str
     amount: float
@@ -73,9 +75,10 @@ class BookingPaymentResponse(BaseModel):
     payment_gateway: Optional[str]
     gateway_transaction_id: Optional[str]
     gateway_order_id: Optional[str]
+    description: Optional[str]
     is_security_deposit: bool
     security_deposit_refunded: bool
-    initiated_at: Optional[datetime]
+    initiated_at: datetime
     completed_at: Optional[datetime]
 
     class Config:
@@ -114,15 +117,19 @@ class CreateOrderRequest(BaseModel):
 
 
 # Add RefundRequest for compatibility with payment_routers.py
-class RefundRequest(BaseModel):
-    payment_id: str | int
-    amount: Optional[float] = None
-    reason: Optional[str] = None
+# class RefundRequest(BaseModel):
+#     payment_id: str | int
+#     amount: Optional[float] = None
+#     reason: Optional[str] = None
 
 class RefundCreate(BaseModel):
     payment_id: str | int
     amount: Optional[float] = None
     reason: Optional[str] = None
+
+# Backwards-compatible name expected by some routers
+# Keep both names available so older imports continue to work.
+RefundRequest = RefundCreate
 
 
 class RefundResponse(BaseModel):

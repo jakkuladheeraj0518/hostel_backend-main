@@ -3,8 +3,8 @@
 """
 from typing import Dict, List, Set
 from app.core.roles import Role, RoleHierarchy
-
-
+ 
+ 
 class Permission:
     """Permission constants"""
     # User management
@@ -12,17 +12,17 @@ class Permission:
     READ_USER = "read_user"
     UPDATE_USER = "update_user"
     DELETE_USER = "delete_user"
-    
+   
     # Hostel management
     CREATE_HOSTEL = "create_hostel"
     READ_HOSTEL = "read_hostel"
     UPDATE_HOSTEL = "update_hostel"
     DELETE_HOSTEL = "delete_hostel"
-    
+   
     # Session management
     SWITCH_SESSION = "switch_session"
     VIEW_SESSION = "view_session"
-    
+   
     # Audit
     VIEW_AUDIT = "view_audit"
     CREATE_AUDIT = "create_audit"
@@ -32,28 +32,28 @@ class Permission:
     MANAGE_SUBSCRIPTIONS = "manage_subscriptions"
     VIEW_PAYMENTS = "view_payments"
     MANAGE_PAYMENTS = "manage_payments"
-
+ 
     # Supervisor and hostel management
     MANAGE_SUPERVISORS = "manage_supervisors"
     MANAGE_HOSTEL_CONFIG = "manage_hostel_config"
-
+ 
     # Day-to-day operations
     MANAGE_ATTENDANCE = "manage_attendance"
     MANAGE_COMPLAINTS = "manage_complaints"
     CREATE_COMPLAINT = "create_complaint"
     MANAGE_MAINTENANCE = "manage_maintenance"
     MANAGE_ANNOUNCEMENTS = "manage_announcements"
-
+ 
     # Multi-hostel & UI
     MULTI_HOSTEL_DASHBOARD = "multi_hostel_dashboard"
     SWITCH_HOSTEL = "switch_hostel"
     HOSTEL_SELECTOR = "hostel_selector"
-
+ 
     # Supervisor management & delegation
     ASSIGN_SUPERVISOR = "assign_supervisor"
     CONFIGURE_SUPERVISOR_PERMISSIONS = "configure_supervisor_permissions"
     OVERRIDE_SUPERVISOR = "override_supervisor"
-
+ 
     # Supervisor operational permissions
     SUPERVISOR_DASHBOARD_VIEW = "supervisor_dashboard_view"
     SUPERVISOR_RECORD_ATTENDANCE = "supervisor_record_attendance"
@@ -67,7 +67,7 @@ class Permission:
     SUPERVISOR_VIEW_FINANCIALS_READONLY = "supervisor_view_financials_readonly"
     SUPERVISOR_UPDATE_STUDENT_CONTACT = "supervisor_update_student_contact"
     SUPERVISOR_VIEW_AUDIT = "supervisor_view_audit"
-
+ 
     # Hostel profile & room/booking management
     MANAGE_HOSTEL_LISTINGS = "manage_hostel_listings"
     MANAGE_ROOM_TYPES = "manage_room_types"
@@ -75,11 +75,11 @@ class Permission:
     DELETE_BOOKING = "delete_booking"
     MANAGE_WAITLIST = "manage_waitlist"
     MANAGE_STUDENTS = "manage_students"
-
+ 
     # Booking / registration
     INITIATE_BOOKING = "initiate_booking"
     CREATE_REGISTRATION = "create_registration"
-
+ 
     # Visitor / Booking actions
     BROWSE_PUBLIC_HOSTELS = "browse_public_hostels"
     VIEW_HOSTEL_DETAILS = "view_hostel_details"
@@ -96,7 +96,7 @@ class Permission:
     VOTE_REVIEW = "vote_review"
     REQUEST_CALLBACK = "request_callback"
     NEGOTIATE_PRICE = "negotiate_price"
-
+ 
     # Broad reporting/export
     EXPORT_REPORTS = "export_reports"
     # Reporting & analytics
@@ -105,16 +105,16 @@ class Permission:
     VIEW_MARKETING_REPORTS = "view_marketing_reports"
     VIEW_SUPERVISOR_PERFORMANCE = "view_supervisor_performance"
     VIEW_CONSOLIDATED_REPORTS = "view_consolidated_reports"
-
+ 
     # Profile / announcements
     VIEW_OWN_PROFILE = "view_own_profile"
     VIEW_HOSTEL_ANNOUNCEMENTS = "view_hostel_announcements"
-    
+   
     # Permissions management
     MANAGE_PERMISSIONS = "manage_permissions"
     ASSIGN_ROLE = "assign_role"
-
-
+ 
+ 
 # Role-Permission Matrix
 PERMISSION_MATRIX: Dict[str, Set[str]] = {
     Role.SUPERADMIN: {
@@ -163,8 +163,9 @@ PERMISSION_MATRIX: Dict[str, Set[str]] = {
         Permission.MANAGE_MAINTENANCE,
     },
     Role.ADMIN: {
+        Permission.CREATE_USER,
         Permission.READ_USER,
-        Permission.UPDATE_USER,
+        Permission.UPDATE_USER,        
         Permission.READ_HOSTEL,
         Permission.SWITCH_SESSION,
         Permission.VIEW_SESSION,
@@ -196,6 +197,8 @@ PERMISSION_MATRIX: Dict[str, Set[str]] = {
         Permission.MANAGE_STUDENTS,
     },
     Role.SUPERVISOR: {
+        Permission.CREATE_USER,
+        Permission.UPDATE_USER,
         Permission.READ_USER,
         Permission.READ_HOSTEL,
         Permission.VIEW_AUDIT,
@@ -254,14 +257,14 @@ PERMISSION_MATRIX: Dict[str, Set[str]] = {
         Permission.NEGOTIATE_PRICE,
     },
 }
-
-
+ 
+ 
 def has_permission(role: str, permission: str) -> bool:
     """Check if a role has a specific permission"""
     return permission in PERMISSION_MATRIX.get(role, set())
-
-
+ 
+ 
 def get_role_permissions(role: str) -> Set[str]:
     """Get all permissions for a role"""
     return PERMISSION_MATRIX.get(role, set())
-
+ 

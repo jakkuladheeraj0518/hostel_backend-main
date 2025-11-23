@@ -3,7 +3,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 import os
 
-from app.schemas.payment_schemas import PaymentCreate, PaymentResponse, RefundRequest, RefundResponse, SecurityDepositReleaseRequest, SecurityDepositReleaseResponse, ConfirmationResponse
+from app.schemas.payment_schemas import BookingPaymentCreate, BookingPaymentResponse, PaymentCreate, PaymentResponse, RefundRequest, RefundResponse, SecurityDepositReleaseRequest, SecurityDepositReleaseResponse, ConfirmationResponse
 from app.services import payment_service
 from app.core.database import get_db
 from app.dependencies import get_current_user
@@ -11,17 +11,15 @@ from app.models.user import User
 from app.models.payment import Confirmation
 from app.utils.invoice import INVOICE_DIR, generate_invoice, send_email_simulation, send_sms_simulation
 
-router = APIRouter()
+router = APIRouter(prefix="/payments", tags=["Payments"])
 
-@router.post("/initiate")
-def initiate_payment(
-    data: PaymentCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    return payment_service.initiate_payment(db, data, current_user.id)
 
-@router.post("/{payment_id}/confirm", response_model=PaymentResponse)
+@router.post("", response_model=BookingPaymentResponse)
+def create_booking_payment_api(data: BookingPaymentCreate, db: Session = Depends(get_db)):
+    payment = payment_service.create_booking_payment(db, data)
+    return payment
+
+@router.post("/{payment_id}/confirm", response_model=BookingPaymentResponse)
 def confirm_payment(payment_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     payment = payment_service.confirm_payment(db, payment_id)
     if not payment:
@@ -62,7 +60,7 @@ def confirm_payment(payment_id: int, background_tasks: BackgroundTasks, db: Sess
 
     return payment
 
-@router.get("", response_model=list[PaymentResponse])
+@router.get("", response_model=list[BookingPaymentResponse])
 def get_all_payments(db: Session = Depends(get_db)):
     return payment_service.get_all_payments(db)
 

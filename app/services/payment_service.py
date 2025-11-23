@@ -1,29 +1,39 @@
 import random, string
 from datetime import datetime
+import uuid
 from app.models.payment import BookingPayment as Payment, BookingRefund as Refund, Confirmation
 from sqlalchemy.orm import Session
+
+from app.schemas.payment_schemas import BookingPaymentCreate
 
 def _generate_ref(prefix: str) -> str:
     suffix = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
     return f"{prefix}{datetime.utcnow().strftime('%Y%m%d%H%M')}{suffix}"
 
 # 1️⃣ Initiate Payment
-def initiate_payment(db: Session, data, user_id: int):
+def create_booking_payment(db: Session, data: BookingPaymentCreate):
+
+    # Generate unique payment reference
+    payment_reference = f"BPAY-{uuid.uuid4().hex[:10].upper()}"
+
     payment = Payment(
         booking_id=data.booking_id,
-        user_id=user_id,
+        user_id=data.user_id,
+        payment_reference=payment_reference,
         payment_type=data.payment_type,
         amount=data.amount,
         currency=data.currency,
         payment_method=data.payment_method,
         payment_gateway=data.payment_gateway,
         description=data.description,
-        status="processing",
-        gateway_order_id=f"order_{''.join(random.choices(string.ascii_lowercase + string.digits, k=14))}"
+        is_security_deposit=data.is_security_deposit,
     )
+
     db.add(payment)
     db.commit()
     db.refresh(payment)
+
+    return payment
 
     return {
         "payment_id": payment.id,
