@@ -7980,3 +7980,21 @@ DETAIL:  Key (location_id)=(3) is not present in table "locations".
 2025-11-23 21:33:23,468 | INFO     | app.api.v1.super_admin.admins | Bulk assigning hostels with data: {'admin_id': 3, 'hostel_ids': [5, 7], 'permission_level': 'read'}
 2025-11-23 21:33:23,474 | INFO     | app.services.admin_service | Bulk assigning with permission level: read (type: <enum 'PermissionLevel'>)
 2025-11-23 21:33:23,507 | INFO     | app.api.v1.super_admin.admins | Bulk assignment successful: success=True message='Successfully assigned 2 hostels to admin' assignments=[AdminHostelAssignmentResponse(permission_level=<PermissionLevel.read: 'read'>, id=2, admin_id=3, hostel_id=5, assigned_at=datetime.datetime(2025, 11, 23, 21, 33, 23, 471956, tzinfo=datetime.timezone(datetime.timedelta(seconds=19800)))), AdminHostelAssignmentResponse(permission_level=<PermissionLevel.read: 'read'>, id=1, admin_id=3, hostel_id=7, assigned_at=datetime.datetime(2025, 11, 23, 21, 32, 47, 922203, tzinfo=datetime.timezone(datetime.timedelta(seconds=19800))))]
+2025-11-23 22:38:19,436 | INFO     | app | Initializing database...
+2025-11-23 22:38:20,672 | INFO     | app | Database initialized.
+2025-11-23 22:38:20,682 | INFO     | app | Initializing Elasticsearch...
+2025-11-23 22:38:24,704 | INFO     | app | Elasticsearch ready.
+2025-11-23 22:38:24,721 | INFO     | app | BookingExpiryService started
+2025-11-23 22:38:24,754 | INFO     | app | Notification worker started.
+2025-11-23 22:38:56,129 | INFO     | app | Initializing database...
+2025-11-23 22:38:56,216 | INFO     | app | Database initialized.
+2025-11-23 22:38:56,216 | INFO     | app | Initializing Elasticsearch...
+2025-11-23 22:39:00,236 | INFO     | app | Elasticsearch ready.
+2025-11-23 22:39:00,250 | INFO     | app | BookingExpiryService started
+2025-11-23 22:39:00,266 | INFO     | app | Notification worker started.
+2025-11-23 22:46:44,251 | INFO     | app | Initializing database...
+2025-11-23 22:46:44,436 | INFO     | app | Database initialized.
+2025-11-23 22:46:44,436 | INFO     | app | Initializing Elasticsearch...
+2025-11-23 22:46:48,445 | INFO     | app | Elasticsearch ready.
+2025-11-23 22:46:48,460 | INFO     | app | BookingExpiryService started
+2025-11-23 22:46:48,492 | INFO     | app | Notification worker started.

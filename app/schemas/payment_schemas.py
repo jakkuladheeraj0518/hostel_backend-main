@@ -19,8 +19,12 @@ from app.models.payment_models import (
 # =====================================================================
 
 class PaymentCreate(BaseModel):
+    invoice_id: int
     amount: float = Field(gt=0)
     currency: str = "INR"
+    payment_method: str = "razorpay"
+    payment_gateway: Optional[str] = None
+    gateway_transaction_id: Optional[str] = None 
     user_id: int
     hostel_id: int
     description: Optional[str] = None
@@ -117,15 +121,18 @@ class CreateOrderRequest(BaseModel):
 
 
 # Add RefundRequest for compatibility with payment_routers.py
-# class RefundRequest(BaseModel):
-#     payment_id: str | int
-#     amount: Optional[float] = None
-#     reason: Optional[str] = None
-
-class RefundCreate(BaseModel):
+class RefundRequest(BaseModel):
     payment_id: str | int
     amount: Optional[float] = None
     reason: Optional[str] = None
+
+class RefundCreate(BaseModel):
+    transaction_id: str
+    payment_id: str | int
+    # amount: Optional[float] = None
+    refund_amount: float
+    reason: Optional[str] = None
+    requested_by: str
 
 # Backwards-compatible name expected by some routers
 # Keep both names available so older imports continue to work.

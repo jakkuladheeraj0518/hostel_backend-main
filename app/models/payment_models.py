@@ -4,7 +4,7 @@ from enum import Enum
 from app.core.database import Base
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, Integer, String, Float, DateTime, Enum as SQLEnum, Text, Boolean, ForeignKey
-
+from sqlalchemy.dialects.postgresql import JSONB
 
 
 class PaymentStatus(str, Enum):
@@ -143,8 +143,8 @@ class Invoice(Base):
     total_amount = Column(Float, nullable=False)
     paid_amount = Column(Float, default=0.0)
     due_amount = Column(Float, nullable=False)
-    description = Column(Text)
-    items = Column(Text)  # store JSON string
+    description = Column(JSONB)
+    items = Column(JSONB)  # store JSON string
     status = Column(
     SQLEnum(PaymentStatus, name="paymentstatus", native_enum=False),
     default=PaymentStatus.PENDING.value
@@ -189,7 +189,7 @@ class Transaction(Base):
     payment_gateway = Column(String)
     gateway_transaction_id = Column(String)
     status = Column(String, default="success")
-    notes = Column(Text)
+    notes = Column(JSONB)
     processed_by = Column(Integer)
     created_at = Column(DateTime, default=datetime.utcnow)
 

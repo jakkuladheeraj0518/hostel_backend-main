@@ -203,8 +203,8 @@ class Payment(Base):
     # -----------------------------------
     # Metadata & Notes
     # -----------------------------------
-    description = Column(Text)
-    notes = Column(Text)                                                         # MERGED
+    description = Column(JSON)
+    notes = Column(JSON)                                                         # MERGED
     metadata_ = Column("metadata", JSON)
 
     # -----------------------------------

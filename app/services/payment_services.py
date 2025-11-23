@@ -64,270 +64,7 @@ class RazorpayService:
             "local_payment_id": payment.id
         }
 
-#payments,partial payments, refunds, customers, and generates PDF receipts.
-# app/services/payment_service.py
-# from datetime import datetime
-# import uuid
-# from app.models.payment_models import Invoice, Transaction, Receipt, RefundRequest, TransactionType, PaymentStatus
-# from app.repositories.payment_repository import PaymentRepository
-# from app.utils.receipt_generator import generate_receipt_pdf
-# from sqlalchemy.orm import Session
 
-# def generate_invoice_number():
-#     return f"INV-{datetime.utcnow().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
-
-# def generate_transaction_id():
-#     return f"TXN-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:8].upper()}"
-
-# def generate_receipt_number():
-#     return f"RCP-{datetime.utcnow().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
-
-# def generate_refund_id():
-#     return f"RFN-{datetime.utcnow().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
-
-# class PaymentService:
-
-#     @staticmethod
-#     def create_invoice(db: Session, user_id: int, hostel_id: int, items: list, description: str, due_date):
-#         total = sum(i['amount'] for i in items)
-#         inv = Invoice(
-#             invoice_number=generate_invoice_number(),
-#             user_id=user_id,
-#             hostel_id=hostel_id,
-#             total_amount=total,
-#             paid_amount=0.0,
-#             due_amount=total,
-#             description=description,
-#             items=__import__("json").dumps(items),
-#             due_date=due_date,
-#             status=PaymentStatus.PENDING
-#         )
-#         return PaymentRepository.create_invoice(db, inv)
-
-#     @staticmethod
-#     def process_payment(db: Session, invoice_id: int, amount: float, payment_method: str, payment_gateway: str=None, gateway_transaction_id: str=None, notes: str=None, processed_by: int=None):
-#         invoice = PaymentRepository.get_invoice(db, invoice_id)
-#         if not invoice:
-#             raise ValueError("Invoice not found")
-#         if amount > invoice.due_amount:
-#             raise ValueError("Amount exceeds due amount")
-#         txn = Transaction(
-#             transaction_id=generate_transaction_id(),
-#             invoice_id=invoice.id,
-#             transaction_type=TransactionType.PAYMENT,
-#             amount=amount,
-#             payment_method=payment_method,
-#             payment_gateway=payment_gateway,
-#             gateway_transaction_id=gateway_transaction_id,
-#             notes=notes,
-#             status="success",
-#             processed_by=processed_by
-#         )
-#         PaymentRepository.save_transaction(db, txn)
-
-#         # update invoice
-#         invoice.paid_amount += amount
-#         invoice.due_amount -= amount
-#         invoice.updated_at = datetime.utcnow()
-#         if invoice.due_amount <= 0:
-#             invoice.status = PaymentStatus.COMPLETED
-#             invoice.due_amount = 0
-#         elif invoice.paid_amount > 0:
-#             invoice.status = PaymentStatus.PARTIAL
-#         db.commit()
-#         db.refresh(txn)
-
-#         # create receipt
-#         receipt = Receipt(
-#             receipt_number=generate_receipt_number(),
-#             invoice_id=invoice.id,
-#             transaction_id=txn.id,
-#             amount=txn.amount,
-#             qr_code_data=f"R:{generate_receipt_number()}|A:{txn.amount}"
-#         )
-#         PaymentRepository.save_receipt(db, receipt)
-
-#         # generate pdf synchronously (you can move to background)
-#         pdf_path = generate_receipt_pdf(receipt, invoice, txn)
-#         receipt.pdf_path = pdf_path
-#         db.commit()
-#         db.refresh(receipt)
-
-#         return txn
-
-#     @staticmethod
-#     def request_refund(db: Session, transaction_id: int, refund_amount: float, reason: str, requested_by: int):
-#         txn = PaymentRepository.get_transaction(db, transaction_id)
-#         if not txn:
-#             raise ValueError("Transaction not found")
-#         refund = RefundRequest(
-#             refund_id=generate_refund_id(),
-#             transaction_id=txn.id,
-#             invoice_id=txn.invoice_id,
-#             refund_amount=refund_amount,
-#             reason=reason,
-#             requested_by=requested_by,
-#             status='initiated'
-#         )
-#         return PaymentRepository.create_refund_request(db, refund)
-
-
-
-# from datetime import datetime
-# import uuid, json
-# from sqlalchemy.orm import Session
-# from app.models.payment_models import (
-#     Invoice, Transaction, Receipt, RefundRequest,
-#     TransactionType, PaymentStatus
-# )
-# from app.repositories.payment_repository import PaymentRepository
-# from app.utils.receipt_generator import generate_receipt_pdf
-
-
-# # -------------------------------------------------------------------
-# # 🔹 Helper ID Generators
-# # -------------------------------------------------------------------
-# def generate_invoice_number():
-#     return f"INV-{datetime.utcnow().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
-
-# def generate_transaction_id():
-#     return f"TXN-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:8].upper()}"
-
-# def generate_receipt_number():
-#     return f"RCP-{datetime.utcnow().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
-
-# def generate_refund_id():
-#     return f"RFN-{datetime.utcnow().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
-
-
-# # -------------------------------------------------------------------
-# # 💳 Payment Service Layer
-# # -------------------------------------------------------------------
-# class PaymentService:
-
-#     # ---------------------------------------------------------------
-#     # 🧾 Create Invoice
-#     # ---------------------------------------------------------------
-#     @staticmethod
-#     def create_invoice(db: Session, user_id: int, hostel_id: int, items: list, description: str, due_date):
-#         total = sum(i['amount'] for i in items)
-#         invoice = Invoice(
-#             invoice_number=generate_invoice_number(),
-#             user_id=user_id,
-#             hostel_id=hostel_id,
-#             total_amount=total,
-#             paid_amount=0.0,
-#             due_amount=total,
-#             description=description,
-#             items=json.dumps(items),
-#             due_date=due_date,
-#             status=PaymentStatus.PENDING.value  # ✅ ensure lowercase enum value
-#         )
-#         return PaymentRepository.create_invoice(db, invoice)
-
-
-#     # ---------------------------------------------------------------
-#     # 💰 Process Payment → Creates Transaction + Receipt
-#     # ---------------------------------------------------------------
-#     @staticmethod
-#     def process_payment(
-#         db: Session,
-#         invoice_id: int,
-#         amount: float,
-#         payment_method: str,
-#         payment_gateway: str = None,
-#         gateway_transaction_id: str = None,
-#         notes: str = None,
-#         processed_by: int = None
-#     ):
-#         try:
-#             invoice = PaymentRepository.get_invoice(db, invoice_id)
-#             if not invoice:
-#                 raise ValueError("Invoice not found")
-
-#             if amount > invoice.due_amount:
-#                 raise ValueError(f"Amount exceeds due amount ₹{invoice.due_amount}")
-
-#             # 💳 Create Transaction
-#             txn = Transaction(
-#                 transaction_id=generate_transaction_id(),
-#                 invoice_id=invoice.id,
-#                 transaction_type=TransactionType.PAYMENT,
-#                 amount=amount,
-#                 payment_method=payment_method,
-#                 payment_gateway=payment_gateway,
-#                 gateway_transaction_id=gateway_transaction_id,
-#                 notes=notes,
-#                 status="success",
-#                 processed_by=processed_by
-#             )
-#             PaymentRepository.save_transaction(db, txn)
-
-#             # 💡 Update Invoice status and amounts
-#             invoice.paid_amount += amount
-#             invoice.due_amount = max(invoice.due_amount - amount, 0)
-#             invoice.updated_at = datetime.utcnow()
-
-#             if invoice.due_amount <= 0:
-#                 invoice.status = PaymentStatus.COMPLETED.value
-#                 invoice.due_amount = 0
-#             elif invoice.paid_amount > 0:
-#                 invoice.status = PaymentStatus.PARTIAL.value
-
-#             db.commit()
-#             db.refresh(invoice)
-#             db.refresh(txn)
-
-#             # 🧾 Create Receipt (always, even if PDF fails)
-#             receipt_number = generate_receipt_number()
-#             receipt = Receipt(
-#                 receipt_number=receipt_number,
-#                 invoice_id=invoice.id,
-#                 transaction_id=txn.id,
-#                 amount=txn.amount,
-#                 qr_code_data=f"Receipt:{receipt_number}|Amount:{txn.amount}|Date:{datetime.utcnow().isoformat()}",
-#                 generated_at=datetime.utcnow()
-#             )
-#             PaymentRepository.save_receipt(db, receipt)
-
-#             # 🧾 Try generating PDF
-#             try:
-#                 pdf_path = generate_receipt_pdf(receipt, invoice, txn, db)
-#                 receipt.pdf_path = pdf_path
-#                 db.commit()
-#                 db.refresh(receipt)
-#                 print(f"✅ Receipt generated successfully: {receipt.receipt_number}")
-#             except Exception as pdf_error:
-#                 db.commit()  # commit even if PDF fails
-#                 print(f"⚠️ PDF generation failed for receipt {receipt.receipt_number}: {pdf_error}")
-
-#             return txn
-
-#         except Exception as e:
-#             db.rollback()
-#             print(f"❌ Payment processing error: {e}")
-#             raise ValueError(f"Payment processing failed: {str(e)}")
-
-
-#     # ---------------------------------------------------------------
-#     # 💸 Request Refund
-#     # ---------------------------------------------------------------
-#     @staticmethod
-#     def request_refund(db: Session, transaction_id: int, refund_amount: float, reason: str, requested_by: int):
-#         txn = PaymentRepository.get_transaction(db, transaction_id)
-#         if not txn:
-#             raise ValueError("Transaction not found")
-
-#         refund = RefundRequest(
-#             refund_id=generate_refund_id(),
-#             transaction_id=txn.id,
-#             invoice_id=txn.invoice_id,
-#             refund_amount=refund_amount,
-#             reason=reason,
-#             requested_by=requested_by,
-#             status='initiated'
-#         )
-#         return PaymentRepository.create_refund_request(db, refund)
 
 from datetime import datetime
 import uuid, json
@@ -378,7 +115,7 @@ class PaymentService:
             paid_amount=0.0,
             due_amount=total,
             description=description,
-            items=json.dumps(items),
+            items=items,
             due_date=due_date,
             status=PaymentStatus.pending.value  # ✅ ensure lowercase enum value
         )
@@ -446,7 +183,7 @@ class PaymentService:
                 payment_method=payment_method,
                 payment_gateway=payment_gateway,
                 gateway_transaction_id=gateway_transaction_id,
-                notes=notes,
+                notes=json.dumps({"msg": notes}) if notes else None,   # ✅ FIXED,
                 status="success",
                 processed_by=processed_by,
                 created_at=datetime.utcnow()
@@ -503,10 +240,9 @@ class PaymentService:
             db.rollback()
             print(f"❌ Payment processing error: {e}")
             raise ValueError(f"Payment processing failed: {str(e)}")
-
-
+        
     # ---------------------------------------------------------------
-    # 💸 Request Refund
+    # 💸 Refund – User Requests Refund
     # ---------------------------------------------------------------
     @staticmethod
     def request_refund(
@@ -520,149 +256,107 @@ class PaymentService:
         if not txn:
             raise ValueError("Transaction not found")
 
+        invoice = PaymentRepository.get_invoice(db, txn.invoice_id)
+        if not invoice:
+            raise ValueError("Invoice not found")
+
+        if refund_amount > invoice.paid_amount:
+            raise ValueError("Refund amount cannot exceed paid amount")
+
         refund = RefundRequest(
             refund_id=generate_refund_id(),
             transaction_id=txn.id,
-            invoice_id=txn.invoice_id,
+            invoice_id=invoice.id,
             refund_amount=refund_amount,
             reason=reason,
             requested_by=requested_by,
             status="initiated"
         )
-        return PaymentRepository.create_refund_request(db, refund)
 
+        PaymentRepository.create_refund_request(db, refund)
 
-# app/services/refund_service.py
-# from sqlalchemy.orm import Session
-# from datetime import datetime
-# import uuid
-# from typing import Dict
-# from app.repositories.payment_repository import RefundRepository
-# from app.repositories.invoice_repository import InvoiceRepository
-# from app.models.payment_models import TransactionType, PaymentStatus
-# from app.schemas.payment_schemas import RefundApproval
-
-# class RefundService:
-#     """Business logic for refund operations"""
-    
-#     def __init__(self, db: Session):
-#         self.db = db
-#         self.refund_repo = RefundRepository(db)
-#         self.invoice_repo = InvoiceRepository(db)
-    
-#     @staticmethod
-#     def generate_transaction_id() -> str:
-#         """Generate unique transaction ID"""
-#         timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
-#         unique_id = uuid.uuid4().hex[:8].upper()
-#         return f"TXN-{timestamp}-{unique_id}"
-    
-#     def calculate_invoice_status(self, paid_amount: float, due_amount: float) -> str:
-#         """Determine invoice status based on payment amounts"""
-#         if paid_amount <= 0:
-#             return PaymentStatus.PENDING.value
-#         elif due_amount > 0:
-#             return PaymentStatus.PARTIAL.value
-#         else:
-#             return PaymentStatus.SUCCESS.value
-    
-#     def approve_refund(self, refund_id: int, approval: RefundApproval) -> Dict:
-#         """Approve a refund request and update invoice"""
-#         refund = self.refund_repo.get_by_id(refund_id)
-#         if not refund:
-#             raise ValueError("Refund request not found")
+        return {
+            "message": "Refund request submitted",
+            "refund_id": refund.id,
+            "refund_ref": refund.refund_id,
+            "status": refund.status,
+        }
         
-#         if refund.status not in ["initiated", "processing"]:
-#             raise ValueError(f"Refund already {refund.status}")
 
-#         try:
-#             txn_id = self.generate_transaction_id()
-#             transaction_data = {
-#                 "transaction_id": txn_id,
-#                 "invoice_id": refund.invoice_id,
-#                 "transaction_type": TransactionType.REFUND.value,
-#                 "amount": -abs(refund.refund_amount),
-#                 "payment_method": "refund",
-#                 "notes": f"Refund processed: {refund.reason}",
-#                 "status": "success",
-#                 "processed_by": approval.approved_by,
-#                 "created_at": datetime.utcnow()
-#             }
-#             txn = self.refund_repo.create_refund_transaction(transaction_data)
+    @staticmethod
+    def approve_refund(
+        db: Session,
+        refund_id: int,
+        approved_by: int
+    ):
+        refund = PaymentRepository.get_refund(db, refund_id)
+        if not refund:
+            raise ValueError("Refund request not found")
 
-#             invoice = self.invoice_repo.get_by_id(refund.invoice_id)
-#             if not invoice:
-#                 raise ValueError("Invoice linked to refund not found")
+        original_txn = PaymentRepository.get_transaction(db, refund.transaction_id)
+        if not original_txn:
+            raise ValueError("Original transaction not found")
 
-#             new_paid = max(invoice.paid_amount - refund.refund_amount, 0)
-#             new_due = invoice.due_amount + refund.refund_amount
-#             new_status = self.calculate_invoice_status(new_paid, new_due)
+        if not original_txn.payment_id:
+            raise ValueError("Payment ID missing — cannot process refund")
 
-#             self.invoice_repo.update_payment_status(invoice, new_paid, new_due, new_status)
+        # 1️⃣ Create Refund Transaction
+        refund_txn = Transaction(
+            transaction_id=generate_transaction_id(),
+            payment_id=original_txn.payment_id,
+            invoice_id=refund.invoice_id,
+            transaction_type=TransactionType.REFUND,
+            amount=-refund.refund_amount,
+            payment_method="refund",
+            notes=f"Refund processed: {refund.reason}",
+            status="success",
+            processed_by=approved_by,
+            created_at=datetime.utcnow(),
+        )
+        PaymentRepository.save_transaction(db, refund_txn)
 
-#             self.refund_repo.update_status(
-#                 refund,
-#                 status="completed",
-#                 approved_by=approval.approved_by,
-#                 processed_at=datetime.utcnow(),
-#                 completed_at=datetime.utcnow()
-#             )
+        # 2️⃣ Update Invoice
+        invoice = PaymentRepository.get_invoice(db, refund.invoice_id)
+        invoice.paid_amount -= refund.refund_amount
+        invoice.due_amount += refund.refund_amount
 
-#             self.db.commit()
-#             self.db.refresh(refund)
+        invoice.paid_amount = max(invoice.paid_amount, 0)
+        invoice.due_amount = max(invoice.due_amount, 0)
 
-#             return {
-#                 "success": True,
-#                 "message": "Refund approved successfully",
-#                 "refund": {
-#                     "refund_id": refund.refund_id,
-#                     "status": refund.status,
-#                     "refund_amount": refund.refund_amount,
-#                     "approved_by": refund.approved_by,
-#                     "processed_at": refund.processed_at,
-#                     "completed_at": refund.completed_at,
-#                 },
-#                 "transaction_id": txn_id
-#             }
+        if invoice.paid_amount == 0:
+            invoice.status = PaymentStatus.pending.value
+        else:
+            invoice.status = "partial"
 
-#         except Exception as e:
-#             self.db.rollback()
-#             raise Exception(f"Refund approval failed: {str(e)}")
+        invoice.updated_at = datetime.utcnow()
 
-#     def reject_refund(self, refund_id: int, approval: RefundApproval) -> Dict:
-#         """Reject a refund request"""
-#         refund = self.refund_repo.get_by_id(refund_id)
-#         if not refund:
-#             raise ValueError("Refund request not found")
-#         if refund.status not in ["initiated", "processing"]:
-#             raise ValueError(f"Refund already {refund.status}")
-        
-#         try:
-#             self.refund_repo.update_status(
-#                 refund,
-#                 status="rejected",
-#                 rejection_reason=approval.rejection_reason,
-#                 approved_by=approval.approved_by,
-#                 processed_at=datetime.utcnow()
-#             )
-#             self.db.commit()
-#             self.db.refresh(refund)
+        # 3️⃣ Update Refund Request
+        refund.status = "completed"
+        refund.processed_at = datetime.utcnow()
 
-#             return {
-#                 "success": True,
-#                 "message": "Refund request rejected",
-#                 "refund": {
-#                     "refund_id": refund.refund_id,
-#                     "status": refund.status,
-#                     "refund_amount": refund.refund_amount,
-#                     "approved_by": refund.approved_by,
-#                     "rejection_reason": refund.rejection_reason,
-#                     "processed_at": refund.processed_at,
-#                 }
-#             }
+        db.commit()
+        db.refresh(invoice)
+        db.refresh(refund)
+        db.refresh(refund_txn)
 
-#         except Exception as e:
-#             self.db.rollback()
-#             raise Exception(f"Refund rejection failed: {str(e)}")
+        # 4️⃣ Optional Refund Receipt
+        try:
+            receipt_number = generate_receipt_number()
+            receipt = Receipt(
+                receipt_number=receipt_number,
+                invoice_id=invoice.id,
+                transaction_id=refund_txn.id,
+                payment_id=original_txn.payment_id,
+                amount=-refund.refund_amount,
+                qr_code_data=f"Refund:{receipt_number}|Amount:{refund.refund_amount}",
+                generated_at=datetime.utcnow(),
+            )
+            PaymentRepository.save_receipt(db, receipt)
+        except Exception as e:
+            print("Refund receipt generation failed:", e)
 
-
+        return {
+            "message": "Refund approved successfully",
+            "refund_transaction": refund_txn,
+            "invoice": invoice,
+        }
