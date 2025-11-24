@@ -17,14 +17,36 @@ class AnalyticsService:
         
         for hostel_id in hostel_ids:
             kpi = AnalyticsService._get_hostel_kpi(db, hostel_id, start_date, end_date)
-            hostel_kpis.append(kpi)
+            if kpi:
+                hostel_kpis.append(kpi)
+            # if hostel not found, skip it silently
         
         # Calculate summary
+        if not hostel_kpis:
+            # No valid hostels found — return empty summary
+            summary = KPISummary(
+                total_revenue=Decimal(0),
+                total_expenses=Decimal(0),
+                net_profit=Decimal(0),
+                occupancy_rate=0,
+                total_complaints=0,
+                resolved_complaints=0,
+                average_resolution_time=0.0,
+                student_count=0
+            )
+            return MultiHostelDashboard(
+                summary=summary,
+                hostels=[],
+                period=f"{start_date} to {end_date}",
+                generated_at=datetime.utcnow()
+            )
+
+        # Calculate summary from available hostels
         summary = KPISummary(
-            total_revenue=sum(h.revenue for h in hostel_kpis),
-            total_expenses=sum(h.expenses for h in hostel_kpis),
-            net_profit=sum(h.profit for h in hostel_kpis),
-            occupancy_rate=sum(h.occupancy_rate for h in hostel_kpis) / len(hostel_kpis) if hostel_kpis else 0,
+            total_revenue=sum((h.revenue for h in hostel_kpis), Decimal(0)),
+            total_expenses=sum((h.expenses for h in hostel_kpis), Decimal(0)),
+            net_profit=sum((h.profit for h in hostel_kpis), Decimal(0)),
+            occupancy_rate=sum(h.occupancy_rate for h in hostel_kpis) / len(hostel_kpis),
             total_complaints=sum(h.complaint_count for h in hostel_kpis),
             resolved_complaints=sum(h.resolved_complaints for h in hostel_kpis),
             average_resolution_time=0.0,  # Calculate separately
@@ -351,21 +373,22 @@ class AnalyticsService:
         hostel = db.execute(text("SELECT hostel_name FROM hostels WHERE id = :id"), 
                           {'id': hostel_id}).first()
         
-        # Get attendance data
+        # Get attendance data from student_attendance (join users to filter by hostel)
         attendance_data = db.execute(text("""
             SELECT 
                 COUNT(*) as total_students,
-                SUM(CASE WHEN attendance_status = 'PRESENT' THEN 1 ELSE 0 END) as present_count
-            FROM attendance
-            WHERE hostel_id = :hostel_id AND attendance_date = :date
+                SUM(CASE WHEN sa.status = 'present' THEN 1 ELSE 0 END) as present_count
+            FROM student_attendance sa
+            JOIN users u ON u.id::text = sa.student_id
+            WHERE u.hostel_id = :hostel_id AND sa.attendance_date = :date
         """), {'hostel_id': hostel_id, 'date': report_date}).first()
-        
+
         # Get absent students (join users for name)
         absent = db.execute(text("""
-            SELECT a.user_id as student_id, u.full_name as student_name
-            FROM attendance a
-            LEFT JOIN users u ON a.user_id = u.id
-            WHERE a.hostel_id = :hostel_id AND a.attendance_date = :date AND a.attendance_status != 'PRESENT'
+            SELECT sa.student_id as student_id, u.name as student_name
+            FROM student_attendance sa
+            LEFT JOIN users u ON u.id::text = sa.student_id
+            WHERE u.hostel_id = :hostel_id AND sa.attendance_date = :date AND sa.status != 'present'
         """), {'hostel_id': hostel_id, 'date': report_date}).fetchall()
         
         total = attendance_data.total_students or 0
@@ -395,14 +418,15 @@ class AnalyticsService:
         # Daily trends
         daily = db.execute(text("""
             SELECT 
-                attendance_date as date,
+                sa.attendance_date as date,
                 COUNT(*) as total_students,
-                SUM(CASE WHEN attendance_status = 'PRESENT' THEN 1 ELSE 0 END) as present_count
-            FROM attendance
-            WHERE hostel_id = :hostel_id 
-            AND attendance_date BETWEEN :start_date AND :end_date
-            GROUP BY attendance_date
-            ORDER BY attendance_date
+                SUM(CASE WHEN sa.status = 'present' THEN 1 ELSE 0 END) as present_count
+            FROM student_attendance sa
+            JOIN users u ON u.id::text = sa.student_id
+            WHERE u.hostel_id = :hostel_id 
+            AND sa.attendance_date BETWEEN :start_date AND :end_date
+            GROUP BY sa.attendance_date
+            ORDER BY sa.attendance_date
         """), {'hostel_id': hostel_id, 'start_date': start_date, 'end_date': end_date}).fetchall()
         
         daily_trends = []
@@ -422,12 +446,13 @@ class AnalyticsService:
         # Patterns (day of week analysis)
         patterns = db.execute(text("""
             SELECT 
-                EXTRACT(DOW FROM attendance_date) as day_of_week,
-                AVG(CASE WHEN attendance_status = 'PRESENT' THEN 100.0 ELSE 0.0 END) as avg_attendance
-            FROM attendance
-            WHERE hostel_id = :hostel_id 
-            AND attendance_date BETWEEN :start_date AND :end_date
-            GROUP BY EXTRACT(DOW FROM attendance_date)
+                EXTRACT(DOW FROM sa.attendance_date) as day_of_week,
+                AVG(CASE WHEN sa.status = 'present' THEN 100.0 ELSE 0.0 END) as avg_attendance
+            FROM student_attendance sa
+            JOIN users u ON u.id::text = sa.student_id
+            WHERE u.hostel_id = :hostel_id 
+            AND sa.attendance_date BETWEEN :start_date AND :end_date
+            GROUP BY EXTRACT(DOW FROM sa.attendance_date)
             ORDER BY day_of_week
         """), {'hostel_id': hostel_id, 'start_date': start_date, 'end_date': end_date}).fetchall()
         
@@ -448,17 +473,17 @@ class AnalyticsService:
                                        start_date: date, end_date: date) -> StudentAttendanceHistory:
         """Get attendance history for a student"""
         
-        # Get student info and attendance
+        # Get student info and attendance from student_attendance
         attendance = db.execute(text("""
             SELECT 
-                a.user_id as student_id, u.full_name as student_name, a.hostel_id,
+                sa.student_id as student_id, u.name as student_name, u.hostel_id,
                 COUNT(*) as total_days,
-                SUM(CASE WHEN a.attendance_status = 'PRESENT' THEN 1 ELSE 0 END) as present_days
-            FROM attendance a
-            LEFT JOIN users u ON a.user_id = u.id
-            WHERE a.user_id = :student_id 
-            AND a.attendance_date BETWEEN :start_date AND :end_date
-            GROUP BY a.user_id, u.full_name, a.hostel_id
+                SUM(CASE WHEN sa.status = 'present' THEN 1 ELSE 0 END) as present_days
+            FROM student_attendance sa
+            LEFT JOIN users u ON u.id::text = sa.student_id
+            WHERE sa.student_id = (:student_id)::text 
+            AND sa.attendance_date BETWEEN :start_date AND :end_date
+            GROUP BY sa.student_id, u.name, u.hostel_id
         """), {'student_id': student_id, 'start_date': start_date, 'end_date': end_date}).first()
         
         if not attendance:
@@ -466,12 +491,12 @@ class AnalyticsService:
         
         # Get recent absences
         absences = db.execute(text("""
-            SELECT a.attendance_date as date
-            FROM attendance a
-            WHERE a.user_id = :student_id 
-            AND a.attendance_status != 'PRESENT'
-            AND a.attendance_date BETWEEN :start_date AND :end_date
-            ORDER BY a.attendance_date DESC
+            SELECT sa.attendance_date as date
+            FROM student_attendance sa
+            WHERE sa.student_id = (:student_id)::text 
+            AND sa.status != 'present'
+            AND sa.attendance_date BETWEEN :start_date AND :end_date
+            ORDER BY sa.attendance_date DESC
             LIMIT 10
         """), {'student_id': student_id, 'start_date': start_date, 'end_date': end_date}).fetchall()
         
@@ -499,13 +524,14 @@ class AnalyticsService:
         # Summary
         summary_data = db.execute(text("""
             SELECT 
-                COUNT(DISTINCT hostel_id) as total_hostels,
-                COUNT(DISTINCT user_id) as total_students,
+                COUNT(DISTINCT u.hostel_id) as total_hostels,
+                COUNT(DISTINCT sa.student_id) as total_students,
                 COUNT(*) as total_records,
-                SUM(CASE WHEN attendance_status = 'PRESENT' THEN 1 ELSE 0 END) as total_present
-            FROM attendance
-            WHERE hostel_id = ANY(:hostel_ids)
-            AND attendance_date BETWEEN :start_date AND :end_date
+                SUM(CASE WHEN sa.status = 'present' THEN 1 ELSE 0 END) as total_present
+            FROM student_attendance sa
+            JOIN users u ON u.id::text = sa.student_id
+            WHERE u.hostel_id = ANY(:hostel_ids)
+            AND sa.attendance_date BETWEEN :start_date AND :end_date
         """), {'hostel_ids': hostel_ids, 'start_date': start_date, 'end_date': end_date}).first()
         
         total_records = summary_data.total_records or 0
