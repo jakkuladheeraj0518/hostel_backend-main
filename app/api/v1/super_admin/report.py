@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from typing import List
 from app.core.database import get_db
 from app.schemas.reports import *
@@ -195,16 +195,19 @@ def get_student_retention(
     """Student retention rates and demographic analytics"""
     from sqlalchemy import text
     
-    # This is a simplified version - would need proper student tracking
+    # Use student_attendance joined to users to compute retention per hostel.
+    # The project stores per-student attendance in `student_attendance` (sa.student_id)
+    # and earlier code joins `users` with `u.id::text = sa.student_id` to obtain `hostel_id`.
     result = db.execute(text("""
-        SELECT 
-            hostel_id,
-            COUNT(DISTINCT user_id) as total_students,
-            AVG(CASE WHEN attendance_status = 'PRESENT' THEN 100.0 ELSE 0.0 END) as avg_attendance
-        FROM attendance
-        WHERE hostel_id = ANY(:hostel_ids)
-        AND attendance_date >= CURRENT_DATE - INTERVAL '90 days'
-        GROUP BY hostel_id
+        SELECT
+            u.hostel_id as hostel_id,
+            COUNT(DISTINCT sa.student_id) as total_students,
+            AVG(CASE WHEN LOWER(sa.status) = 'present' THEN 100.0 ELSE 0.0 END) as avg_attendance
+        FROM student_attendance sa
+        JOIN users u ON u.id::text = sa.student_id
+        WHERE u.hostel_id = ANY(:hostel_ids)
+        AND sa.attendance_date >= CURRENT_DATE - INTERVAL '90 days'
+        GROUP BY u.hostel_id
     """), {'hostel_ids': hostel_ids}).fetchall()
     
     return {
