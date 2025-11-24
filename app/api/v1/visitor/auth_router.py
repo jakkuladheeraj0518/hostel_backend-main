@@ -21,7 +21,7 @@ from app.core.database import get_db
 
 router = APIRouter()
 
-@router.post("/register", status_code=status.HTTP_201_CREATED)
+@router.post("/register", status_code=status.HTTP_201_CREATED, operation_id="visitor_register_user")
 async def register(user_data: UserRegister, db: Session = Depends(get_db)):
     if not user_data.email and not user_data.phone:
         raise HTTPException(400, "Email or phone required")
@@ -44,7 +44,7 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
 
     return {"message": "User registered. OTP sent."}
 
-@router.post("/verify-otp", response_model=Token)
+@router.post("/verify-otp", response_model=Token, operation_id="visitor_verify_otp")
 async def verify_otp(otp_data: OTPVerify, db: Session = Depends(get_db)):
     otp_record = repo.get_valid_otp(db, otp_data.otp_code, email=otp_data.email, phone=otp_data.phone)
     if not otp_record:
@@ -59,7 +59,7 @@ async def verify_otp(otp_data: OTPVerify, db: Session = Depends(get_db)):
     token = service.create_access_token({"sub": str(user.id), "email": user.email, "phone": user.phone_number})
     return {"access_token": token, "token_type": "bearer"}
 
-@router.post("/resend-otp")
+@router.post("/resend-otp", operation_id="visitor_resend_otp")
 async def resend_otp(otp_data: OTPResend, db: Session = Depends(get_db)):
     user = None
     if otp_data.email:
@@ -81,7 +81,7 @@ async def resend_otp(otp_data: OTPResend, db: Session = Depends(get_db)):
 
     return {"message": "OTP resent successfully"}
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED, operation_id="visitor_register_user_response")
 async def register(user_data: UserRegister, db: Session = Depends(get_db)):
     if not user_data.email and not user_data.phone:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Either email or phone must be provided")
@@ -109,7 +109,7 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
 
     return user
 
-@router.post("/verify-otp", response_model=Token)
+@router.post("/verify-otp", response_model=Token, operation_id="visitor_verify_otp_response")
 async def verify_otp(otp_data: OTPVerify, db: Session = Depends(get_db)):
     if not otp_data.email and not otp_data.phone:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Either email or phone must be provided")
@@ -146,7 +146,7 @@ async def verify_otp(otp_data: OTPVerify, db: Session = Depends(get_db)):
     access_token = service.create_access_token({"sub": str(user.id), "email": user.email})
     return {"access_token": access_token, "token_type": "bearer"}
 
-@router.post("/resend-otp")
+@router.post("/resend-otp", operation_id="visitor_resend_otp_response")
 async def resend_otp(otp_data: OTPResend, db: Session = Depends(get_db)):
     if not otp_data.email and not otp_data.phone:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Either email or phone must be provided")

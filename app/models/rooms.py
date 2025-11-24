@@ -4,6 +4,7 @@ from sqlalchemy import (
 )
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import relationship
+from app.models.beds import Bed
 
 from app.core.database import Base
 
@@ -98,3 +99,5 @@ class Room(Base):
     # Relationship → Hostel
     # -----------------------------------------------------
     hostel = relationship("Hostel", back_populates="rooms")
+    beds = relationship("Bed", back_populates="room")
+    bookings = relationship("Booking", back_populates="room")

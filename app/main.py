@@ -280,7 +280,7 @@ async def root():
         "docs": "/docs"
     }
 
-@app.get("/health")
+@app.get("/health", operation_id="health_check_status")
 async def health_check():
     return {"status": "healthy"}
 

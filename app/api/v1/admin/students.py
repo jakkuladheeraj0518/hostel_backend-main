@@ -81,7 +81,7 @@ def create_student(item: StudentCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="A student with this information already exists")
 
 
-@router.put("/{student_id}", response_model=StudentOut)
+@router.put("/{student_id}", response_model=StudentOut, operation_id="admin_update_student")
 def update_student(student_id: str, payload: StudentUpdate, db: Session = Depends(get_db)):
     try:
         updated = service_update_student(db, student_id, payload)
@@ -97,7 +97,7 @@ def update_student(student_id: str, payload: StudentUpdate, db: Session = Depend
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="A student with this information already exists")
 
 
-@router.delete("/{student_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{student_id}", status_code=status.HTTP_204_NO_CONTENT, operation_id="admin_delete_student")
 def delete_student(student_id: str, db: Session = Depends(get_db)):
     ok = service_delete_student(db, student_id)
     if not ok:

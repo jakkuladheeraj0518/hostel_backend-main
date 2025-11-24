@@ -7,7 +7,7 @@ from app.models.beds import BedStatus  # from app.models.beds.py
 # BED SCHEMAS
 
 class BedBase(BaseModel):
-    hostel_id: Optional[str] = None
+    hostel_id: Optional[int] = None
     bed_number: str
     room_number: str
     bed_status: BedStatus = BedStatus.AVAILABLE
@@ -21,7 +21,7 @@ class BedCreate(BedBase):
 
 
 class BedUpdate(BaseModel):
-    hostel_id: Optional[str] = None
+    hostel_id: Optional[int] = None
     bed_number: Optional[str] = None
     room_number: Optional[str] = None
     bed_status: Optional[BedStatus] = None

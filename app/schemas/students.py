@@ -22,6 +22,7 @@ class StudentBase(BaseModel):
     room_assignment: Optional[str] = None
     bed_assignment: Optional[str] = None
     status: Optional[str] = None
+    hostel_id: Optional[int] = None
 
 
 class StudentCreate(StudentBase):

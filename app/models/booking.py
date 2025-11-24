@@ -28,6 +28,7 @@ class Booking(Base):
     visitor_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     hostel_id = Column(Integer, ForeignKey("hostels.id"), nullable=False)
     room_id = Column(Integer, ForeignKey("rooms.id"), nullable=False)
+    # Removed student_id column as requested
 
     check_in = Column(DateTime, nullable=False)
     check_out = Column(DateTime, nullable=False)
@@ -37,7 +38,7 @@ class Booking(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # relationship to room (used by services)
-    room = relationship("Room")
+    room = relationship("Room", back_populates="bookings")
 
 
 class BookingRequest(Base):

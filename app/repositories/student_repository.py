@@ -39,7 +39,13 @@ def list_students(
 
 
 def get_student(db: Session, student_id: str) -> Optional[Student]:
-    return db.query(Student).filter(Student.student_id == student_id).first()
+    student = db.query(Student).filter(Student.student_id == student_id).first()
+    if student and hasattr(student, 'hostel_id') and isinstance(student.hostel_id, str):
+        try:
+            student.hostel_id = int(student.hostel_id)
+        except Exception:
+            student.hostel_id = None
+    return student
 
 
 def create_student(db: Session, student_in: StudentCreate) -> Student:

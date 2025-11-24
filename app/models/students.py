@@ -2,6 +2,7 @@ from enum import Enum
 from sqlalchemy import Column, String, Integer, Float, DateTime, Date, Time, Boolean, func, ForeignKey
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.schema import Identity
+from sqlalchemy.orm import relationship
 
 from app.config import Base
 
@@ -58,6 +59,10 @@ class Student(Base):
     room_assignment = Column(String, nullable=True)
     bed_assignment = Column(String, nullable=True)
     status = Column(String, nullable=True)
+
+    # New relationships/fields
+    hostel_id = Column(Integer, ForeignKey("hostels.id"), nullable=True)
+    hostel = relationship("Hostel", back_populates="students")
 
 
 class StudentStatusHistory(Base):

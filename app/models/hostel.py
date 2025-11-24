@@ -4,6 +4,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
+from app.models.students import Student
 from app.core.database import Base
 
 
@@ -91,6 +92,8 @@ class Hostel(Base):
 
     # Rooms (from second model + first model → already matching)
     rooms = relationship("Room", back_populates="hostel")
+    beds = relationship("Bed", back_populates="hostel")
+    students = relationship("Student", back_populates="hostel")
 
     # Admin mappings
     admin_assignments = relationship(
