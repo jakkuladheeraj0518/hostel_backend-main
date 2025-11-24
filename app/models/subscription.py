@@ -9,6 +9,7 @@ import uuid
 import enum
 from datetime import datetime
 from enum import Enum
+from app.models.payment_models import PaymentStatus_hms
 
 
 
@@ -186,10 +187,7 @@ class Payment(Base):
 
     gateway = Column(SQLEnum(PaymentGateway), nullable=True)                     # MERGED
 
-    status = Column(
-        SQLEnum(PaymentStatus, name="payment_status"),
-        default=PaymentStatus.pending
-    )                                                                             # BASE MODEL
+    status = Column(String)                                                                         # BASE MODEL
 
     payment_type = Column(
         SQLEnum(PaymentType, name="payment_type"),

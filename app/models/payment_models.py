@@ -109,12 +109,11 @@ from enum import Enum
 from app.core.database import Base
 
 
-class PaymentStatus(str, Enum):
-    PENDING = "pending"
-    PARTIAL = "partial"
-    SUCCESS = "success"
-    FAILED = "failed"
-    CANCELLED = "cancelled"
+class PaymentStatus_hms(str, Enum):
+    pending = "pending"
+    partial = "partial"
+    success = "success"
+    cancelled = "cancelled"
 
 
 class TransactionType(str, Enum):
@@ -145,11 +144,7 @@ class Invoice(Base):
     due_amount = Column(Float, nullable=False)
     description = Column(JSONB)
     items = Column(JSONB)  # store JSON string
-    status = Column(
-    SQLEnum(PaymentStatus, name="paymentstatus", native_enum=False),
-    default=PaymentStatus.PENDING.value
-)
-
+    status = Column(String)
     issue_date = Column(DateTime, default=datetime.utcnow)
     due_date = Column(DateTime, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)

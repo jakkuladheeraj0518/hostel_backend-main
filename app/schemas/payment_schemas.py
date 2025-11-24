@@ -136,7 +136,7 @@ class RefundCreate(BaseModel):
 
 # Backwards-compatible name expected by some routers
 # Keep both names available so older imports continue to work.
-RefundRequest = RefundCreate
+
 
 
 class RefundResponse(BaseModel):

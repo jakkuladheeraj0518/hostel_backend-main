@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from app.repositories.razorpay_repositorys import RazorpayRepository
 from app.models.subscription import Payment
-from app.models.subscription import PaymentStatus
+from app.models.payment_models import PaymentStatus_hms
 from app.models.user import User
 from datetime import datetime
 import  os, uuid
@@ -75,7 +75,7 @@ from app.models.payment_models import (
     TransactionType
 )
 from app.models.subscription import Payment
-from app.models.subscription import PaymentStatus
+from app.models.payment_models import PaymentStatus_hms
 from app.repositories.payment_repositorys import PaymentRepository
 from app.utils.receipt_generatorss import generate_receipt_pdf
 
@@ -117,7 +117,7 @@ class PaymentService:
             description=description,
             items=items,
             due_date=due_date,
-            status=PaymentStatus.pending.value  # ✅ ensure lowercase enum value
+            status=PaymentStatus_hms.pending.value  # ✅ ensure lowercase enum value
         )
         return PaymentRepository.create_invoice(db, invoice)
 
@@ -142,15 +142,15 @@ class PaymentService:
             if not invoice:
                 raise ValueError("Invoice not found")
 
-            if amount > invoice.due_amount:
-                raise ValueError(f"Amount exceeds due amount ₹{invoice.due_amount}")
+            # if amount < invoice.due_amount:
+            #     raise ValueError(f"Amount exceeds due amount ₹{invoice.due_amount}")
             # 2️⃣ ALWAYS create a Payment entry for invoice payments
             payment = Payment(
                 user_id=invoice.user_id,
                 hostel_id=invoice.hostel_id,
                 amount=amount,
                 currency="INR",
-                status=PaymentStatus.succeeded.value,
+                status="success",
                 description=notes or "Invoice payment",
                 created_at=datetime.utcnow()
                 )
@@ -196,14 +196,14 @@ class PaymentService:
             invoice.updated_at = datetime.utcnow()
 
             if invoice.due_amount <= 0:
-                invoice.status = PaymentStatus.succeeded.value   
+                invoice.status = PaymentStatus_hms.success.value   
                 invoice.due_amount = 0
             elif invoice.paid_amount > 0:
-                invoice.status = PaymentStatus.pending.value
+                invoice.status = PaymentStatus_hms.pending.value
 
             # 5️⃣ Update Payment status too (if exists)
             if payment:
-                payment.status = PaymentStatus.succeeded.value
+                payment.status = PaymentStatus_hms.success.value
                 payment.updated_at = datetime.utcnow()
 
             db.commit()
@@ -324,7 +324,7 @@ class PaymentService:
         invoice.due_amount = max(invoice.due_amount, 0)
 
         if invoice.paid_amount == 0:
-            invoice.status = PaymentStatus.pending.value
+            invoice.status = PaymentStatus_hms.pending.value
         else:
             invoice.status = "partial"
 

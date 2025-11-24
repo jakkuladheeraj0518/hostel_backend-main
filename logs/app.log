@@ -8309,3 +8309,54 @@ WHERE bookings.status = %(status_1)s AND bookings.created_at < %(created_at_1)s]
 2025-11-24 23:01:48,211 | INFO     | app | Elasticsearch ready.
 2025-11-24 23:01:48,227 | INFO     | app | BookingExpiryService started
 2025-11-24 23:01:48,289 | INFO     | app | Notification worker started.
+2025-11-25 02:15:37,608 | INFO     | app | Initializing database...
+2025-11-25 02:15:38,553 | INFO     | app | Database initialized.
+2025-11-25 02:15:38,554 | INFO     | app | Initializing Elasticsearch...
+2025-11-25 02:15:42,580 | INFO     | app | Elasticsearch ready.
+2025-11-25 02:15:42,596 | INFO     | app | BookingExpiryService started
+2025-11-25 02:15:42,751 | INFO     | app | Notification worker started.
+2025-11-25 02:18:08,335 | INFO     | app | Initializing database...
+2025-11-25 02:18:08,559 | INFO     | app | Database initialized.
+2025-11-25 02:18:08,560 | INFO     | app | Initializing Elasticsearch...
+2025-11-25 02:18:12,581 | INFO     | app | Elasticsearch ready.
+2025-11-25 02:18:12,597 | INFO     | app | BookingExpiryService started
+2025-11-25 02:18:12,666 | INFO     | app | Notification worker started.
+2025-11-25 02:19:55,468 | INFO     | app | Initializing database...
+2025-11-25 02:19:56,204 | INFO     | app | Database initialized.
+2025-11-25 02:19:56,204 | INFO     | app | Initializing Elasticsearch...
+2025-11-25 02:20:00,227 | INFO     | app | Elasticsearch ready.
+2025-11-25 02:20:00,243 | INFO     | app | BookingExpiryService started
+2025-11-25 02:20:00,388 | INFO     | app | Notification worker started.
+2025-11-25 02:20:21,920 | INFO     | app | Initializing database...
+2025-11-25 02:20:22,075 | INFO     | app | Database initialized.
+2025-11-25 02:20:22,076 | INFO     | app | Initializing Elasticsearch...
+2025-11-25 02:20:26,084 | INFO     | app | Elasticsearch ready.
+2025-11-25 02:20:26,099 | INFO     | app | BookingExpiryService started
+2025-11-25 02:20:26,179 | INFO     | app | Notification worker started.
+2025-11-25 02:30:00,197 | INFO     | app.api.v1.super_admin.admins | Creating admin with data: {'admin_name': 'sas', 'email': 'user@example.com', 'is_active': True}
+2025-11-25 02:30:00,205 | INFO     | app.api.v1.super_admin.admins | Admin created successfully: admin_name='sas' email='user@example.com' is_active=True id=3 joined_at=datetime.datetime(2025, 11, 25, 2, 30, 0, 199010, tzinfo=datetime.timezone(datetime.timedelta(seconds=19800)))
+2025-11-25 02:30:34,989 | INFO     | app.api.v1.super_admin.admins | Assigning hostel to admin 3 with data: {'permission_level': 'read', 'hostel_id': 3}
+2025-11-25 02:30:34,990 | INFO     | app.services.admin_service | Assigning hostel with permission level: read (type: <enum 'PermissionLevel'>)
+2025-11-25 02:30:34,993 | INFO     | app.repositories.admin_repository | Creating assignment with permission level: read
+2025-11-25 02:30:35,006 | INFO     | app.api.v1.super_admin.admins | Hostel assignment created successfully: permission_level=<PermissionLevel.read: 'read'> id=1 admin_id=3 hostel_id=3 assigned_at=datetime.datetime(2025, 11, 25, 2, 30, 34, 992597, tzinfo=datetime.timezone(datetime.timedelta(seconds=19800)))
+2025-11-25 02:31:04,975 | INFO     | app.api.v1.super_admin.admins | Bulk assigning hostels with data: {'admin_id': 3, 'hostel_ids': [5, 2], 'permission_level': 'read'}
+2025-11-25 02:31:04,978 | INFO     | app.services.admin_service | Bulk assigning with permission level: read (type: <enum 'PermissionLevel'>)
+2025-11-25 02:31:04,982 | INFO     | app.api.v1.super_admin.admins | Bulk assignment successful: success=True message='Successfully assigned 2 hostels to admin' assignments=[AdminHostelAssignmentResponse(permission_level=<PermissionLevel.read: 'read'>, id=2, admin_id=3, hostel_id=5, assigned_at=datetime.datetime(2025, 11, 25, 2, 31, 4, 977884, tzinfo=datetime.timezone(datetime.timedelta(seconds=19800)))), AdminHostelAssignmentResponse(permission_level=<PermissionLevel.read: 'read'>, id=3, admin_id=3, hostel_id=2, assigned_at=datetime.datetime(2025, 11, 25, 2, 31, 4, 977884, tzinfo=datetime.timezone(datetime.timedelta(seconds=19800))))]
+2025-11-25 02:46:03,543 | INFO     | app | Initializing database...
+2025-11-25 02:46:03,931 | INFO     | app | Database initialized.
+2025-11-25 02:46:03,938 | INFO     | app | Initializing Elasticsearch...
+2025-11-25 02:46:07,966 | INFO     | app | Elasticsearch ready.
+2025-11-25 02:46:07,983 | INFO     | app | BookingExpiryService started
+2025-11-25 02:46:08,048 | INFO     | app | Notification worker started.
+2025-11-25 02:49:19,842 | INFO     | app | Initializing database...
+2025-11-25 02:49:22,353 | INFO     | app | Database initialized.
+2025-11-25 02:49:22,355 | INFO     | app | Initializing Elasticsearch...
+2025-11-25 02:49:26,390 | INFO     | app | Elasticsearch ready.
+2025-11-25 02:49:26,414 | INFO     | app | BookingExpiryService started
+2025-11-25 02:49:26,505 | INFO     | app | Notification worker started.
+2025-11-25 02:50:46,405 | INFO     | app | Initializing database...
+2025-11-25 02:50:46,801 | INFO     | app | Database initialized.
+2025-11-25 02:50:46,808 | INFO     | app | Initializing Elasticsearch...
+2025-11-25 02:50:50,839 | INFO     | app | Elasticsearch ready.
+2025-11-25 02:50:50,853 | INFO     | app | BookingExpiryService started
+2025-11-25 02:50:50,931 | INFO     | app | Notification worker started.
