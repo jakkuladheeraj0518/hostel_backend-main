@@ -74,6 +74,9 @@ def update_room(db: Session, room: Room, room_in: RoomUpdate) -> Room:
 
 
 def delete_room(db: Session, room: Room) -> None:
+    # Delete all bookings for this room first
+    from app.models.booking import Booking
+    db.query(Booking).filter(Booking.room_id == room.id).delete()
     db.delete(room)
     db.commit()
 

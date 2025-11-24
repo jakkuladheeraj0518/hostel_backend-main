@@ -62,12 +62,14 @@ def update_bed(bed_id: int, payload: BedUpdate, db: Session = Depends(get_db)):
     return updated
 
 
-@router.delete("/{bed_id}", status_code=status.HTTP_204_NO_CONTENT)
+from fastapi.responses import JSONResponse
+
+@router.delete("/{bed_id}", status_code=status.HTTP_200_OK)
 def delete_bed(bed_id: int, db: Session = Depends(get_db)):
     ok = service_delete_bed(db, bed_id)
     if not ok:
         raise HTTPException(status_code=404, detail="Bed not found")
-    return None
+    return JSONResponse(content={"detail": "Bed deleted successfully"})
 
 
 @router.post("/{bed_id}/assign", response_model=BedOut)

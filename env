@@ -2,7 +2,7 @@
 # Database (Postgres)
 # -----------------------
 # Format: postgresql://<user>:<password>@<host>:<port>/<database>
-DATABASE_URL=postgresql://postgres:abhi8851013k@localhost:5432/hostelB
+DATABASE_URL=postgresql://postgres:12345678@localhost:5432/hostelB
 
 # -----------------------
 # Security & JWT

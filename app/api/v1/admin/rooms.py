@@ -95,12 +95,14 @@ def update_room(room_id: int, payload: RoomUpdate, db: Session = Depends(get_db)
     return updated
 
 
-@router.delete("/{room_id}", status_code=status.HTTP_204_NO_CONTENT)
+from fastapi.responses import JSONResponse
+
+@router.delete("/{room_id}", status_code=status.HTTP_200_OK)
 def delete_room(room_id: int, db: Session = Depends(get_db)):
     ok = service_delete_room(db, room_id)
     if not ok:
         raise HTTPException(status_code=404, detail="Room not found")
-    return None
+    return JSONResponse(content={"detail": "Room deleted successfully"})
 
 
 @router.post("/{room_id}/maintenance", response_model=RoomOut)

@@ -72,10 +72,12 @@ def delete_supervisor(employee_id: str, db: Session = Depends(get_db)):
     return None
 
 
-@router.post("/{employee_id}/assign-hostel", status_code=status.HTTP_204_NO_CONTENT)
+from fastapi.responses import JSONResponse
+
+@router.post("/{employee_id}/assign-hostel", status_code=status.HTTP_200_OK)
 def assign_hostel(employee_id: str, hostel_id: str, db: Session = Depends(get_db)):
     service_assign_supervisor_hostel(db, employee_id, hostel_id)
-    return None
+    return JSONResponse(content={"detail": "Supervisor assigned to hostel successfully"})
 
 
 @router.get("/{employee_id}/hostels")
@@ -97,10 +99,12 @@ def create_override(payload: AdminOverrideCreate, db: Session = Depends(get_db))
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
-@router.post("/{employee_id}/override/assign-hostel", status_code=status.HTTP_204_NO_CONTENT)
+from fastapi.responses import JSONResponse
+
+@router.post("/{employee_id}/override/assign-hostel", status_code=status.HTTP_200_OK)
 def override_assign_hostel(employee_id: str, new_hostel_id: str, admin_employee_id: str, db: Session = Depends(get_db)):
     try:
         service_override_assign_supervisor_hostel(db, admin_employee_id, employee_id, new_hostel_id)
-        return None
+        return JSONResponse(content={"detail": "Supervisor override assignment successful"})
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
