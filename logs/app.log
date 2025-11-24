@@ -8035,3 +8035,9 @@ DETAIL:  Key (location_id)=(3) is not present in table "locations".
 2025-11-24 09:36:25,764 | INFO     | app | Elasticsearch ready.
 2025-11-24 09:36:25,778 | INFO     | app | BookingExpiryService started
 2025-11-24 09:36:25,826 | INFO     | app | Notification worker started.
+2025-11-24 09:37:00,689 | INFO     | app | Initializing database...
+2025-11-24 09:37:00,937 | INFO     | app | Database initialized.
+2025-11-24 09:37:00,938 | INFO     | app | Initializing Elasticsearch...
+2025-11-24 09:37:04,968 | INFO     | app | Elasticsearch ready.
+2025-11-24 09:37:04,983 | INFO     | app | BookingExpiryService started
+2025-11-24 09:37:05,030 | INFO     | app | Notification worker started.
