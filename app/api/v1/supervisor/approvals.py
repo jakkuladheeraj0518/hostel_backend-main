@@ -24,13 +24,10 @@ async def create_approval_request(
     """Create an approval request for an action requiring approval"""
     permission_service = PermissionService(db)
     
-    # Check if action requires approval
-    if not permission_service.requires_approval(approval_data.action, current_user.role):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This action does not require approval for your role"
-        )
-    
+    # Previously we rejected requests for actions not listed in thresholds.
+    # Allow supervisors to create approval requests for any action; the
+    # PermissionService will assign a threshold (defaults to SuperAdmin level)
+    # so approvers can handle it appropriately.
     return permission_service.create_approval_request(
         requester_id=current_user.id,
         action=approval_data.action,

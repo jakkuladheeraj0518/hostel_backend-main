@@ -136,15 +136,29 @@ async def get_current_user(
 
     try:
         payload = decode_token(token)
-        raw_sub = payload.get("sub")
-
-        if raw_sub is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
-
-        user_id = int(raw_sub)
-
+    except HTTPException as e:
+        # Propagate decode errors (expired / invalid token) so caller sees clearer reason
+        raise e
     except Exception:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials"
+        )
+
+    raw_sub = payload.get("sub")
+    if raw_sub is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload: missing 'sub' claim"
+        )
+
+    try:
+        user_id = int(raw_sub)
+    except (ValueError, TypeError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token subject"
+        )
 
     user = db.query(User).filter(User.id == user_id).first()
 
