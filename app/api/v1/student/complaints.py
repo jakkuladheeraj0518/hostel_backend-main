@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Header
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 from typing import Optional
 from pathlib import Path
 import aiofiles
@@ -20,6 +20,8 @@ from app.schemas.complaint import (
     ComplaintNoteCreate
 )
 from app.config import settings
+from sqlalchemy import select
+from app.models.hostel import Hostel
 
 router = APIRouter(prefix="/student/complaints", tags=["Student Complaints"])
 
@@ -27,14 +29,39 @@ router = APIRouter(prefix="/student/complaints", tags=["Student Complaints"])
 @router.post("/", response_model=ComplaintResponse, status_code=status.HTTP_201_CREATED)
 async def create_complaint(
     complaint_data: ComplaintCreate,
-    db: AsyncSession = Depends(get_db)
+    db: Session = Depends(get_db)
 ):
     """Submit a new complaint"""
+    # If caller provided a hostel_id, resolve it to hostel_name and validate existence.
+    payload = complaint_data.model_dump()
+    hostel_id = payload.get('hostel_id') if isinstance(payload, dict) else None
+    # Require hostel_id in the new schema (hostel_name replaced by hostel_id).
+    if hostel_id is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="hostel id not found")
+
+    if hostel_id is not None:
+        # `get_db` yields a synchronous Session; execute synchronously to avoid awaiting a non-awaitable
+        result = db.execute(select(Hostel).where(Hostel.id == int(hostel_id)))
+        hostel = result.scalar_one_or_none()
+        if not hostel:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="hostel id not found")
+        # Overwrite / set hostel_name to the canonical name and remove hostel_id
+        # We'll pass a dict payload to the service (ComplaintCreate schema no longer
+        # includes `hostel_name`, so building a Pydantic model here would drop it).
+        payload['hostel_name'] = hostel.hostel_name
+        payload.pop('hostel_id', None)
+
     repository = ComplaintRepository(db)
     service = ComplaintService(repository)
-    
-    complaint = await service.create_complaint(complaint_data)
-    return complaint
+
+    # Pass a plain dict payload that includes `hostel_name` so the repository
+    # gets the expected field for DB insertion.
+    try:
+        complaint = await service.create_complaint(payload)
+        return complaint
+    except ValueError as e:
+        # Map service validation errors to HTTP responses
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.get("/", response_model=ComplaintListResponse)
@@ -45,7 +72,7 @@ async def list_student_complaints(
     status_filter: Optional[str] = None,
     page: int = 1,
     page_size: int = 10,
-    db: AsyncSession = Depends(get_db)
+    db: Session = Depends(get_db)
 ):
     """List complaints by student email"""
     filters = ComplaintFilter(
@@ -77,7 +104,7 @@ async def list_student_complaints(
 async def get_complaint(
     complaint_id: int,
     student_email: str = Header(..., alias="X-User-Email"),
-    db: AsyncSession = Depends(get_db)
+    db: Session = Depends(get_db)
 ):
     """Get complaint details with attachments and notes"""
     repository = ComplaintRepository(db)
@@ -109,7 +136,7 @@ async def upload_attachment(
     complaint_id: int,
     file: UploadFile = File(...),
     student_email: str = Header(..., alias="X-User-Email"),
-    db: AsyncSession = Depends(get_db)
+    db: Session = Depends(get_db)
 ):
     """Upload attachment for a complaint"""
     repository = ComplaintRepository(db)
@@ -173,7 +200,7 @@ async def submit_feedback(
     complaint_id: int,
     feedback_data: ComplaintFeedback,
     student_email: str = Header(..., alias="X-User-Email"),
-    db: AsyncSession = Depends(get_db)
+    db: Session = Depends(get_db)
 ):
     """Submit feedback for a resolved complaint"""
     repository = ComplaintRepository(db)
@@ -205,7 +232,7 @@ async def reopen_complaint(
     complaint_id: int,
     reopen_data: ComplaintReopen,
     student_email: str = Header(..., alias="X-User-Email"),
-    db: AsyncSession = Depends(get_db)
+    db: Session = Depends(get_db)
 ):
     """Reopen a closed complaint"""
     repository = ComplaintRepository(db)
@@ -235,7 +262,7 @@ async def add_note(
     note: str,
     student_name: str = Header(..., alias="X-User-Name"),
     student_email: str = Header(..., alias="X-User-Email"),
-    db: AsyncSession = Depends(get_db)
+    db: Session = Depends(get_db)
 ):
     """Add a note to the complaint"""
     repository = ComplaintRepository(db)

@@ -8285,3 +8285,27 @@ WHERE bookings.status = %(status_1)s AND bookings.created_at < %(created_at_1)s]
 2025-11-24 21:36:38,434 | INFO     | app | Elasticsearch ready.
 2025-11-24 21:36:38,449 | INFO     | app | BookingExpiryService started
 2025-11-24 21:36:38,535 | INFO     | app | Notification worker started.
+2025-11-24 22:46:05,374 | INFO     | app | Initializing database...
+2025-11-24 22:46:05,719 | INFO     | app | Database initialized.
+2025-11-24 22:46:05,719 | INFO     | app | Initializing Elasticsearch...
+2025-11-24 22:46:09,737 | INFO     | app | Elasticsearch ready.
+2025-11-24 22:46:09,753 | INFO     | app | BookingExpiryService started
+2025-11-24 22:46:09,799 | INFO     | app | Notification worker started.
+2025-11-24 22:47:04,461 | INFO     | app | Initializing database...
+2025-11-24 22:47:07,313 | INFO     | app | Database initialized.
+2025-11-24 22:47:07,314 | INFO     | app | Initializing Elasticsearch...
+2025-11-24 22:47:11,333 | INFO     | app | Elasticsearch ready.
+2025-11-24 22:47:11,348 | INFO     | app | BookingExpiryService started
+2025-11-24 22:47:11,425 | INFO     | app | Notification worker started.
+2025-11-24 22:47:29,856 | INFO     | app | Initializing database...
+2025-11-24 22:47:31,362 | INFO     | app | Database initialized.
+2025-11-24 22:47:31,363 | INFO     | app | Initializing Elasticsearch...
+2025-11-24 22:47:35,390 | INFO     | app | Elasticsearch ready.
+2025-11-24 22:47:35,405 | INFO     | app | BookingExpiryService started
+2025-11-24 22:47:35,452 | INFO     | app | Notification worker started.
+2025-11-24 23:01:43,942 | INFO     | app | Initializing database...
+2025-11-24 23:01:44,189 | INFO     | app | Database initialized.
+2025-11-24 23:01:44,189 | INFO     | app | Initializing Elasticsearch...
+2025-11-24 23:01:48,211 | INFO     | app | Elasticsearch ready.
+2025-11-24 23:01:48,227 | INFO     | app | BookingExpiryService started
+2025-11-24 23:01:48,289 | INFO     | app | Notification worker started.

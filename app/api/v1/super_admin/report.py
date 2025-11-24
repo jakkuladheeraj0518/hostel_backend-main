@@ -5,6 +5,8 @@ from typing import List
 from app.core.database import get_db
 from app.schemas.reports import *
 from app.services.analytics_service import AnalyticsService
+from app.repositories.hostel_repository import HostelRepository
+from fastapi import HTTPException, status
 
 router = APIRouter(prefix="/super-admin/reports", tags=["Super Admin Reports"])
 
@@ -16,6 +18,12 @@ def get_unified_dashboard(
     db: Session = Depends(get_db)
 ):
     """Get unified multi-hostel dashboard with aggregate KPIs"""
+    # Validate hostels
+    repo = HostelRepository(db)
+    missing = [hid for hid in hostel_ids if not repo.get_by_id(hid)]
+    if missing:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"hostel id(s) not found: {missing}")
+
     return AnalyticsService.get_multi_hostel_dashboard(db, hostel_ids, start_date, end_date)
 
 @router.get("/cross-hostel/revenue-comparison")
@@ -30,6 +38,12 @@ def get_revenue_comparison(
     previous_start = current_start - timedelta(days=days_diff)
     previous_end = current_start - timedelta(days=1)
     
+    # Validate hostels
+    repo = HostelRepository(db)
+    missing = [hid for hid in hostel_ids if not repo.get_by_id(hid)]
+    if missing:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"hostel id(s) not found: {missing}")
+
     return AnalyticsService.get_revenue_comparison(
         db, hostel_ids, current_start, current_end, previous_start, previous_end
     )
@@ -42,6 +56,12 @@ def get_occupancy_trends(
     db: Session = Depends(get_db)
 ):
     """Occupancy trends across multiple hostels"""
+    # Validate hostels
+    repo = HostelRepository(db)
+    missing = [hid for hid in hostel_ids if not repo.get_by_id(hid)]
+    if missing:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"hostel id(s) not found: {missing}")
+
     return AnalyticsService.get_occupancy_trends(db, hostel_ids, start_date, end_date)
 
 @router.get("/cross-hostel/complaint-metrics")
@@ -52,6 +72,12 @@ def get_complaint_metrics(
     db: Session = Depends(get_db)
 ):
     """Complaint metrics across multiple hostels"""
+    # Validate hostels
+    repo = HostelRepository(db)
+    missing = [hid for hid in hostel_ids if not repo.get_by_id(hid)]
+    if missing:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"hostel id(s) not found: {missing}")
+
     return AnalyticsService.get_complaint_metrics(db, hostel_ids, start_date, end_date)
 
 @router.get("/marketing/analytics")
@@ -62,6 +88,12 @@ def get_marketing_analytics(
     db: Session = Depends(get_db)
 ):
     """Marketing analytics across hostels"""
+    # Validate hostels
+    repo = HostelRepository(db)
+    missing = [hid for hid in hostel_ids if not repo.get_by_id(hid)]
+    if missing:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"hostel id(s) not found: {missing}")
+
     return AnalyticsService.get_marketing_analytics(db, hostel_ids, start_date, end_date)
 
 @router.get("/marketing/search-trends")
@@ -137,6 +169,11 @@ def get_booking_conversion_rates(
     }
     
     if hostel_ids:
+        # Validate hostels
+        repo = HostelRepository(db)
+        missing = [hid for hid in hostel_ids if not repo.get_by_id(hid)]
+        if missing:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"hostel id(s) not found: {missing}")
         where_clause += " AND hostel_id = ANY(:hostel_ids)"
         params['hostel_ids'] = hostel_ids
     
@@ -173,6 +210,12 @@ def get_consolidated_attendance(
     db: Session = Depends(get_db)
 ):
     """Consolidated attendance report across multiple hostels"""
+    # Validate hostels
+    repo = HostelRepository(db)
+    missing = [hid for hid in hostel_ids if not repo.get_by_id(hid)]
+    if missing:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"hostel id(s) not found: {missing}")
+
     return AnalyticsService.get_consolidated_attendance_report(
         db, hostel_ids, start_date, end_date
     )
@@ -198,6 +241,12 @@ def get_student_retention(
     # Use student_attendance joined to users to compute retention per hostel.
     # The project stores per-student attendance in `student_attendance` (sa.student_id)
     # and earlier code joins `users` with `u.id::text = sa.student_id` to obtain `hostel_id`.
+    # Validate hostels
+    repo = HostelRepository(db)
+    missing = [hid for hid in hostel_ids if not repo.get_by_id(hid)]
+    if missing:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"hostel id(s) not found: {missing}")
+
     result = db.execute(text("""
         SELECT
             u.hostel_id as hostel_id,

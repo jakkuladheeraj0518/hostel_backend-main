@@ -26,21 +26,27 @@ class MessMenuRepository:
         hostel_id: int,
         skip: int = 0,
         limit: int = 100,
-        menu_type: Optional[str] = None,
+        menu_type: Optional[MenuType] = None,
         start_date: Optional[date] = None,
-        end_date: Optional[date] = None
+        end_date: Optional[date] = None,
+        meal_type: Optional[MealType] = None,
     ) -> List[MessMenu]:
         query = self.db.query(MessMenu).filter(MessMenu.hostel_id == hostel_id)
-        
+
+        # menu_type filters the periodicity (daily/weekly/monthly)
         if menu_type:
             query = query.filter(MessMenu.menu_type == menu_type)
-        
+
+        # meal_type filters the meal (breakfast/lunch/dinner)
+        if meal_type:
+            query = query.filter(MessMenu.meal_type == meal_type)
+
         if start_date:
             query = query.filter(MessMenu.menu_date >= start_date)
-        
+
         if end_date:
             query = query.filter(MessMenu.menu_date <= end_date)
-        
+
         return query.order_by(MessMenu.menu_date.desc()).offset(skip).limit(limit).all()
 
     def get_menu_by_date_and_meal(

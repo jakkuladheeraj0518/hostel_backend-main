@@ -23,9 +23,32 @@ class ComplaintService:
     # STUDENT ACTIONS
     # -------------------------------------------------------------------------
 
-    async def create_complaint(self, data: ComplaintCreate):
-        """Create a new complaint (student)."""
-        payload = data.dict()
+    async def create_complaint(self, data):
+        """Create a new complaint (student).
+
+        Accepts either a Pydantic `ComplaintCreate` or a plain `dict` payload.
+        The repository expects `hostel_name` (DB column) so the payload must
+        include `hostel_name` (endpoint resolves `hostel_id` -> `hostel_name`).
+        """
+        # Normalize incoming data to a dict regardless of Pydantic version
+        if isinstance(data, dict):
+            payload = data.copy()
+        else:
+            # pydantic v2 uses model_dump(), v1 uses dict()
+            if hasattr(data, "model_dump"):
+                payload = data.model_dump()
+            elif hasattr(data, "dict"):
+                payload = data.dict()
+            else:
+                payload = dict(data)
+
+        # Ensure we have the DB field `hostel_name` available
+        if not payload.get("hostel_name"):
+            raise ValueError("hostel id not found")
+
+        # Remove any input-side hostel_id (not a DB column)
+        payload.pop('hostel_id', None)
+
         payload["status"] = ComplaintStatus.PENDING
         payload["created_at"] = datetime.utcnow()
         payload["sla_deadline"] = datetime.utcnow() + timedelta(days=3)

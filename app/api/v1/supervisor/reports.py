@@ -4,6 +4,14 @@ from datetime import date, datetime, timedelta
 from app.core.database import get_db
 from app.schemas.reports import AttendanceReport, AttendanceTrend
 from app.services.analytics_service import AnalyticsService
+from app.repositories.hostel_repository import HostelRepository
+from fastapi import HTTPException, status
+
+
+def _validate_hostel(db: Session, hostel_id: int):
+    repo = HostelRepository(db)
+    if not repo.get_by_id(hostel_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="hostel id not found")
 
 router = APIRouter(prefix="/supervisor/reports", tags=["Supervisor Reports"])
 
@@ -13,6 +21,9 @@ def get_daily_summary(hostel_id: int, report_date: date = None, db: Session = De
     if not report_date:
         report_date = date.today()
     
+    # Validate hostel
+    _validate_hostel(db, hostel_id)
+
     # Attendance summary
     attendance = AnalyticsService.get_attendance_report(db, hostel_id, report_date)
     
@@ -56,6 +67,9 @@ def get_weekly_summary(hostel_id: int, end_date: date = None, db: Session = Depe
     
     start_date = end_date - timedelta(days=7)
     
+    # Validate hostel
+    _validate_hostel(db, hostel_id)
+
     # Attendance trends
     attendance_trend = AnalyticsService.get_attendance_trends(db, hostel_id, start_date, end_date)
     
@@ -84,6 +98,9 @@ def get_monthly_performance(hostel_id: int, month: int, year: int, db: Session =
     _, last_day = monthrange(year, month)
     end_date = date(year, month, last_day)
     
+    # Validate hostel
+    _validate_hostel(db, hostel_id)
+
     # Attendance analysis
     attendance_trend = AnalyticsService.get_attendance_trends(db, hostel_id, start_date, end_date)
     
@@ -114,10 +131,14 @@ def get_monthly_performance(hostel_id: int, month: int, year: int, db: Session =
 @router.get("/attendance/daily")
 def get_daily_attendance(hostel_id: int, report_date: date, db: Session = Depends(get_db)):
     """Get attendance report for specific date"""
+    _validate_hostel(db, hostel_id)
+
     return AnalyticsService.get_attendance_report(db, hostel_id, report_date)
 
 @router.get("/attendance/trends")
 def get_attendance_trends(hostel_id: int, start_date: date, end_date: date, 
                          db: Session = Depends(get_db)):
     """Get attendance trends over period"""
+    _validate_hostel(db, hostel_id)
+
     return AnalyticsService.get_attendance_trends(db, hostel_id, start_date, end_date)

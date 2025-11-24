@@ -500,15 +500,29 @@ class AnalyticsService:
             LIMIT 10
         """), {'student_id': student_id, 'start_date': start_date, 'end_date': end_date}).fetchall()
         
-        total = attendance.total_days
-        present = attendance.present_days
+        total = int(attendance.total_days or 0)
+        present = int(attendance.present_days or 0)
         absent = total - present
         percentage = (present / total * 100) if total > 0 else 0
-        
+
+        # Safely coerce/replace nullable fields coming from the DB so pydantic validation doesn't fail
+        try:
+            student_id_val = int(attendance.student_id) if attendance.student_id is not None else int(student_id)
+        except Exception:
+            student_id_val = int(student_id)
+
+        student_name_val = attendance.student_name or ""
+
+        # If hostel_id is missing, use 0 as a safe default (or change to raise a 404 if preferred)
+        try:
+            hostel_id_val = int(attendance.hostel_id) if attendance.hostel_id is not None else 0
+        except Exception:
+            hostel_id_val = 0
+
         return StudentAttendanceHistory(
-            student_id=attendance.student_id,
-            student_name=attendance.student_name,
-            hostel_id=attendance.hostel_id,
+            student_id=student_id_val,
+            student_name=student_name_val,
+            hostel_id=hostel_id_val,
             total_days=total,
             present_days=present,
             absent_days=absent,

@@ -2,6 +2,9 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import date, datetime
 from app.repositories.mess_menu_repository import MessMenuRepository
+from app.repositories.hostel_repository import HostelRepository
+from app.models.mess_menu import MenuType, MealType
+from app.models.user import User
 from app.schemas.mess_menu import (
     MessMenuCreate, MessMenuUpdate, MessMenuResponse,
     MenuFeedbackCreate, MenuFeedbackResponse,
@@ -17,6 +20,15 @@ class MessMenuService:
 
     # Menu Management
     def create_menu(self, menu: MessMenuCreate) -> MessMenuResponse:
+        # Verify hostel exists
+        hostel_repo = HostelRepository(self.repository.db)
+        hostel = hostel_repo.get_by_id(menu.hostel_id)
+        if not hostel:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="hostel id not found"
+            )
+
         # Check if menu already exists for the same date and meal type
         existing_menu = self.repository.get_menu_by_date_and_meal(
             menu.hostel_id,
@@ -51,8 +63,24 @@ class MessMenuService:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None
     ) -> List[MessMenuResponse]:
+        # Normalize/validate menu_type param. Accept either MenuType (daily/weekly/monthly)
+        # or allow users accidentally passing a MealType (breakfast/lunch/etc.) in the same param.
+        menu_type_enum = None
+        meal_type_enum = None
+        if menu_type:
+            try:
+                menu_type_enum = MenuType(menu_type)
+            except ValueError:
+                try:
+                    meal_type_enum = MealType(menu_type)
+                except ValueError:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Invalid menu_type value: {menu_type}"
+                    )
+
         db_menus = self.repository.get_menus_by_hostel(
-            hostel_id, skip, limit, menu_type, start_date, end_date
+            hostel_id, skip, limit, menu_type=menu_type_enum, start_date=start_date, end_date=end_date, meal_type=meal_type_enum
         )
         return [MessMenuResponse.from_orm(menu) for menu in db_menus]
 
@@ -142,6 +170,13 @@ class MessMenuService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Menu not found"
             )
+        # Verify student exists
+        student = self.repository.db.query(User).filter(User.id == feedback.student_id).first()
+        if not student:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="student id was not found"
+            )
         
         db_feedback = self.repository.create_feedback(feedback)
         return MenuFeedbackResponse.from_orm(db_feedback)
@@ -156,6 +191,13 @@ class MessMenuService:
     # Meal Preference Management
     def create_preference(self, preference: MealPreferenceCreate) -> MealPreferenceResponse:
         # Check if student already has an active preference
+        # Verify student exists
+        student = self.repository.db.query(User).filter(User.id == preference.student_id).first()
+        if not student:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="student id was not found"
+            )
         existing = self.repository.get_preference_by_student(
             preference.student_id,
             preference.hostel_id
@@ -171,6 +213,13 @@ class MessMenuService:
         return MealPreferenceResponse.from_orm(db_preference)
 
     def get_student_preference(self, student_id: int, hostel_id: int) -> MealPreferenceResponse:
+        # Verify student exists
+        student = self.repository.db.query(User).filter(User.id == student_id).first()
+        if not student:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="student id was not found"
+            )
         preference = self.repository.get_preference_by_student(student_id, hostel_id)
         if not preference:
             raise HTTPException(

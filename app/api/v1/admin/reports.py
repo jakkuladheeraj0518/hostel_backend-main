@@ -5,6 +5,16 @@ from typing import List
 from app.core.database import get_db
 from app.schemas.reports import *
 from app.services.analytics_service import AnalyticsService
+from app.repositories.hostel_repository import HostelRepository
+from fastapi import HTTPException, status
+
+
+def _validate_hostel(db: Session, hostel_id: int):
+    repo = HostelRepository(db)
+    if not repo.get_by_id(hostel_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="hostel id not found")
+
+
 
 router = APIRouter(prefix="/admin/reports", tags=["Admin Reports"])
 
@@ -21,6 +31,9 @@ def get_admin_dashboard(
     if not end_date:
         end_date = date.today()
     
+    # Validate hostel
+    _validate_hostel(db, hostel_id)
+
     # Get KPI
     kpi = AnalyticsService._get_hostel_kpi(db, hostel_id, start_date, end_date)
     
@@ -65,6 +78,9 @@ def get_income_statement(
     """Get income statement for hostel"""
     from sqlalchemy import text
     
+    # Validate hostel
+    _validate_hostel(db, hostel_id)
+
     result = db.execute(text("""
         SELECT 
             transaction_type,
@@ -103,6 +119,9 @@ def get_outstanding_payments(hostel_id: int, db: Session = Depends(get_db)):
     """Get outstanding payment tracking"""
     from sqlalchemy import text
     
+    # Validate hostel
+    _validate_hostel(db, hostel_id)
+
     result = db.execute(text("""
         SELECT 
             student_id,
@@ -133,6 +152,9 @@ def get_outstanding_payments(hostel_id: int, db: Session = Depends(get_db)):
 def get_occupancy_report(hostel_id: int, start_date: date, end_date: date, 
                         db: Session = Depends(get_db)):
     """Get occupancy reports"""
+    # Validate hostel
+    _validate_hostel(db, hostel_id)
+
     trends = AnalyticsService.get_occupancy_trends(db, [hostel_id], start_date, end_date)
     return {"trends": trends}
 
@@ -141,6 +163,9 @@ def get_student_demographics(hostel_id: int, db: Session = Depends(get_db)):
     """Get student demographic analysis"""
     from sqlalchemy import text
     
+    # Validate hostel
+    _validate_hostel(db, hostel_id)
+
     # This would require a students table - simplified version
     result = db.execute(text("""
         SELECT 
@@ -160,12 +185,18 @@ def get_student_demographics(hostel_id: int, db: Session = Depends(get_db)):
 def get_attendance_patterns(hostel_id: int, start_date: date, end_date: date,
                            db: Session = Depends(get_db)):
     """Get attendance patterns and trends"""
+    # Validate hostel
+    _validate_hostel(db, hostel_id)
+
     return AnalyticsService.get_attendance_trends(db, hostel_id, start_date, end_date)
 
 @router.get("/operational/complaints")
 def get_complaint_metrics(hostel_id: int, start_date: date, end_date: date,
                          db: Session = Depends(get_db)):
     """Get complaint resolution metrics"""
+    # Validate hostel
+    _validate_hostel(db, hostel_id)
+
     metrics = AnalyticsService.get_complaint_metrics(db, [hostel_id], start_date, end_date)
     return metrics[0] if metrics else {}
 
@@ -175,6 +206,9 @@ def get_maintenance_costs(hostel_id: int, start_date: date, end_date: date,
     """Get maintenance costs and trend analysis"""
     from sqlalchemy import text
     
+    # Validate hostel
+    _validate_hostel(db, hostel_id)
+
     # complaints table stores `hostel_name` not `hostel_id`; resolve name first
     from app.models.hostel import Hostel
 
@@ -214,6 +248,9 @@ def get_maintenance_costs(hostel_id: int, start_date: date, end_date: date,
 def get_profile_analytics(hostel_id: int, start_date: date, end_date: date,
                          db: Session = Depends(get_db)):
     """Get hostel profile view analytics"""
+    # Validate hostel
+    _validate_hostel(db, hostel_id)
+
     analytics = AnalyticsService.get_marketing_analytics(db, [hostel_id], start_date, end_date)
     return analytics[0] if analytics else {}
 
@@ -225,6 +262,12 @@ def compare_hostels(
     db: Session = Depends(get_db)
 ):
     """Compare revenue and performance across hostels"""
+    # Validate hostels
+    repo = HostelRepository(db)
+    missing = [hid for hid in hostel_ids if not repo.get_by_id(hid)]
+    if missing:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"hostel id(s) not found: {missing}")
+
     return AnalyticsService.get_revenue_comparison(
         db, hostel_ids, start_date, end_date,
         start_date - timedelta(days=(end_date - start_date).days),

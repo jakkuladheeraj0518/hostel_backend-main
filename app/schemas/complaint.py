@@ -38,7 +38,7 @@ class ComplaintBase(BaseModel):
     description: str
     category: ComplaintCategory
     priority: Optional[ComplaintPriority] = ComplaintPriority.medium
-    hostel_name: str
+    hostel_id: Optional[int] = None
     room_number: Optional[str] = None
 
 
