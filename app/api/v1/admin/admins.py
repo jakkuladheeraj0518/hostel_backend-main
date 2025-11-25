@@ -305,7 +305,7 @@ async def update_admin(
     return updated_admin
 
 
-@router.delete("/admins/{admin_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["admin"])
+@router.delete("/admins/{admin_id}", status_code=status.HTTP_200_OK, tags=["admin"])
 async def delete_admin(
     admin_id: int,
     current_user: User = Depends(role_required(Role.SUPERADMIN)),
@@ -350,15 +350,30 @@ async def delete_admin(
         if profile_path.exists():
             profile_path.unlink()
     
-    # Delete admin
-    success = user_repo.delete(admin_id)
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Admin not found"
-        )
-    
-    return None
+    # Soft-delete / deactivate admin instead of hard delete to preserve
+    # audit log integrity and avoid FK constraint issues.
+    try:
+        # Anonymize identifying fields to allow reuse of emails/usernames
+        import uuid as _uuid
+        admin.is_active = False
+        admin.is_email_verified = False
+        admin.is_phone_verified = False
+        # Clear contact info
+        admin.email = None
+        admin.phone_number = None
+        admin.profile_picture_url = None
+        # Set a unique placeholder username to avoid uniqueness conflicts
+        admin.username = f"deleted_admin_{admin.id}_{_uuid.uuid4().hex[:8]}"
+        # Remove password
+        admin.hashed_password = None
+
+        db.commit()
+        db.refresh(admin)
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to deactivate admin")
+
+    return {"message": "Admin deactivated"}
 
 
 @router.post("/admins/{admin_id}/profile-picture", response_model=dict, tags=["admin"])
@@ -597,7 +612,7 @@ async def update_supervisor(
     return updated
 
 
-@router.delete("/supervisors/{supervisor_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["admin"])
+@router.delete("/supervisors/{supervisor_id}", status_code=status.HTTP_200_OK, tags=["admin"])
 async def delete_supervisor(
     supervisor_id: int,
     current_user: User = Depends(role_required(Role.SUPERADMIN, Role.ADMIN)),
@@ -636,11 +651,25 @@ async def delete_supervisor(
         if supervisor.hostel_id and supervisor.hostel_id not in allowed_hostels:
             raise AccessDeniedException("Admin cannot delete a supervisor outside their hostels")
 
-    success = user_repo.delete(supervisor_id)
-    if not success:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Supervisor not found")
+    # Soft-delete (deactivate and anonymize) to preserve FK integrity
+    try:
+        import uuid as _uuid
+        supervisor.is_active = False
+        supervisor.is_email_verified = False
+        supervisor.is_phone_verified = False
+        supervisor.email = None
+        supervisor.phone_number = None
+        supervisor.profile_picture_url = None
+        supervisor.username = f"deleted_supervisor_{supervisor.id}_{_uuid.uuid4().hex[:8]}"
+        supervisor.hashed_password = None
 
-    return None
+        db.commit()
+        db.refresh(supervisor)
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to deactivate supervisor")
+
+    return {"message": "Supervisor deactivated"}
 
 
 @router.put("/students/{student_id}", response_model=UserResponse, tags=["admin"])

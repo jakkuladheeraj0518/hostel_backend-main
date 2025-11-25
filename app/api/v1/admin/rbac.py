@@ -16,15 +16,6 @@ from app.schemas.rbac import RoleAssign, PermissionCheck, RolePermissionsRespons
 router = APIRouter()
 
 
-@router.post("/rbac/assign-role", response_model=dict, status_code=status.HTTP_200_OK)
-async def assign_role(
-    assign_data: RoleAssign,
-    current_user: User = Depends(role_required(Role.SUPERADMIN)),
-    db: Session = Depends(get_db)
-):
-    """Assign role to user"""
-    rbac_service = RBACService(db)
-    return rbac_service.assign_role(assign_data, current_user.role)
 
 
 @router.post("/rbac/check-permission", response_model=dict, status_code=status.HTTP_200_OK)

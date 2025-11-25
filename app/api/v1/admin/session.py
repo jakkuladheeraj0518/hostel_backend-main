@@ -110,25 +110,28 @@ async def get_assigned_hostels(
     return tenant_service.get_user_hostels(current_user.id, current_user.role)
 
 
-@router.post("/session/clear", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/session/clear", status_code=status.HTTP_200_OK)
 async def clear_session(
     session_id: Optional[int] = Body(None, embed=True, description="Optional session id to clear; if omitted, clears the active session"),
     current_user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN)),
     db: Session = Depends(get_db)
 ):
-    """Clear/deactivate a session. If session_id omitted, deactivate the active session."""
+    """Clear/deactivate a session. If session_id omitted, deactivate the active session.
+
+    Returns a JSON object with a success message and the cleared `session_id`.
+    """
     session_service = SessionService(db)
     # If no session_id provided, get active session
     if session_id is None:
         active = session_service.get_active_session(current_user.id)
         if not active:
             # nothing to clear
-            return None
+            return {"message": "No active session to clear", "session_id": None}
         session_id = active.id
 
     ok = session_service.deactivate_session(current_user.id, session_id)
     if not ok:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found or not owned by user")
 
-    return None
+    return {"message": "Session cleared", "session_id": session_id}
 

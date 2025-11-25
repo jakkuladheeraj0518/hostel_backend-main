@@ -15,16 +15,6 @@ from app.schemas.permission import RolePermissionAssign
 router = APIRouter()
 
 
-@router.post("/permissions/assign", response_model=dict, status_code=status.HTTP_200_OK)
-async def assign_permission_to_role(
-    assign_data: RolePermissionAssign,
-    current_user: User = Depends(role_required(Role.SUPERADMIN)),
-    db: Session = Depends(get_db)
-):
-    """Assign permission to role (Superadmin only)"""
-    permission_service = PermissionService(db)
-    return permission_service.assign_permission_to_role(assign_data)
-
 
 @router.get("/permissions/role/{role}", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_role_permissions(
