@@ -111,7 +111,7 @@ from app.models.report_models import (
 )
 
 # Notifications
-from app.models.notification import Notification, NotificationTemplate, DeviceToken, Channel
+from app.models.notification import Notification, NotificationTemplate, DeviceToken, Channel, NotificationStatus
 
 
 # ---------------------------------------------------------
@@ -1048,8 +1048,9 @@ def seed_notifications(db: Session, users):
         name="welcome_email",
         defaults={
             "channel": "email",
-            "subject_template": "Welcome, {{name}}",
-            "body_template": "Hello {{name}}, welcome to {{app_name}}",
+            # model fields are `subject` / `body` (not *_template)
+            "subject": "Welcome, {{name}}",
+            "body": "Hello {{name}}, welcome to {{app_name}}",
         },
     )
 
@@ -1063,16 +1064,16 @@ def seed_notifications(db: Session, users):
             "channel": Channel.EMAIL.value,
             "subject": "Welcome to Hostel",
             "body": "Your registration is complete.",
-            "template_id": tmpl.id,
-            "sent": False,
+                "template_id": tmpl.id,
+                "status": NotificationStatus.pending.value,
         },
     )
 
     dev, _ = get_or_create(
         db,
         DeviceToken,
-        user_id=str(users["student"].id),
-        token="fcm_device_token",
+        user_id=users["student"].id,
+        device_token="fcm_device_token",
         defaults={
             "platform": "android",
         },

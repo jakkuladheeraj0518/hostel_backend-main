@@ -24,13 +24,16 @@ from app.middleware.tenant_filter import TenantFilterMiddleware
 from app.middleware.role_enforcer import RoleEnforcerMiddleware
 from app.middleware.audit_trail import AuditTrailMiddleware
 
+
 # ---------------------------------------------------------
-# ⭐ NEW: Notification Routers + Worker
+# ⭐ NOTIFICATION ROUTERS
 # ---------------------------------------------------------
 from app.api.v1.student.notification import router as student_notification_router
 from app.api.v1.supervisor.notification import router as supervisor_notification_router
 from app.api.v1.admin.notification import router as admin_notification_router
+from app.api.v1.webhooks.notifications import router as notification_webhook_router
 # ---------------------------------------------------------
+
 
 # Routers (core / existing)
 from app.api.v1.router import api_router
@@ -257,10 +260,33 @@ app.include_router(admin_announcement.router, prefix="/api/v1")
 app.include_router(supervisor_announcement.router, prefix="/api/v1")
 app.include_router(student_announcement.router, prefix="/api/v1")
 
-# ⭐ Notification Routers
-app.include_router(student_notification_router, prefix="/api/v1")
-app.include_router(supervisor_notification_router, prefix="/api/v1")
-app.include_router(admin_notification_router, prefix="/api/v1")
+# ---------------------------------------------------------
+# ⭐ NOTIFICATION ROUTERS (FINAL STEP)
+# ---------------------------------------------------------
+app.include_router(
+    student_notification_router,
+    prefix="/api/v1/student/notifications",
+    tags=["Student Notifications"]
+)
+
+app.include_router(
+    supervisor_notification_router,
+    prefix="/api/v1/supervisor/notifications",
+    tags=["Supervisor Notifications"]
+)
+
+app.include_router(
+    admin_notification_router,
+    prefix="/api/v1/admin/notifications",
+    tags=["Admin Notifications"]
+)
+
+# Webhook for delivery tracking (SendGrid / Twilio)
+app.include_router(
+    notification_webhook_router,
+    prefix="/api/v1/webhooks/notifications",
+    tags=["Notification Webhooks"]
+)
 
 # ---------------------------------------------------------------------------
 # STATIC FILES

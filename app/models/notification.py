@@ -1,72 +1,176 @@
+import enum
 from datetime import datetime
-from enum import Enum
 
 from sqlalchemy import (
-	Column,
-	Integer,
-	String,
-	Text,
-	DateTime,
-	ForeignKey,
-	Boolean,
+    Column,
+    Integer,
+    String,
+    Text,
+    DateTime,
+    JSON,
+    ForeignKey,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, foreign, backref
+from sqlalchemy import cast
 
-from app.config import Base
-
-
-class Channel(Enum):
-	EMAIL = "email"
-	SMS = "sms"
-	PUSH = "push"
+from app.core.database import Base
 
 
-class Notification(Base):
-	__tablename__ = "notifications"
+class NotificationChannel(str, enum.Enum):
+    # keep lowercase canonical names
+    email = "email"
+    sms = "sms"
+    push = "push"
 
-	id = Column(Integer, primary_key=True, index=True)
-	recipient_id = Column(String(128), index=True, nullable=False)
-	recipient_type = Column(String(64), index=True, nullable=False)  # admin/supervisor/student
-	channel = Column(String(32), nullable=False)
-	subject = Column(String(255), nullable=True)
-	body = Column(Text, nullable=True)
-	template_id = Column(Integer, ForeignKey("notification_templates.id"), nullable=True)
-	sent = Column(Boolean, default=False)
-	created_at = Column(DateTime, default=datetime.utcnow)
-	sent_at = Column(DateTime, nullable=True)
+    # Backwards-compatible uppercase aliases used in older scripts
+    EMAIL = "email"
+    SMS = "sms"
+    PUSH = "push"
 
-	attempts = relationship("DeliveryAttempt", back_populates="notification")
 
+class NotificationStatus(str, enum.Enum):
+    pending = "pending"
+    queued = "queued"
+    sent = "sent"
+    delivered = "delivered"
+    failed = "failed"
+
+
+class NotificationPriority(str, enum.Enum):
+    low = "low"
+    normal = "normal"
+    high = "high"
+    critical = "critical"
+
+
+# ------------------------------------------------------------------
+# TEMPLATE MODEL
+# ------------------------------------------------------------------
 
 class NotificationTemplate(Base):
-	__tablename__ = "notification_templates"
+    """
+    Reusable templates for email / SMS / push.
+    Example: payment reminders, OTP messages, alerts.
+    """
+    __tablename__ = "notification_templates"
 
-	id = Column(Integer, primary_key=True, index=True)
-	name = Column(String(128), unique=True, index=True, nullable=False)
-	channel = Column(String(32), nullable=False)
-	subject_template = Column(String(255), nullable=True)
-	body_template = Column(Text, nullable=True)
-	created_at = Column(DateTime, default=datetime.utcnow)
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True, nullable=False)
+    channel = Column(String, nullable=False)  # email / sms / push
+    subject = Column(String, nullable=True)
+    body = Column(Text, nullable=False)
+    is_active = Column(Integer, default=1, nullable=False)  # 1 = active, 0 = inactive
 
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
-class DeliveryAttempt(Base):
-	__tablename__ = "notification_attempts"
-
-	id = Column(Integer, primary_key=True, index=True)
-	notification_id = Column(Integer, ForeignKey("notifications.id"), nullable=False)
-	provider = Column(String(64), nullable=True)
-	provider_response = Column(Text, nullable=True)
-	success = Column(Boolean, default=False)
-	attempted_at = Column(DateTime, default=datetime.utcnow)
-
-	notification = relationship("Notification", back_populates="attempts")
+    # ✅ One template -> Many notifications
+    notifications = relationship("Notification", back_populates="template")
 
 
-class DeviceToken(Base):
-	__tablename__ = "device_tokens"
+# ------------------------------------------------------------------
+# NOTIFICATION MODEL
+# ------------------------------------------------------------------
 
-	id = Column(Integer, primary_key=True, index=True)
-	user_id = Column(String(128), index=True, nullable=False)
-	platform = Column(String(32), nullable=True)
-	token = Column(String(512), nullable=False)
-	created_at = Column(DateTime, default=datetime.utcnow)
+class Notification(Base):
+    """
+    A single notification (email/SMS/push) to one recipient.
+    """
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    # ✅ Hostel relationship (if tied to a hostel)
+    hostel_id = Column(Integer, ForeignKey("hostels.id"), nullable=True)
+    # Use backref on the Notification side so 'notifications' is created on
+    # Hostel lazily after both classes are registered (avoids import-order issues).
+    hostel = relationship("Hostel", backref=backref("notifications", cascade="all, delete-orphan"))
+
+    # Generic recipient storage
+    recipient_id = Column(String, index=True, nullable=False)
+    recipient_type = Column(String, index=True, nullable=False)
+    # super_admin / admin / supervisor / student / visitor / system
+
+    channel = Column(String, nullable=False)  # email / sms / push
+    subject = Column(String, nullable=True)
+    body = Column(Text, nullable=False)
+
+    priority = Column(String, default=NotificationPriority.normal.value, nullable=False)
+    status = Column(String, default=NotificationStatus.pending.value, nullable=False)
+
+    error_message = Column(Text, nullable=True)
+    template_data = Column(JSON, nullable=True)
+
+    provider_message_id = Column(String, nullable=True)
+    provider_response = Column(JSON, nullable=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    scheduled_at = Column(DateTime, nullable=True)
+    sent_at = Column(DateTime, nullable=True)
+    delivered_at = Column(DateTime, nullable=True)
+
+    # ✅ Template relationship
+    template_id = Column(Integer, ForeignKey("notification_templates.id"), nullable=True)
+    template = relationship("NotificationTemplate", back_populates="notifications")
+
+    # ------------------------------------------------------------------
+    # ✅ OPTIONAL Relationships (No DB constraint - Powered by recipient_type)
+    # ------------------------------------------------------------------
+
+    student = relationship(
+        "Student",
+        primaryjoin="foreign(Notification.recipient_id)==Student.student_id",
+        viewonly=True
+    )
+
+    supervisor = relationship(
+        "Supervisor",
+        # Supervisor primary key is `employee_id` in the supervisors table.
+        # Use `employee_id` here because `Supervisor` doesn't define `supervisor_id`.
+        primaryjoin="foreign(Notification.recipient_id)==Supervisor.employee_id",
+        viewonly=True
+    )
+
+    user = relationship(
+        "User",
+        primaryjoin="foreign(Notification.recipient_id)==cast(User.id, String)",
+        viewonly=True
+    )
+
+
+# ------------------------------------------------------------------
+# DEVICE TOKENS FOR PUSH NOTIFICATIONS
+# ------------------------------------------------------------------
+
+class DevicePlatform(str, enum.Enum):
+    android = "android"
+    ios = "ios"
+    web = "web"
+
+
+class NotificationDeviceToken(Base):
+    """
+    Device token storage for push notifications.
+    """
+    __tablename__ = "notification_device_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    # Use backref so the User side doesn't need an explicit relationship
+    # declaration. This helps avoid mapper initialization order problems.
+    user = relationship("User", backref=backref("device_tokens", cascade="all, delete-orphan"))
+
+    device_token = Column(String, unique=True, nullable=False)
+    platform = Column(String, nullable=False)  # android/ios/web
+    is_active = Column(Integer, default=1, nullable=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    last_used_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+# --- Compatibility / convenience aliases ---
+# Older scripts expect DeviceToken and Channel names — keep aliases so imports
+# like `from app.models.notification import DeviceToken, Channel` continue to work.
+DeviceToken = NotificationDeviceToken
+Channel = NotificationChannel

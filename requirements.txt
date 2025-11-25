@@ -48,6 +48,7 @@ fastapi-limiter==0.1.6
 # Email & SMS APIs
 twilio==8.10.0
 sendgrid==6.11.0
+boto3==1.35.0
 
 # Payment Gateway
 razorpay==1.4.2
