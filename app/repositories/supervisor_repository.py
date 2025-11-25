@@ -70,10 +70,11 @@ def delete_supervisor(db: Session, employee_id: str) -> bool:
     return True
 
 
-def assign_hostel(db: Session, employee_id: str, hostel_id: str) -> None:
+def assign_hostel(db: Session, employee_id: str, hostel_id: int) -> None:
+    # accept numeric hostel_id and insert as FK-safe value
     db.execute(
         text("INSERT INTO supervisor_hostels (employee_id, hostel_id) VALUES (:eid, :hid)"),
-        {"eid": employee_id, "hid": hostel_id}
+        {"eid": employee_id, "hid": int(hostel_id)}
     )
     db.commit()
 
@@ -141,7 +142,7 @@ def create_admin_override(db: Session, admin_employee_id: str, target_supervisor
 
 
 def admin_override_assign_supervisor_hostel(db: Session, admin_employee_id: str,
-                                            target_supervisor_id: str, new_hostel_id: str) -> None:
+                                            target_supervisor_id: str, new_hostel_id: int) -> None:
 
     create_admin_override(
         db,
@@ -153,6 +154,6 @@ def admin_override_assign_supervisor_hostel(db: Session, admin_employee_id: str,
 
     db.execute(
         text("INSERT INTO supervisor_hostels (employee_id, hostel_id) VALUES (:eid, :hid)"),
-        {"eid": target_supervisor_id, "hid": new_hostel_id}
+        {"eid": target_supervisor_id, "hid": int(new_hostel_id)}
     )
     db.commit()

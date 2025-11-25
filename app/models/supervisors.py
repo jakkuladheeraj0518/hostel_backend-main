@@ -1,5 +1,6 @@
 from enum import Enum
 from sqlalchemy import Column, String, Integer, DateTime, func, ForeignKey
+from sqlalchemy.orm import relationship
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.schema import Identity
 
@@ -47,8 +48,11 @@ class SupervisorHostel(Base):
 
     id = Column(Integer, Identity(start=1), primary_key=True)
     employee_id = Column(String, ForeignKey("supervisors.employee_id"), nullable=False, index=True)
-    hostel_id = Column(String(100), nullable=False, index=True)
+    hostel_id = Column(Integer, ForeignKey("hostels.id"), nullable=False, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    # relationships
+    supervisor = relationship("Supervisor", back_populates="hostels")
+    hostel = relationship("Hostel", back_populates="supervisor_assignments")
 
 
 class SupervisorActivity(Base):
@@ -71,3 +75,8 @@ class AdminOverride(Base):
     action = Column(String, nullable=False)
     details = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+# relationships (connected using SupervisorHostel table)
+Supervisor.hostels = relationship("SupervisorHostel", back_populates="supervisor")
+SupervisorActivity.supervisor = relationship("Supervisor", backref="activity_log")

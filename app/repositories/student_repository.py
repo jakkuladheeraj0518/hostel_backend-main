@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text, func
 
 from app.models.students import Student, StudentPayment, Attendance, StudentDocument
+from app.models.beds import Bed, BedStatus
+from app.repositories.bed_repository import find_bed_by_room_and_bed_number
 from app.schemas.students import StudentCreate, StudentUpdate
 
 
@@ -21,7 +23,12 @@ def list_students(
     if name:
         query = query.filter(Student.student_name.ilike(f"%{name}%"))
     if room:
-        query = query.filter(Student.room_assignment == room)
+        # support numeric room ids as well as room_number strings
+        try:
+            room_id_val = int(room)
+            query = query.filter(Student.room_id == room_id_val)
+        except Exception:
+            query = query.filter(Student.room_assignment == room)
     if payment_status:
         query = query.filter(
             db.query(StudentPayment.id)
@@ -118,8 +125,41 @@ def transfer(db: Session, student_id: str, new_room: Optional[str], new_bed: Opt
     old_room = obj.room_assignment
     old_bed = obj.bed_assignment
 
-    obj.room_assignment = new_room
-    obj.bed_assignment = new_bed
+    # If new_bed is provided try to look up the bed (support id or room/bed numbers)
+    bed_obj = None
+    if new_bed is not None:
+        # if numeric id passed
+        try:
+            nbid = int(new_bed)
+            bed_obj = db.query(Bed).filter(Bed.id == nbid).first()
+        except Exception:
+            # attempt to locate by room number + bed number when new_room provided
+            if new_room:
+                bed_obj = find_bed_by_room_and_bed_number(db, new_room, new_bed)
+
+    # If bed_obj provided, perform a proper bed transfer and status updates
+    if bed_obj:
+        # free old bed if present
+        if obj.bed_id:
+            old_bed_obj = db.query(Bed).filter(Bed.id == obj.bed_id).first()
+            if old_bed_obj:
+                old_bed_obj.bed_status = BedStatus.AVAILABLE
+                db.add(old_bed_obj)
+
+        # occupy new bed
+        bed_obj.bed_status = BedStatus.OCCUPIED
+        db.add(bed_obj)
+
+        # update student fk references and legacy text fields
+        obj.bed_id = bed_obj.id
+        obj.room_id = bed_obj.room_id
+        obj.room_assignment = bed_obj.room_number
+        obj.bed_assignment = bed_obj.bed_number
+
+    else:
+        # fallback: update textual room/bed assignments only
+        obj.room_assignment = new_room
+        obj.bed_assignment = new_bed
     db.add(obj)
     db.commit()
     db.refresh(obj)

@@ -75,7 +75,7 @@ def delete_supervisor(employee_id: str, db: Session = Depends(get_db)):
 from fastapi.responses import JSONResponse
 
 @router.post("/{employee_id}/assign-hostel", status_code=status.HTTP_200_OK)
-def assign_hostel(employee_id: str, hostel_id: str, db: Session = Depends(get_db)):
+def assign_hostel(employee_id: str, hostel_id: int, db: Session = Depends(get_db)):
     service_assign_supervisor_hostel(db, employee_id, hostel_id)
     return JSONResponse(content={"detail": "Supervisor assigned to hostel successfully"})
 
@@ -102,7 +102,7 @@ def create_override(payload: AdminOverrideCreate, db: Session = Depends(get_db))
 from fastapi.responses import JSONResponse
 
 @router.post("/{employee_id}/override/assign-hostel", status_code=status.HTTP_200_OK)
-def override_assign_hostel(employee_id: str, new_hostel_id: str, admin_employee_id: str, db: Session = Depends(get_db)):
+def override_assign_hostel(employee_id: str, new_hostel_id: int, admin_employee_id: str, db: Session = Depends(get_db)):
     try:
         service_override_assign_supervisor_hostel(db, admin_employee_id, employee_id, new_hostel_id)
         return JSONResponse(content={"detail": "Supervisor override assignment successful"})

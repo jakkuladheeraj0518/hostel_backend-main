@@ -11,8 +11,14 @@ class HostelComparisonRequest(BaseModel):
             raise ValueError('hostel_ids must be a non-empty list')
         if len(v) > 4:
             raise ValueError('Cannot compare more than 4 hostels')
-        # Normalize all IDs to strings for DB queries (DB uses string IDs in models)
-        return [str(x).strip() for x in v]
+        # Normalize all IDs to ints for DB queries and API consistency
+        normalized = []
+        for x in v:
+            try:
+                normalized.append(int(x))
+            except Exception:
+                raise ValueError("hostel_ids must be numeric or numeric strings")
+        return normalized
 
 
 class HostelComparisonItem(BaseModel):

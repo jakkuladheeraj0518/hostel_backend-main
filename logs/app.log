@@ -8360,3 +8360,32 @@ WHERE bookings.status = %(status_1)s AND bookings.created_at < %(created_at_1)s]
 2025-11-25 02:50:50,839 | INFO     | app | Elasticsearch ready.
 2025-11-25 02:50:50,853 | INFO     | app | BookingExpiryService started
 2025-11-25 02:50:50,931 | INFO     | app | Notification worker started.
+2025-11-25 13:05:27,175 | INFO     | app | Initializing database...
+2025-11-25 13:05:28,318 | INFO     | app | Database initialized.
+2025-11-25 13:05:28,335 | INFO     | app | Initializing Elasticsearch...
+2025-11-25 13:05:32,379 | INFO     | app | Elasticsearch ready.
+2025-11-25 13:05:32,394 | INFO     | app | BookingExpiryService started
+2025-11-25 13:05:32,453 | INFO     | app | Notification worker started.
+2025-11-25 13:11:11,546 | ERROR    | app.repositories.hostel_repository | Integrity error during upsert: insert or update on table "hostels" violates foreign key constraint "hostels_location_id_fkey"
+DETAIL:  Key (location_id)=(4) is not present in table "locations".
+
+2025-11-25 13:11:21,449 | ERROR    | app.repositories.hostel_repository | Integrity error during upsert: insert or update on table "hostels" violates foreign key constraint "hostels_location_id_fkey"
+DETAIL:  Key (location_id)=(1) is not present in table "locations".
+
+2025-11-25 13:12:21,589 | INFO     | app | Initializing database...
+2025-11-25 13:12:21,826 | INFO     | app | Database initialized.
+2025-11-25 13:12:21,826 | INFO     | app | Initializing Elasticsearch...
+2025-11-25 13:12:25,833 | INFO     | app | Elasticsearch ready.
+2025-11-25 13:12:25,848 | INFO     | app | BookingExpiryService started
+2025-11-25 13:12:25,948 | INFO     | app | Notification worker started.
+2025-11-25 14:50:06,572 | INFO     | app | Initializing database...
+2025-11-25 14:50:06,752 | INFO     | app | Database initialized.
+2025-11-25 14:50:06,752 | INFO     | app | Initializing Elasticsearch...
+2025-11-25 14:50:10,776 | INFO     | app | Elasticsearch ready.
+2025-11-25 14:50:10,791 | INFO     | app | BookingExpiryService started
+2025-11-25 14:50:10,869 | INFO     | app | Notification worker started.
+2025-11-25 15:25:05,029 | INFO     | app | Initializing database...
+2025-11-25 15:25:05,259 | INFO     | app | Database initialized.
+2025-11-25 15:25:05,259 | INFO     | app | Initializing Elasticsearch...
+2025-11-25 15:25:09,267 | INFO     | app | Elasticsearch ready.
+2025-11-25 15:25:09,281 | INFO     | app | BookingExpiryService started

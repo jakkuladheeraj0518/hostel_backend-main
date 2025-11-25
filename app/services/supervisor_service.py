@@ -37,7 +37,7 @@ def delete_supervisor(db: Session, employee_id: str) -> bool:
     return repo_delete_supervisor(db, employee_id)
 
 
-def assign_supervisor_hostel(db: Session, employee_id: str, hostel_id: str) -> None:
+def assign_supervisor_hostel(db: Session, employee_id: str, hostel_id: int) -> None:
     return repo_assign_hostel(db, employee_id, hostel_id)
 
 
@@ -54,5 +54,5 @@ def create_admin_override(db: Session, admin_employee_id: str, target_supervisor
     return repo_create_admin_override(db, admin_employee_id, target_supervisor_id, action, details)
 
 
-def override_assign_supervisor_hostel(db: Session, admin_employee_id: str, target_supervisor_id: str, new_hostel_id: str) -> None:
+def override_assign_supervisor_hostel(db: Session, admin_employee_id: str, target_supervisor_id: str, new_hostel_id: int) -> None:
     return repo_admin_override_assign_supervisor_hostel(db, admin_employee_id, target_supervisor_id, new_hostel_id)

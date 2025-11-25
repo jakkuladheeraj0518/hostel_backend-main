@@ -103,6 +103,9 @@ class Hostel(Base):
     )
     admin_hostel_mappings = relationship("AdminHostelMapping", back_populates="hostel")
 
+    # Supervisor mapping (many-to-many via SupervisorHostel)
+    supervisor_assignments = relationship("SupervisorHostel", back_populates="hostel")
+
     # Financial data
     revenues = relationship("Revenue", back_populates="hostel", cascade="all, delete-orphan")
     occupancies = relationship("Occupancy", back_populates="hostel", cascade="all, delete-orphan")

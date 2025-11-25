@@ -21,6 +21,9 @@ class StudentBase(BaseModel):
     check_out_date: Optional[date] = None
     room_assignment: Optional[str] = None
     bed_assignment: Optional[str] = None
+    # FK fields (preferred) — room_id and bed_id reference rooms.id / beds.id
+    room_id: Optional[int] = None
+    bed_id: Optional[int] = None
     status: Optional[str] = None
     hostel_id: Optional[int] = None
 

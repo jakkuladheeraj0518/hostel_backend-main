@@ -101,3 +101,5 @@ class Room(Base):
     hostel = relationship("Hostel", back_populates="rooms")
     beds = relationship("Bed", back_populates="room")
     bookings = relationship("Booking", back_populates="room")
+    # students currently or historically assigned to this room (via Student.room_id)
+    students = relationship("Student", back_populates="room")

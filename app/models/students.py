@@ -56,13 +56,22 @@ class Student(Base):
     emergency_contact = Column(String, nullable=True)
     check_in_date = Column(Date, nullable=True)
     check_out_date = Column(Date, nullable=True)
+    # legacy human readable assignment fields (kept for backwards compatibility)
     room_assignment = Column(String, nullable=True)
     bed_assignment = Column(String, nullable=True)
+
+    # Proper foreign-key relationships to rooms and beds
+    room_id = Column(Integer, ForeignKey("rooms.id"), nullable=True)
+    bed_id = Column(Integer, ForeignKey("beds.id"), nullable=True)
     status = Column(String, nullable=True)
 
     # New relationships/fields
     hostel_id = Column(Integer, ForeignKey("hostels.id"), nullable=True)
     hostel = relationship("Hostel", back_populates="students")
+
+    # relationships to room/bed (use the explicit foreign keys above)
+    room = relationship("Room", back_populates="students")
+    bed = relationship("Bed", back_populates="students")
 
 
 class StudentStatusHistory(Base):

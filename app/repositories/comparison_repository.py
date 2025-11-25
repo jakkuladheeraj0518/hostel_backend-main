@@ -6,7 +6,7 @@ from app.models.rooms import Room
 from app.models.beds import Bed, BedStatus
 
 
-def get_hostel_comparison(db: Session, hostel_ids: List[str]) -> List[dict]:
+def get_hostel_comparison(db: Session, hostel_ids: List[int]) -> List[dict]:
     if not hostel_ids:
         return []
 
@@ -31,7 +31,7 @@ def get_hostel_comparison(db: Session, hostel_ids: List[str]) -> List[dict]:
 
     pricing_map = {r.hostel_id: dict(r._mapping) for r in pricing_rows}
 
-    amenities_map: dict[str, set[str]] = {hid: set() for hid in hostel_ids}
+    amenities_map: dict[int, set[str]] = {hid: set() for hid in hostel_ids}
     amen_rows = db.query(Room.hostel_id, Room.amenities).filter(Room.hostel_id.in_(hostel_ids)).all()
 
     for hid, amen in amen_rows:
@@ -64,7 +64,7 @@ def get_hostel_comparison(db: Session, hostel_ids: List[str]) -> List[dict]:
         p = pricing_map.get(hid, {})
 
         results.append({
-            "hostel_id": str(hid),  # Ensure hostel_id is returned as a string
+            "hostel_id": hid,
             "pricing": {
                 "monthly_min": p.get("monthly_min"),
                 "monthly_avg": float(p.get("monthly_avg")) if p.get("monthly_avg") else None,

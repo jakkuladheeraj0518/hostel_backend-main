@@ -62,6 +62,12 @@ def delete_bed(db: Session, bed: Bed) -> None:
 
 
 def assign_bed_to_student(db: Session, bed: Bed, student_id: str) -> Bed:
+    """
+    Assign the given bed to the student by id.
+    This updates bed.bed_status and sets Student.bed_id/room_id (and keeps legacy text fields in sync).
+    All within a single commit.
+    """
+    # mark the bed occupied
     bed.bed_status = BedStatus.OCCUPIED
     db.add(bed)
 
@@ -69,6 +75,9 @@ def assign_bed_to_student(db: Session, bed: Bed, student_id: str) -> Bed:
     if not student:
         raise ValueError("Student not found")
 
+    # set FK references and keep legacy textual fields in sync
+    student.bed_id = bed.id
+    student.room_id = bed.room_id
     student.room_assignment = bed.room_number
     student.bed_assignment = bed.bed_number
     db.add(student)
@@ -79,15 +88,16 @@ def assign_bed_to_student(db: Session, bed: Bed, student_id: str) -> Bed:
 
 
 def release_bed(db: Session, bed: Bed) -> Bed:
+    # make the bed available
     bed.bed_status = BedStatus.AVAILABLE
     db.add(bed)
 
-    db.query(Student).filter(
-        Student.room_assignment == bed.room_number,
-        Student.bed_assignment == bed.bed_number
-    ).update({
+    # clear assigned student FK/legacy fields where the student references this bed
+    db.query(Student).filter(Student.bed_id == bed.id).update({
+        Student.bed_id: None,
+        Student.room_id: None,
         Student.room_assignment: None,
-        Student.bed_assignment: None
+        Student.bed_assignment: None,
     })
 
     db.commit()
@@ -99,16 +109,20 @@ def transfer_student_to_bed(db: Session, student_id: str, new_bed: Bed) -> Bed:
     student = db.query(Student).filter(Student.student_id == student_id).first()
     if not student:
         raise ValueError("Student not found")
-
-    if student.room_assignment and student.bed_assignment:
-        old_bed = find_bed_by_room_and_bed_number(db, student.room_assignment, student.bed_assignment)
+    # if student currently assigned to a bed, free it
+    if student.bed_id:
+        old_bed = db.query(Bed).filter(Bed.id == student.bed_id).first()
         if old_bed:
             old_bed.bed_status = BedStatus.AVAILABLE
             db.add(old_bed)
 
+    # occupy new bed
     new_bed.bed_status = BedStatus.OCCUPIED
     db.add(new_bed)
 
+    # update student record to reference new bed/room
+    student.bed_id = new_bed.id
+    student.room_id = new_bed.room_id
     student.room_assignment = new_bed.room_number
     student.bed_assignment = new_bed.bed_number
     db.add(student)

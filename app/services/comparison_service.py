@@ -9,7 +9,7 @@ from app.models.rooms import Room
 # ---------------------------------------------------------
 # VERSION 1: (Simple repository pass-through)
 # ---------------------------------------------------------
-def compare_hostels(db: Session, hostel_ids: List[str]) -> List[dict]:
+def compare_hostels(db: Session, hostel_ids: List[int]) -> List[dict]:
     return repo_get_hostel_comparison(db, hostel_ids)
 
 

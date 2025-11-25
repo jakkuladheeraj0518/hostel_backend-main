@@ -33,3 +33,6 @@ class Bed(Base):
 
     hostel = relationship("Hostel", back_populates="beds")
     room = relationship("Room", back_populates="beds")
+    # students assigned to this bed (current occupant(s)). For current single-occupant model
+    # Student.bed_id references this bed's id.
+    students = relationship("Student", back_populates="bed")
