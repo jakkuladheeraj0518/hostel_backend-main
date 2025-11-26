@@ -1,5 +1,6 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -64,12 +65,12 @@ def update_supervisor(employee_id: str, payload: SupervisorUpdate, db: Session =
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="A supervisor with this information already exists")
 
 
-@router.delete("/{employee_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{employee_id}", status_code=status.HTTP_200_OK)
 def delete_supervisor(employee_id: str, db: Session = Depends(get_db)):
     ok = service_delete_supervisor(db, employee_id)
     if not ok:
         raise HTTPException(status_code=404, detail="Supervisor not found")
-    return None
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"message": "Supervisor deleted"})
 
 
 from fastapi.responses import JSONResponse

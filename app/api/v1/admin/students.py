@@ -1,5 +1,6 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 import csv
@@ -97,12 +98,12 @@ def update_student(student_id: str, payload: StudentUpdate, db: Session = Depend
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="A student with this information already exists")
 
 
-@router.delete("/{student_id}", status_code=status.HTTP_204_NO_CONTENT, operation_id="admin_delete_student")
+@router.delete("/{student_id}", status_code=status.HTTP_200_OK, operation_id="admin_delete_student")
 def delete_student(student_id: str, db: Session = Depends(get_db)):
     ok = service_delete_student(db, student_id)
     if not ok:
         raise HTTPException(status_code=404, detail="Student not found")
-    return None
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"message": "Student deleted"})
 
 
 @router.post("/{student_id}/status", response_model=StudentOut)

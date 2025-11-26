@@ -62,11 +62,18 @@ def delete_supervisor(db: Session, employee_id: str) -> bool:
     obj = get_supervisor(db, employee_id)
     if not obj:
         return False
+    # Remove related rows first to avoid FK constraint problems
+    # supervisor_activity and supervisor_hostels reference supervisors.employee_id
+    # Deleting the parent while children exist caused SQLAlchemy to try and set
+    # the FK to NULL which violates the NOT NULL constraint. Delete children
+    # explicitly before removing the supervisor.
+    db.execute(text("DELETE FROM supervisor_activity WHERE employee_id = :eid"), {"eid": employee_id})
+    db.execute(text("DELETE FROM supervisor_hostels WHERE employee_id = :eid"), {"eid": employee_id})
+    # Also remove any admin override entries that reference this supervisor (either as admin or target)
+    db.execute(text("DELETE FROM admin_overrides WHERE admin_employee_id = :eid OR target_supervisor_id = :eid"), {"eid": employee_id})
 
     db.delete(obj)
     db.commit()
-
-    _log(db, employee_id, "delete", "deleted supervisor")
     return True
 
 

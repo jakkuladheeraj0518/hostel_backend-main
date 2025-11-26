@@ -450,7 +450,7 @@ async def assign_hostels_to_admin(
     return tenant_service.assign_admin_to_hostels(admin_id, hostel_ids, current_user.role)
 
 
-@router.post("/supervisors", response_model=UserResponse, status_code=status.HTTP_201_CREATED, tags=["admin"])
+@router.post("/users/supervisors", response_model=UserResponse, status_code=status.HTTP_201_CREATED, tags=["admin"])
 async def create_supervisor(
     supervisor_data: AdminCreate,
     current_user: User = Depends(role_required(Role.SUPERADMIN, Role.ADMIN)),
@@ -503,7 +503,7 @@ async def create_supervisor(
     return user
 
 
-@router.post("/students", response_model=UserResponse, status_code=status.HTTP_201_CREATED, tags=["admin"])
+@router.post("/users/students", response_model=UserResponse, status_code=status.HTTP_201_CREATED, tags=["admin"])
 async def create_student(
     student_data: AdminCreate,
     current_user: User = Depends(role_required(Role.SUPERADMIN, Role.ADMIN)),
@@ -556,7 +556,7 @@ async def create_student(
 
 
 
-@router.put("/supervisors/{supervisor_id}", response_model=UserResponse, tags=["admin"])
+@router.put("/users/supervisors/{supervisor_id}", response_model=UserResponse, tags=["admin"])
 async def update_supervisor(
     supervisor_id: int,
     supervisor_data: UserUpdate,
@@ -612,7 +612,7 @@ async def update_supervisor(
     return updated
 
 
-@router.delete("/supervisors/{supervisor_id}", status_code=status.HTTP_200_OK, tags=["admin"])
+@router.delete("/users/supervisors/{supervisor_id}", status_code=status.HTTP_200_OK, tags=["admin"])
 async def delete_supervisor(
     supervisor_id: int,
     current_user: User = Depends(role_required(Role.SUPERADMIN, Role.ADMIN)),
@@ -672,7 +672,7 @@ async def delete_supervisor(
     return {"message": "Supervisor deactivated"}
 
 
-@router.put("/students/{student_id}", response_model=UserResponse, tags=["admin"])
+@router.put("/users/students/{student_id}", response_model=UserResponse, tags=["admin"])
 async def update_student(
     student_id: int,
     student_data: UserUpdate,
@@ -728,7 +728,7 @@ async def update_student(
     return updated
 
 
-@router.delete("/students/{student_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["admin"])
+@router.delete("/users/students/{student_id}", status_code=status.HTTP_200_OK, tags=["admin"])
 async def delete_student(
     student_id: int,
     current_user: User = Depends(role_required(Role.SUPERADMIN)),
@@ -764,5 +764,5 @@ async def delete_student(
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Student not found")
 
-    return None
+    return {"message": "Student deleted"}
 

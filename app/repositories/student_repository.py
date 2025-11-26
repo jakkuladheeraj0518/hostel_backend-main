@@ -81,6 +81,19 @@ def delete_student(db: Session, student_id: str) -> bool:
     obj = get_student(db, student_id)
     if not obj:
         return False
+    # Remove dependent records to avoid FK constraint problems.
+    # child tables referencing students.student_id include:
+    # - student_payments
+    # - student_attendance
+    # - student_documents
+    # - student_status_history
+    # Complaints keep denormalized student fields; safely NULL the student_id so complaints remain.
+    db.execute(text("DELETE FROM student_payments WHERE student_id = :sid"), {"sid": student_id})
+    db.execute(text("DELETE FROM student_attendance WHERE student_id = :sid"), {"sid": student_id})
+    db.execute(text("DELETE FROM student_documents WHERE student_id = :sid"), {"sid": student_id})
+    db.execute(text("DELETE FROM student_status_history WHERE student_id = :sid"), {"sid": student_id})
+    # Make complaints reference explicit - set student_id to NULL to preserve complaint rows and attachments
+    db.execute(text("UPDATE complaints SET student_id = NULL WHERE student_id = :sid"), {"sid": student_id})
 
     db.delete(obj)
     db.commit()
