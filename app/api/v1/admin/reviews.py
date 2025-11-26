@@ -1,25 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
-from typing import List, Optional
-from datetime import datetime
+from typing import Optional
+from datetime import datetime, timedelta
 from app.core.database import get_db
-from app.api.deps import current_user
-from app.core.rbac import Role
-from app.models.hostel import AdminHostel, Hostel
-from app.models.user import User
+from app.dependencies import get_current_user
+from app.core.roles import Role
 from app.models.review import Review
-from app.models.maintenance import Complaint, MaintenanceRequest, MaintenanceCost, MaintenanceTask
-from app.models.leave import LeaveRequest
-from app.models.notice import Notice
-from app.schemas.user_schema import UserCreate, UserOut
-from app.schemas.notice_schema import NoticeCreate
-from app.schemas.maintenance_schema import MaintenanceCreate, MaintenanceUpdate, MaintenanceCostCreate
-from app.schemas.preventive_maintenance_schema import PreventiveMaintenanceScheduleCreate, PreventiveMaintenanceTaskCreate, PreventiveMaintenanceTaskUpdate
-from app.models.preventive_maintenance import PreventiveMaintenanceSchedule, PreventiveMaintenanceTask
-
-
-# Admin Dashboard
 
 router = APIRouter(prefix="/reviews", tags=["Admin Reviews"])
 
@@ -27,8 +14,8 @@ router = APIRouter(prefix="/reviews", tags=["Admin Reviews"])
 def get_reviews(hostel_id: Optional[int] = None, status: Optional[str] = None, 
                 rating: Optional[int] = None, is_spam: Optional[bool] = None,
                 skip: int = 0, limit: int = 100, sort_by: str = "newest",
-                db: Session = Depends(get_db), user=Depends(current_user)):
-    if user.get("role") not in [Role.ADMIN, Role.SUPER_ADMIN]:
+                db: Session = Depends(get_db), user=Depends(get_current_user)):
+    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
         raise HTTPException(403, "Forbidden")
     
     query = db.query(Review)
@@ -63,12 +50,10 @@ def get_reviews(hostel_id: Optional[int] = None, status: Optional[str] = None,
                         "is_approved": r.is_approved, "is_spam": r.is_spam,
                         "helpful_count": r.helpful_count, "created_at": r.created_at} for r in reviews]}
 
-
-
 @router.get("/reviews/pending")
-def get_pending_reviews(skip: int = 0, limit: int = 50, db: Session = Depends(get_db), user=Depends(current_user)):
+def get_pending_reviews(skip: int = 0, limit: int = 50, db: Session = Depends(get_db), user=Depends(get_current_user)):
     """Get reviews pending moderation"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPER_ADMIN]:
+    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
         raise HTTPException(403, "Forbidden")
     
     reviews = db.query(Review).filter(
@@ -80,13 +65,11 @@ def get_pending_reviews(skip: int = 0, limit: int = 50, db: Session = Depends(ge
                         "rating": r.rating, "text": r.text, "photo_url": r.photo_url,
                         "created_at": r.created_at} for r in reviews]}
 
-
-
 @router.put("/reviews/{review_id}/moderate")
 def moderate_review(review_id: int, action: str, reason: Optional[str] = None, 
-                   db: Session = Depends(get_db), user=Depends(current_user)):
+                   db: Session = Depends(get_db), user=Depends(get_current_user)):
     """Comprehensive review moderation with spam detection"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPER_ADMIN]:
+    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
         raise HTTPException(403, "Forbidden")
     
     review = db.query(Review).filter(Review.id == review_id).first()
@@ -109,28 +92,23 @@ def moderate_review(review_id: int, action: str, reason: Optional[str] = None,
     db.commit()
     return {"ok": True, "action": action}
 
-
-
 @router.get("/reviews/spam")
-def get_spam_reviews(skip: int = 0, limit: int = 50, db: Session = Depends(get_db), user=Depends(current_user)):
+def get_spam_reviews(skip: int = 0, limit: int = 50, db: Session = Depends(get_db), user=Depends(get_current_user)):
     """Get reviews marked as spam"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPER_ADMIN]:
+    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
         raise HTTPException(403, "Forbidden")
     
     reviews = db.query(Review).filter(Review.is_spam == True).offset(skip).limit(limit).all()
     return {"reviews": [{"id": r.id, "hostel_id": r.hostel_id, "rating": r.rating, 
                         "text": r.text, "created_at": r.created_at} for r in reviews]}
 
-
-
 @router.get("/reviews/analytics")
 def get_review_analytics(hostel_id: Optional[int] = None, days: int = 30, 
-                        db: Session = Depends(get_db), user=Depends(current_user)):
+                        db: Session = Depends(get_db), user=Depends(get_current_user)):
     """Get review analytics and insights"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPER_ADMIN]:
+    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
         raise HTTPException(403, "Forbidden")
     
-    from datetime import datetime, timedelta
     start_date = datetime.now() - timedelta(days=days)
     
     query = db.query(Review).filter(Review.created_at >= start_date)
@@ -161,11 +139,9 @@ def get_review_analytics(hostel_id: Optional[int] = None, days: int = 30,
         "approval_rate": round((approved_reviews / total_reviews * 100) if total_reviews > 0 else 0, 2)
     }
 
-
-
 @router.delete("/reviews/{review_id}")
-def delete_review(review_id: int, db: Session = Depends(get_db), user=Depends(current_user)):
-    if user.get("role") not in [Role.ADMIN, Role.SUPER_ADMIN]:
+def delete_review(review_id: int, db: Session = Depends(get_db), user=Depends(get_current_user)):
+    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
         raise HTTPException(403, "Forbidden")
     
     review = db.query(Review).filter(Review.id == review_id).first()
@@ -175,7 +151,3 @@ def delete_review(review_id: int, db: Session = Depends(get_db), user=Depends(cu
     db.delete(review)
     db.commit()
     return {"ok": True}
-
-# Maintenance Management
-
-

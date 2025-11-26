@@ -1,20 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func, desc
-from typing import List, Optional
-from datetime import datetime
+from typing import Optional
+from datetime import datetime, date, timedelta
 from app.core.database import get_db
-from app.api.deps import current_user
-from app.core.rbac import Role
-from app.models.hostel import AdminHostel, Hostel
-from app.models.user import User
-from app.models.review import Review
-from app.models.maintenance import Complaint, MaintenanceRequest, MaintenanceCost, MaintenanceTask
-from app.models.leave import LeaveRequest
-from app.models.notice import Notice
-from app.schemas.user_schema import UserCreate, UserOut
-from app.schemas.notice_schema import NoticeCreate
-from app.schemas.maintenance_schema import MaintenanceCreate, MaintenanceUpdate, MaintenanceCostCreate
+from app.dependencies import get_current_user
+from app.core.roles import Role
 from app.schemas.preventive_maintenance_schema import PreventiveMaintenanceScheduleCreate, PreventiveMaintenanceTaskCreate, PreventiveMaintenanceTaskUpdate
 from app.models.preventive_maintenance import PreventiveMaintenanceSchedule, PreventiveMaintenanceTask
 
@@ -25,8 +15,8 @@ router = APIRouter(prefix="/preventive-maintenance", tags=["Admin Preventive Mai
 
 @router.post("/preventive-maintenance/schedules")
 def create_preventive_schedule(schedule_data: PreventiveMaintenanceScheduleCreate, 
-                              db: Session = Depends(get_db), user=Depends(current_user)):
-    if user.get("role") not in [Role.ADMIN, Role.SUPER_ADMIN]:
+                              db: Session = Depends(get_db), user=Depends(get_current_user)):
+    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
         raise HTTPException(403, "Forbidden")
     
     schedule = PreventiveMaintenanceSchedule(
@@ -44,8 +34,8 @@ def create_preventive_schedule(schedule_data: PreventiveMaintenanceScheduleCreat
 
 
 @router.get("/preventive-maintenance/schedules")
-def get_preventive_schedules(hostel_id: Optional[int] = None, db: Session = Depends(get_db), user=Depends(current_user)):
-    if user.get("role") not in [Role.ADMIN, Role.SUPER_ADMIN]:
+def get_preventive_schedules(hostel_id: Optional[int] = None, db: Session = Depends(get_db), user=Depends(get_current_user)):
+    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
         raise HTTPException(403, "Forbidden")
     
     query = db.query(PreventiveMaintenanceSchedule).filter(PreventiveMaintenanceSchedule.is_active == True)
@@ -61,8 +51,8 @@ def get_preventive_schedules(hostel_id: Optional[int] = None, db: Session = Depe
 
 @router.get("/preventive-maintenance/due")
 def get_due_preventive_maintenance(days_ahead: int = 7, hostel_id: Optional[int] = None, 
-                                  db: Session = Depends(get_db), user=Depends(current_user)):
-    if user.get("role") not in [Role.ADMIN, Role.SUPER_ADMIN]:
+                                  db: Session = Depends(get_db), user=Depends(get_current_user)):
+    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
         raise HTTPException(403, "Forbidden")
     
     from datetime import date, timedelta
@@ -83,8 +73,8 @@ def get_due_preventive_maintenance(days_ahead: int = 7, hostel_id: Optional[int]
 
 @router.post("/preventive-maintenance/tasks")
 def create_preventive_task(task_data: PreventiveMaintenanceTaskCreate, 
-                          db: Session = Depends(get_db), user=Depends(current_user)):
-    if user.get("role") not in [Role.ADMIN, Role.SUPER_ADMIN]:
+                          db: Session = Depends(get_db), user=Depends(get_current_user)):
+    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
         raise HTTPException(403, "Forbidden")
     
     task = PreventiveMaintenanceTask(
@@ -101,8 +91,8 @@ def create_preventive_task(task_data: PreventiveMaintenanceTaskCreate,
 
 @router.put("/preventive-maintenance/tasks/{task_id}")
 def update_preventive_task(task_id: int, task_data: PreventiveMaintenanceTaskUpdate, 
-                          db: Session = Depends(get_db), user=Depends(current_user)):
-    if user.get("role") not in [Role.ADMIN, Role.SUPER_ADMIN]:
+                          db: Session = Depends(get_db), user=Depends(get_current_user)):
+    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
         raise HTTPException(403, "Forbidden")
     
     task = db.query(PreventiveMaintenanceTask).filter(PreventiveMaintenanceTask.id == task_id).first()

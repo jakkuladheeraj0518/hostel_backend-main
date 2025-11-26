@@ -1,10 +1,11 @@
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import ForeignKey, String, Integer, Boolean, Text, DateTime, Float, func
 from datetime import datetime
-from app.models import Base
+from app.config import Base
  
 class Complaint(Base):
     __tablename__ = "complaints"
+    __table_args__ = {'extend_existing': True}
     id: Mapped[int] = mapped_column(primary_key=True)
     hostel_id: Mapped[int] = mapped_column(ForeignKey("hostels.id", ondelete="CASCADE"), index=True)
     student_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"))

@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import ForeignKey, Integer, String, Boolean, Text, DateTime, func
 from datetime import datetime
-from app.models import Base
+from app.config import Base
 
 class Review(Base):
     __tablename__ = "reviews"

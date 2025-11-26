@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import ForeignKey, String, Integer, Boolean, DateTime, Date
 from datetime import datetime, date
-from app.models import Base
+from app.config import Base
 
 class PreventiveMaintenanceSchedule(Base):
     __tablename__ = "preventive_maintenance_schedules"
