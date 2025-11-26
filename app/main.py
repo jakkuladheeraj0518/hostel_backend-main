@@ -70,6 +70,10 @@ from app.api.v1.admin import announcement as admin_announcement
 from app.api.v1.supervisor import announcement as supervisor_announcement
 from app.api.v1.student import announcement as student_announcement
 
+# ⭐ NEW: Supervisor Module (Dashboard, Complaints, Attendance, Leave Management)
+from app.api.v1.supervisor import router as supervisor_module_router
+from app.api.v1.supervisor.auth import router as supervisor_auth_router
+
 # Visitor Routers
 from app.api.v1.visitor.bookings import router as visitor_booking_router
 from app.api.v1.visitor.public_comparison import router as visitor_compare_router
@@ -259,6 +263,18 @@ app.include_router(student_mess_menu.router, prefix="/api/v1")
 app.include_router(admin_announcement.router, prefix="/api/v1")
 app.include_router(supervisor_announcement.router, prefix="/api/v1")
 app.include_router(student_announcement.router, prefix="/api/v1")
+
+# ⭐ NEW: Supervisor Module Routes (Dashboard, Complaints, Attendance, Leave Management)
+app.include_router(
+    supervisor_auth_router,
+    prefix="/api/v1/auth",
+    tags=["Supervisor Authentication"]
+)
+app.include_router(
+    supervisor_module_router,
+    prefix="/api/v1/supervisor",
+    tags=["Supervisor Module"]
+)
 
 # ---------------------------------------------------------
 # ⭐ NOTIFICATION ROUTERS (FINAL STEP)
