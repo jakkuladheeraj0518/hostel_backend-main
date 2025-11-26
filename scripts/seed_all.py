@@ -1168,3 +1168,400 @@ def run():
 
 if __name__ == "__main__":
     run()
+
+
+# ---------------------------------------------------------
+# NEW: Seed data for integrated features from hemantPawade.zip
+# ---------------------------------------------------------
+
+def seed_reviews(db: Session, hostels, users):
+    """Seed review data with various quality levels"""
+    from app.models.review import Review, ReviewHelpful
+    
+    student = users["student"]
+    visitor = users["visitor"]
+    
+    # High-quality review (will be auto-approved)
+    r1, _ = get_or_create(
+        db,
+        Review,
+        id=1,
+        defaults={
+            "hostel_id": hostels[0].id,
+            "student_id": student.id,
+            "rating": 5,
+            "text": "Excellent hostel with clean rooms, friendly staff, and great location near campus. WiFi is fast and reliable. The mess food is good and hygienic. Highly recommended for students!",
+            "photo_url": "https://example.com/photos/review1.jpg",
+            "is_approved": True,  # Auto-approved due to high quality
+            "is_spam": False,
+            "helpful_count": 5,
+            "created_at": datetime.utcnow() - timedelta(days=10),
+        },
+    )
+    
+    # Medium-quality review (pending moderation)
+    r2, _ = get_or_create(
+        db,
+        Review,
+        id=2,
+        defaults={
+            "hostel_id": hostels[0].id,
+            "student_id": visitor.id,
+            "rating": 4,
+            "text": "Good hostel, nice rooms and facilities.",
+            "photo_url": None,
+            "is_approved": False,  # Pending moderation
+            "is_spam": False,
+            "helpful_count": 0,
+            "created_at": datetime.utcnow() - timedelta(days=5),
+        },
+    )
+    
+    # Spam review (flagged)
+    r3, _ = get_or_create(
+        db,
+        Review,
+        id=3,
+        defaults={
+            "hostel_id": hostels[1].id,
+            "student_id": visitor.id,
+            "rating": 5,
+            "text": "BEST HOSTEL!!! Visit www.example.com for DISCOUNT! Call 9876543210 NOW!!!",
+            "photo_url": None,
+            "is_approved": False,
+            "is_spam": True,  # Marked as spam
+            "helpful_count": 0,
+            "created_at": datetime.utcnow() - timedelta(days=3),
+        },
+    )
+    
+    # Another good review for hostel 2
+    r4, _ = get_or_create(
+        db,
+        Review,
+        id=4,
+        defaults={
+            "hostel_id": hostels[1].id,
+            "student_id": student.id,
+            "rating": 4,
+            "text": "Safe and comfortable hostel for girls. Good security arrangements and clean environment. Staff is helpful and responsive.",
+            "photo_url": "https://example.com/photos/review4.jpg",
+            "is_approved": True,
+            "is_spam": False,
+            "helpful_count": 3,
+            "created_at": datetime.utcnow() - timedelta(days=7),
+        },
+    )
+    
+    # Low rating review
+    r5, _ = get_or_create(
+        db,
+        Review,
+        id=5,
+        defaults={
+            "hostel_id": hostels[2].id,
+            "student_id": student.id,
+            "rating": 2,
+            "text": "Rooms are okay but maintenance is poor. WiFi connectivity issues. Food quality needs improvement.",
+            "photo_url": None,
+            "is_approved": True,
+            "is_spam": False,
+            "helpful_count": 2,
+            "created_at": datetime.utcnow() - timedelta(days=2),
+        },
+    )
+    
+    # Helpful votes
+    rh1, _ = get_or_create(
+        db,
+        ReviewHelpful,
+        review_id=r1.id,
+        user_id=visitor.id,
+        defaults={
+            "created_at": datetime.utcnow() - timedelta(days=9),
+        },
+    )
+    
+    print(f"✔ Reviews: {5} reviews created (3 approved, 1 pending, 1 spam)")
+    return [r1, r2, r3, r4, r5]
+
+
+def seed_leave_requests(db: Session, hostels, users):
+    """Seed leave request data"""
+    from app.models.leave import LeaveRequest
+    
+    student = users["student"]
+    today = date.today()
+    
+    # Approved leave (past)
+    lr1, _ = get_or_create(
+        db,
+        LeaveRequest,
+        id=1,
+        defaults={
+            "hostel_id": hostels[0].id,
+            "student_id": student.id,
+            "start_date": today - timedelta(days=20),
+            "end_date": today - timedelta(days=15),
+            "reason": "Family function",
+            "status": "APPROVED",
+            "created_at": datetime.utcnow() - timedelta(days=25),
+        },
+    )
+    
+    # Approved leave (past)
+    lr2, _ = get_or_create(
+        db,
+        LeaveRequest,
+        id=2,
+        defaults={
+            "hostel_id": hostels[0].id,
+            "student_id": student.id,
+            "start_date": today - timedelta(days=10),
+            "end_date": today - timedelta(days=7),
+            "reason": "Medical checkup",
+            "status": "APPROVED",
+            "created_at": datetime.utcnow() - timedelta(days=15),
+        },
+    )
+    
+    # Pending leave (future)
+    lr3, _ = get_or_create(
+        db,
+        LeaveRequest,
+        id=3,
+        defaults={
+            "hostel_id": hostels[0].id,
+            "student_id": student.id,
+            "start_date": today + timedelta(days=5),
+            "end_date": today + timedelta(days=10),
+            "reason": "Going home for festival",
+            "status": "PENDING",
+            "created_at": datetime.utcnow(),
+        },
+    )
+    
+    # Rejected leave
+    lr4, _ = get_or_create(
+        db,
+        LeaveRequest,
+        id=4,
+        defaults={
+            "hostel_id": hostels[0].id,
+            "student_id": student.id,
+            "start_date": today - timedelta(days=5),
+            "end_date": today - timedelta(days=1),
+            "reason": "Personal work",
+            "status": "REJECTED",
+            "created_at": datetime.utcnow() - timedelta(days=10),
+        },
+    )
+    
+    print(f"✔ Leave Requests: 4 requests (2 approved, 1 pending, 1 rejected)")
+    print(f"  → Used leave days: 9 days (6 days + 3 days)")
+    print(f"  → Remaining: 21 days out of 30 annual")
+    return [lr1, lr2, lr3, lr4]
+
+
+def seed_preventive_maintenance(db: Session, hostels, users):
+    """Seed preventive maintenance schedules and tasks"""
+    from app.models.preventive_maintenance import PreventiveMaintenanceSchedule, PreventiveMaintenanceTask
+    
+    admin = users["admin"]
+    supervisor = users["supervisor"]
+    today = date.today()
+    
+    # AC Maintenance Schedule
+    pms1, _ = get_or_create(
+        db,
+        PreventiveMaintenanceSchedule,
+        id=1,
+        defaults={
+            "hostel_id": hostels[0].id,
+            "equipment_type": "Air Conditioner",
+            "maintenance_type": "Filter Cleaning & Gas Check",
+            "frequency_days": 90,  # Every 3 months
+            "next_due": today + timedelta(days=15),
+            "last_maintenance": today - timedelta(days=75),
+            "is_active": True,
+            "created_at": datetime.utcnow() - timedelta(days=180),
+        },
+    )
+    
+    # Plumbing Maintenance Schedule
+    pms2, _ = get_or_create(
+        db,
+        PreventiveMaintenanceSchedule,
+        id=2,
+        defaults={
+            "hostel_id": hostels[0].id,
+            "equipment_type": "Plumbing System",
+            "maintenance_type": "Pipe Inspection & Leak Check",
+            "frequency_days": 180,  # Every 6 months
+            "next_due": today + timedelta(days=45),
+            "last_maintenance": today - timedelta(days=135),
+            "is_active": True,
+            "created_at": datetime.utcnow() - timedelta(days=200),
+        },
+    )
+    
+    # Electrical Maintenance Schedule
+    pms3, _ = get_or_create(
+        db,
+        PreventiveMaintenanceSchedule,
+        id=3,
+        defaults={
+            "hostel_id": hostels[1].id,
+            "equipment_type": "Electrical System",
+            "maintenance_type": "Wiring Check & MCB Testing",
+            "frequency_days": 365,  # Yearly
+            "next_due": today + timedelta(days=120),
+            "last_maintenance": today - timedelta(days=245),
+            "is_active": True,
+            "created_at": datetime.utcnow() - timedelta(days=300),
+        },
+    )
+    
+    # Fire Safety Equipment Schedule (DUE SOON!)
+    pms4, _ = get_or_create(
+        db,
+        PreventiveMaintenanceSchedule,
+        id=4,
+        defaults={
+            "hostel_id": hostels[0].id,
+            "equipment_type": "Fire Safety Equipment",
+            "maintenance_type": "Fire Extinguisher Check & Alarm Test",
+            "frequency_days": 180,
+            "next_due": today + timedelta(days=3),  # Due in 3 days!
+            "last_maintenance": today - timedelta(days=177),
+            "is_active": True,
+            "created_at": datetime.utcnow() - timedelta(days=200),
+        },
+    )
+    
+    # Completed Task
+    pmt1, _ = get_or_create(
+        db,
+        PreventiveMaintenanceTask,
+        id=1,
+        defaults={
+            "schedule_id": pms1.id,
+            "assigned_to_id": supervisor.id,
+            "scheduled_date": today - timedelta(days=75),
+            "completed_date": today - timedelta(days=75),
+            "status": "COMPLETED",
+            "notes": "All AC units serviced. Filters cleaned, gas levels checked. All working fine.",
+            "cost": 2500.0,
+            "created_at": datetime.utcnow() - timedelta(days=80),
+        },
+    )
+    
+    # Pending Task (scheduled for upcoming)
+    pmt2, _ = get_or_create(
+        db,
+        PreventiveMaintenanceTask,
+        id=2,
+        defaults={
+            "schedule_id": pms4.id,
+            "assigned_to_id": supervisor.id,
+            "scheduled_date": today + timedelta(days=3),
+            "completed_date": None,
+            "status": "PENDING",
+            "notes": None,
+            "cost": None,
+            "created_at": datetime.utcnow(),
+        },
+    )
+    
+    print(f"✔ Preventive Maintenance: 4 schedules, 2 tasks")
+    print(f"  → 1 task due in 3 days (Fire Safety)")
+    print(f"  → 1 task completed (AC Maintenance)")
+    return [pms1, pms2, pms3, pms4], [pmt1, pmt2]
+
+
+def seed_maintenance_costs(db: Session, hostels, users):
+    """Seed maintenance cost tracking data"""
+    from app.models.maintenance import MaintenanceCost
+    
+    today = date.today()
+    
+    # AC Repair Cost
+    mc1, _ = get_or_create(
+        db,
+        MaintenanceCost,
+        id=1,
+        defaults={
+            "hostel_id": hostels[0].id,
+            "category": "AC Maintenance",
+            "description": "AC filter cleaning and gas refill for 10 units",
+            "amount": 2500.0,
+            "vendor_name": "Cool Air Services",
+            "vendor_contact": "9876543210",
+            "payment_status": "paid",
+            "payment_date": today - timedelta(days=75),
+            "invoice_number": "INV-AC-001",
+            "created_at": datetime.utcnow() - timedelta(days=75),
+        },
+    )
+    
+    # Plumbing Repair Cost
+    mc2, _ = get_or_create(
+        db,
+        MaintenanceCost,
+        id=2,
+        defaults={
+            "hostel_id": hostels[0].id,
+            "category": "Plumbing",
+            "description": "Emergency pipe leak repair in bathroom",
+            "amount": 1500.0,
+            "vendor_name": "Quick Fix Plumbers",
+            "vendor_contact": "9876543211",
+            "payment_status": "paid",
+            "payment_date": today - timedelta(days=30),
+            "invoice_number": "INV-PLB-001",
+            "created_at": datetime.utcnow() - timedelta(days=30),
+        },
+    )
+    
+    # Electrical Work Cost (Pending Payment)
+    mc3, _ = get_or_create(
+        db,
+        MaintenanceCost,
+        id=3,
+        defaults={
+            "hostel_id": hostels[1].id,
+            "category": "Electrical",
+            "description": "New wiring installation in common area",
+            "amount": 5000.0,
+            "vendor_name": "Bright Electricals",
+            "vendor_contact": "9876543212",
+            "payment_status": "pending",
+            "payment_date": None,
+            "invoice_number": "INV-ELC-001",
+            "created_at": datetime.utcnow() - timedelta(days=5),
+        },
+    )
+    
+    # Painting Cost
+    mc4, _ = get_or_create(
+        db,
+        MaintenanceCost,
+        id=4,
+        defaults={
+            "hostel_id": hostels[0].id,
+            "category": "Painting",
+            "description": "Room 101 and 102 painting work",
+            "amount": 3500.0,
+            "vendor_name": "Color World Painters",
+            "vendor_contact": "9876543213",
+            "payment_status": "paid",
+            "payment_date": today - timedelta(days=15),
+            "invoice_number": "INV-PNT-001",
+            "created_at": datetime.utcnow() - timedelta(days=15),
+        },
+    )
+    
+    print(f"✔ Maintenance Costs: 4 cost entries")
+    print(f"  → Total paid: ₹7,500")
+    print(f"  → Pending: ₹5,000")
+    return [mc1, mc2, mc3, mc4]

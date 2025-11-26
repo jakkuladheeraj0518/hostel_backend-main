@@ -88,7 +88,7 @@ class Complaint(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
-    student = relationship("Student", foreign_keys=[student_id], backref="complaints")
+    student = relationship("Student", foreign_keys=[student_id], primaryjoin="Complaint.student_id==Student.student_id", backref="complaints")
     reporter = relationship("User", foreign_keys=[reporter_id], backref="reported_complaints")
     assigned_to = relationship("User", foreign_keys=[assigned_to_id], backref="assigned_complaints")
     hostel = relationship("Hostel", foreign_keys=[hostel_id], backref="complaints")

@@ -2,21 +2,10 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import ForeignKey, String, Integer, Boolean, Text, DateTime, Float, func
 from datetime import datetime
 from app.config import Base
- 
-class Complaint(Base):
-    __tablename__ = "complaints"
-    __table_args__ = {'extend_existing': True}
-    id: Mapped[int] = mapped_column(primary_key=True)
-    hostel_id: Mapped[int] = mapped_column(ForeignKey("hostels.id", ondelete="CASCADE"), index=True)
-    student_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
-    category: Mapped[str] = mapped_column(String(64))
-    priority: Mapped[str] = mapped_column(String(16), default="MEDIUM")  # LOW, MEDIUM, HIGH, URGENT
-    status: Mapped[str] = mapped_column(String(16), default="PENDING")  # PENDING, IN_PROGRESS, RESOLVED, CLOSED
-    description: Mapped[str] = mapped_column(Text)
-    photo_url: Mapped[str | None] = mapped_column(String(512))
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=func.now(), onupdate=func.now())
- 
+
+# Note: Complaint model is defined in app/models/complaint.py
+# Removed duplicate definition to avoid conflicts
+
 class MaintenanceRequest(Base):
     __tablename__ = "maintenance_requests"
     id: Mapped[int] = mapped_column(primary_key=True)
