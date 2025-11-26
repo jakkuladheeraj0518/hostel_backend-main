@@ -139,24 +139,46 @@ class SearchService:
     @staticmethod
     def log_search(db: Session, filters: HostelSearchFilters, results_count: int):
         """Log search query for analytics"""
-        from app.models.reports import SearchQuery
+        from app.models.search import SearchQuery
         import json
         from decimal import Decimal
-        
+        from sqlalchemy import text
+        from sqlalchemy.exc import IntegrityError
+
         # Convert Decimal to float for JSON serialization
         filters_dict = filters.model_dump(exclude_none=True)
         for key, value in filters_dict.items():
             if isinstance(value, Decimal):
                 filters_dict[key] = float(value)
-        
+
         search_log = SearchQuery(
             query_text=filters.query or "",
             city=filters.city,
             filters=json.dumps(filters_dict),
-            results_count=results_count
+            results_count=results_count,
         )
+
         db.add(search_log)
-        db.commit()
+        try:
+            db.commit()
+        except IntegrityError:
+            # Possible sequence / PK out-of-sync with existing rows (Postgres):
+            # advance the sequence to max(id) so next inserts won't conflict, then retry.
+            db.rollback()
+            try:
+                db.execute(
+                    text(
+                        "SELECT setval(pg_get_serial_sequence('search_queries','id'), (SELECT COALESCE(MAX(id), 1) FROM search_queries))"
+                    )
+                )
+                db.commit()
+            except Exception:
+                db.rollback()
+                raise
+
+            # retry insert
+            db.add(search_log)
+            db.commit()
     
     @staticmethod
     def log_profile_view(db: Session, hostel_id: int, source: str = "direct", visitor_ip: str = None, session_id: str = None):

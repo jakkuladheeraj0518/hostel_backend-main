@@ -27,8 +27,9 @@ from app.models.reports import (
     FinancialTransaction,
     HostelBooking,
     HostelProfileView,
-    SearchQuery,
+   
 )
+from app.models.search import SearchQuery
 
 # Fee & Payment Models
 from app.models.fee_structure_models import (

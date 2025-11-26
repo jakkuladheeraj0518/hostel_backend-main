@@ -93,8 +93,9 @@ from app.models.reports import (
     FinancialTransaction,
     HostelBooking,
     HostelProfileView,
-    SearchQuery,
+    
 )
+from app.models.search import SearchQuery
 
 # Report models (analytics)
 from app.models.report_models import (
@@ -939,10 +940,9 @@ def seed_reports_data(db: Session, hostels, users):
     sq, _ = get_or_create(
         db,
         SearchQuery,
-        id=1,
+        query_text="hostel hyderabad",
+        city="Hyderabad",
         defaults={
-            "query_text": "hostel hyderabad",
-            "city": "Hyderabad",
             "filters": '{"gender": "Boys"}',
             "results_count": 3,
         },

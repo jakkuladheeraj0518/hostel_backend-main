@@ -1,22 +1,13 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Enum
+from sqlalchemy import Column, Integer, String, DateTime, Text
 from datetime import datetime
-import enum
 from app.core.database import Base
 
-class UserRole(str, enum.Enum):
-    SUPER_ADMIN = "super_admin"
-    ADMIN = "admin"
-    SUPERVISOR = "supervisor"
-    STUDENT = "student"
-
-class AdminHostelMapping(Base):
-    __tablename__ = "admin_hostel_mappings"
+class SearchQuery(Base):
+    __tablename__ = "search_queries"
     
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, nullable=False, index=True)
-    user_name = Column(String(255))
-    user_role = Column(Enum(UserRole), nullable=False)
-    hostel_id = Column(Integer, nullable=False, index=True)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    query_text = Column(String(500))
+    city = Column(String(100), index=True)
+    filters = Column(Text)  # JSON string of applied filters
+    results_count = Column(Integer)
+    searched_at = Column(DateTime, default=datetime.utcnow, index=True)
