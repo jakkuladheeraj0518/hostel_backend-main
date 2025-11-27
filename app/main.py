@@ -485,7 +485,16 @@ from app.api.v1.visitor.waitlist import router as visitor_waitlist_router
 
 # NEW: Admin Scheduled Jobs
 from app.api.v1.admin.admin_jobs import router as admin_jobs_router
+# ⭐ Hemant Integration - New Routes
+from app.api.v1.student import reviews as student_reviews
+from app.api.v1.student import leave_enhanced as student_leave_enhanced
+from app.api.v1.admin import review_management as admin_review_management
 
+# ⭐ Maintenance & Leave Management Routes
+from app.api.v1.admin.preventive_maintenance import router as preventive_maintenance_router
+from app.api.v1.admin.maintenance_costs import router as maintenance_costs_router
+from app.api.v1.admin.leave import router as admin_leave_router
+from app.api.v1.admin import reviews as admin_reviews
 # Logger
 logger = setup_logger()
 
@@ -707,6 +716,50 @@ app.include_router(
     notification_webhook_router,
     prefix="/api/v1/webhooks/notifications",
     tags=["Notification Webhooks"]
+)
+
+# ⭐ Hemant Integration Routes
+app.include_router(
+    student_reviews.router,
+    prefix="/api/v1",
+    tags=["Student Reviews"]
+)
+
+app.include_router(
+    student_leave_enhanced.router,
+    prefix="/api/v1",
+    tags=["Student Leave Enhanced"]
+)
+
+app.include_router(
+    admin_review_management.router,
+    prefix="/api/v1",
+    tags=["Admin Review Management"]
+)
+
+# ⭐ Maintenance Management Routes (from image requirements)
+app.include_router(
+    preventive_maintenance_router,
+    prefix="/api/v1/admin",
+    tags=["Admin Preventive Maintenance"]
+)
+
+app.include_router(
+    maintenance_costs_router,
+    prefix="/api/v1/admin",
+    tags=["Admin Maintenance Costs"]
+)
+
+app.include_router(
+    admin_leave_router,
+    prefix="/api/v1/admin",
+    tags=["Admin Leave Management"]
+)
+
+app.include_router(
+    admin_reviews.router,
+    prefix="/api/v1/admin",
+    tags=["Admin Reviews"]
 )
 
 # ---------------------------------------------------------------------------
