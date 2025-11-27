@@ -9,7 +9,7 @@ from app.models.leave import LeaveRequest
 
 # Admin Dashboard
 
-router = APIRouter(prefix="/leave", tags=["Admin Leave"])
+router = APIRouter()  # No prefix/tags here - set in main.py registration
 
 @router.get("/leave/requests")
 def get_leave_requests(hostel_id: Optional[int] = None, status: Optional[str] = None, 

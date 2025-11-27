@@ -488,11 +488,14 @@ from app.api.v1.admin.admin_jobs import router as admin_jobs_router
 # ⭐ Hemant Integration - New Routes
 from app.api.v1.student import reviews as student_reviews
 from app.api.v1.student import leave_enhanced as student_leave_enhanced
-from app.api.v1.admin import review_management as admin_review_management
+# Removed: admin_review_management (duplicate of admin_reviews)
 
 # ⭐ Maintenance & Leave Management Routes
 from app.api.v1.admin.preventive_maintenance import router as preventive_maintenance_router
 from app.api.v1.admin.maintenance_costs import router as maintenance_costs_router
+from app.api.v1.admin.maintenance import router as maintenance_router
+from app.api.v1.admin.maintenance_tasks import router as maintenance_tasks_router
+from app.api.v1.admin.maintenance_approvals import router as maintenance_approvals_router
 from app.api.v1.admin.leave import router as admin_leave_router
 from app.api.v1.admin import reviews as admin_reviews
 # Logger
@@ -731,11 +734,7 @@ app.include_router(
     tags=["Student Leave Enhanced"]
 )
 
-app.include_router(
-    admin_review_management.router,
-    prefix="/api/v1",
-    tags=["Admin Review Management"]
-)
+# Removed duplicate: admin_review_management (same as admin_reviews)
 
 # ⭐ Maintenance Management Routes (from image requirements)
 app.include_router(
@@ -750,10 +749,31 @@ app.include_router(
     tags=["Admin Maintenance Costs"]
 )
 
+# ⭐ NEW: Maintenance Request Management
+app.include_router(
+    maintenance_router,
+    prefix="/api/v1/admin",
+    tags=["Admin Maintenance"]
+)
+
+# ⭐ NEW: Maintenance Task Assignment
+app.include_router(
+    maintenance_tasks_router,
+    prefix="/api/v1/admin",
+    tags=["Admin Maintenance Tasks"]
+)
+
+# ⭐ NEW: Maintenance Approval Workflow
+app.include_router(
+    maintenance_approvals_router,
+    prefix="/api/v1/admin",
+    tags=["Admin Maintenance Approvals"]
+)
+
 app.include_router(
     admin_leave_router,
-    prefix="/api/v1/admin",
-    tags=["Admin Leave Management"]
+    prefix="/api/v1/admin/leave",
+    tags=["Admin Leave"]
 )
 
 app.include_router(
