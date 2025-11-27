@@ -9206,3 +9206,21 @@ DETAIL:  Key (location_id)=(1) is not present in table "locations".
 2025-11-26 19:24:22,241 | INFO     | app | Elasticsearch ready.
 2025-11-26 19:24:22,256 | INFO     | app | BookingExpiryService started
 2025-11-26 19:24:22,337 | INFO     | app | Notification worker started.
+2025-11-27 11:46:06,519 | INFO     | app | Initializing database...
+2025-11-27 11:46:08,879 | INFO     | app | Database initialized.
+2025-11-27 11:46:08,890 | INFO     | app | Initializing Elasticsearch...
+2025-11-27 11:46:12,917 | INFO     | app | Elasticsearch ready.
+2025-11-27 11:46:12,933 | INFO     | app | BookingExpiryService started
+2025-11-27 11:46:13,026 | INFO     | app | Notification worker started.
+2025-11-27 11:47:07,001 | INFO     | app | Initializing database...
+2025-11-27 11:47:07,375 | INFO     | app | Database initialized.
+2025-11-27 11:47:07,376 | INFO     | app | Initializing Elasticsearch...
+2025-11-27 11:47:11,407 | INFO     | app | Elasticsearch ready.
+2025-11-27 11:47:11,420 | INFO     | app | BookingExpiryService started
+2025-11-27 11:47:11,733 | INFO     | app | Notification worker started.
+2025-11-27 11:48:56,345 | INFO     | app | Initializing database...
+2025-11-27 11:48:56,722 | INFO     | app | Database initialized.
+2025-11-27 11:48:56,725 | INFO     | app | Initializing Elasticsearch...
+2025-11-27 11:49:00,749 | INFO     | app | Elasticsearch ready.
+2025-11-27 11:49:00,764 | INFO     | app | BookingExpiryService started
+2025-11-27 11:49:01,094 | INFO     | app | Notification worker started.

@@ -114,6 +114,13 @@ class Permission:
     MANAGE_PERMISSIONS = "manage_permissions"
     ASSIGN_ROLE = "assign_role"
  
+    # 🔔 Notifications
+    VIEW_NOTIFICATIONS = "view_notifications"
+    SEND_NOTIFICATION = "send_notification"
+    UPDATE_NOTIFICATION = "update_notification"
+    DELETE_NOTIFICATION = "delete_notification"
+ 
+ 
  
 # Role-Permission Matrix
 PERMISSION_MATRIX: Dict[str, Set[str]] = {
@@ -161,6 +168,11 @@ PERMISSION_MATRIX: Dict[str, Set[str]] = {
         Permission.MANAGE_ATTENDANCE,
         Permission.MANAGE_COMPLAINTS,
         Permission.MANAGE_MAINTENANCE,
+        Permission.VIEW_NOTIFICATIONS,
+        Permission.SEND_NOTIFICATION,
+        Permission.UPDATE_NOTIFICATION,
+        Permission.DELETE_NOTIFICATION,
+ 
     },
     Role.ADMIN: {
         Permission.CREATE_USER,
@@ -195,6 +207,11 @@ PERMISSION_MATRIX: Dict[str, Set[str]] = {
         Permission.MANAGE_BOOKINGS,
         Permission.MANAGE_WAITLIST,
         Permission.MANAGE_STUDENTS,
+        Permission.VIEW_NOTIFICATIONS,
+        Permission.SEND_NOTIFICATION,
+        Permission.UPDATE_NOTIFICATION,
+        Permission.DELETE_NOTIFICATION,
+ 
     },
     Role.SUPERVISOR: {
         Permission.CREATE_USER,
@@ -221,6 +238,8 @@ PERMISSION_MATRIX: Dict[str, Set[str]] = {
         Permission.SUPERVISOR_UPDATE_STUDENT_CONTACT,
         Permission.SUPERVISOR_VIEW_AUDIT,
         Permission.VIEW_SUPERVISOR_PERFORMANCE,
+        Permission.VIEW_NOTIFICATIONS,
+ 
     },
     Role.STUDENT: {
         Permission.READ_USER,
@@ -234,6 +253,8 @@ PERMISSION_MATRIX: Dict[str, Set[str]] = {
         Permission.MANAGE_WISHLIST,
         Permission.RATE_HOSTEL,
         Permission.WRITE_REVIEW,
+        Permission.VIEW_NOTIFICATIONS,
+ 
     },
     Role.VISITOR: {
         Permission.READ_USER,
@@ -267,4 +288,5 @@ def has_permission(role: str, permission: str) -> bool:
 def get_role_permissions(role: str) -> Set[str]:
     """Get all permissions for a role"""
     return PERMISSION_MATRIX.get(role, set())
+ 
  
