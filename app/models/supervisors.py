@@ -40,6 +40,9 @@ class Supervisor(Base):
     permissions = Column(String, nullable=True)
     status = Column(String, nullable=True)
     invitation_status = Column(String, nullable=True)
+    # 🔥 NEW FIELD: link to User table
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=True)
+    user = relationship("User", back_populates="supervisor_data")
 
 
 class SupervisorHostel(Base):

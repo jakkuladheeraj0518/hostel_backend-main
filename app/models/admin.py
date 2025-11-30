@@ -21,6 +21,9 @@ class Admin(Base):
 
     # Relationships
     hostel_assignments = relationship("AdminHostelAssignment", back_populates="admin")
+    # Link to User
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=True)
+    user = relationship("User", back_populates="admin_data")
 
 class AdminHostelAssignment(Base):
     __tablename__ = "admin_hostel_assignments"

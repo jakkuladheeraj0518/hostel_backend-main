@@ -72,6 +72,9 @@ class Student(Base):
     # relationships to room/bed (use the explicit foreign keys above)
     room = relationship("Room", back_populates="students")
     bed = relationship("Bed", back_populates="students")
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=True)
+    user = relationship("User", back_populates="student")
+
 
 
 class StudentStatusHistory(Base):

@@ -82,15 +82,15 @@ def monthly_revenue(
 # ---------------------------------------------------------
 # 🔹 Payment Method Breakdown
 # ---------------------------------------------------------
-@router.get("/reports/payment-methods")
-def payment_methods(
-    start_date: Optional[date] = None,
-    end_date: Optional[date] = None,
-    hostel_id: Optional[int] = None,
-    db: Session = Depends(get_db)
-):
-    return LedgerService(db).report_repo.get_payment_method_breakdown(
-        start_date=start_date,
-        end_date=end_date,
-        hostel_id=hostel_id
-    )
+# @router.get("/reports/payment-methods")
+# def payment_methods(
+#     start_date: Optional[date] = None,
+#     end_date: Optional[date] = None,
+#     hostel_id: Optional[int] = None,
+#     db: Session = Depends(get_db)
+# ):
+#     return LedgerService(db).report_repo.get_payment_method_breakdown(
+#         start_date=start_date,
+#         end_date=end_date,
+#         hostel_id=hostel_id
+#     )

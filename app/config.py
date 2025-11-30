@@ -24,7 +24,7 @@ env_path = Path(__file__).parent.parent / ".env"
 
 class Settings(BaseSettings):
     # Database
-    DATABASE_URL: str = "postgresql://postgres:1234@localhost/hostelC"
+    DATABASE_URL: str = "postgresql://postgres:1234@localhost:5432/hostelA"
     COMMISSION_RATE: float = 0.15
 
     ELASTICSEARCH_URL: Optional[str] = None
@@ -180,7 +180,7 @@ def init_db():
     # Mess menu, announcements, notifications
     import app.models.mess_menu
     import app.models.announcement
-    import app.models.notification
+    
 
     # Reports & analytics
     import app.models.reports

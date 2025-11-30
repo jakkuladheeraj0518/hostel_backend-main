@@ -26,31 +26,31 @@ router = APIRouter(prefix="/reminders", tags=["Reminders"])
 # 1️⃣ Get reminders for invoice
 # -----------------------------------------------------------
 
-@router.get("/invoice/{invoice_id}", response_model=list[PaymentReminderResponse])
-def get_invoice_reminders(invoice_id: int, db: Session = Depends(get_db)):
-    reminders = db.query(PaymentReminder).filter(
-        PaymentReminder.invoice_id == invoice_id
-    ).all()
+# @router.get("/invoice/{invoice_id}", response_model=list[PaymentReminderResponse])
+# def get_invoice_reminders(invoice_id: int, db: Session = Depends(get_db)):
+#     reminders = db.query(PaymentReminder).filter(
+#         PaymentReminder.invoice_id == invoice_id
+#     ).all()
 
-    return reminders
+#     return reminders
 
 
-# -----------------------------------------------------------
-# 2️⃣ Send manual reminder
-# -----------------------------------------------------------
+# # -----------------------------------------------------------
+# # 2️⃣ Send manual reminder
+# # -----------------------------------------------------------
 
-@router.post("/send-manual")
-def send_manual(
-    invoice_id: int,
-    reminder_type: ReminderType,
-    channel: ReminderChannel,
-    background: BackgroundTasks,
-    db: Session = Depends(get_db)
-):
+# @router.post("/send-manual")
+# def send_manual(
+#     invoice_id: int,
+#     reminder_type: ReminderType,
+#     channel: ReminderChannel,
+#     background: BackgroundTasks,
+#     db: Session = Depends(get_db)
+# ):
 
-    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
-    if not invoice:
-        raise HTTPException(404, "Invoice not found")
+#     invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+#     if not invoice:
+#         raise HTTPException(404, "Invoice not found")
 
-    create_and_schedule_reminder(invoice, reminder_type, channel, db)
-    return {"success": True, "message": "Reminder sent successfully"}
+#     create_and_schedule_reminder(invoice, reminder_type, channel, db)
+#     return {"success": True, "message": "Reminder sent successfully"}

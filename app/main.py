@@ -419,10 +419,11 @@ from app.core.database import SessionLocal
 # ---------------------------------------------------------
 # ⭐ NOTIFICATION ROUTERS
 # ---------------------------------------------------------
-from app.api.v1.student.notification import router as student_notification_router
-from app.api.v1.supervisor.notification import router as supervisor_notification_router
-from app.api.v1.admin.notification import router as admin_notification_router
-from app.api.v1.webhooks.notifications import router as notification_webhook_router
+from app.api.v1.admin.api_router import router as admin_notification_router
+from app.api.v1.admin.push_router import router as supervisor_notification_router
+from app.api.v1.admin.routers import router as student_notification_router
+from app.api.v1.admin.routing_router import router as notification_webhook_router
+from app.api.v1.admin.sms_router import router as admin_sms_router
 # ---------------------------------------------------------
 
 
@@ -651,10 +652,11 @@ app.include_router(admin_jobs_router)
 
 # Fee & Payment
 app.include_router(fee_structure_configuration.router)
-app.include_router(payment_routes.router)
+
 
 from app.api.v1.admin import invoices, transactions, receipts, refunds
 app.include_router(invoices.router, prefix="/invoices", tags=["Invoices"])
+app.include_router(payment_routes.router)
 app.include_router(transactions.router, prefix="/transactions", tags=["Transactions"])
 app.include_router(receipts.router, prefix="/receipts", tags=["Receipts"])
 app.include_router(refunds.router, prefix="/refunds", tags=["Refunds"])
@@ -668,8 +670,8 @@ app.include_router(reminder_config_router)
 from app.api.v1.admin.reminder_templates import router as reminder_template_router
 app.include_router(reminder_template_router)
 
-from app.api.v1.admin.Reminder_rotes import router as reminder_router
-app.include_router(reminder_router)
+# from app.api.v1.admin.Reminder_rotes import router as reminder_router
+# app.include_router(reminder_router)
 
 # ⭐ Mess Menu Routers
 app.include_router(admin_mess_menu.router, prefix="/api/v1")
@@ -696,30 +698,11 @@ app.include_router(
 # ---------------------------------------------------------
 # ⭐ NOTIFICATION ROUTERS (FINAL STEP)
 # ---------------------------------------------------------
-app.include_router(
-    student_notification_router,
-    prefix="/api/v1/student/notifications",
-    tags=["Student Notifications"]
-)
-
-app.include_router(
-    supervisor_notification_router,
-    prefix="/api/v1/supervisor/notifications",
-    tags=["Supervisor Notifications"]
-)
-
-app.include_router(
-    admin_notification_router,
-    prefix="/api/v1/admin/notifications",
-    tags=["Admin Notifications"]
-)
-
-# Webhook for delivery tracking (SendGrid / Twilio)
-app.include_router(
-    notification_webhook_router,
-    prefix="/api/v1/webhooks/notifications",
-    tags=["Notification Webhooks"]
-)
+app.include_router(admin_notification_router)
+app.include_router(supervisor_notification_router)
+app.include_router(student_notification_router)
+app.include_router(notification_webhook_router)
+app.include_router(admin_sms_router)
 
 # ⭐ Hemant Integration Routes
 app.include_router(

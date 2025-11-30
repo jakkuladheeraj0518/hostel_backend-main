@@ -33,6 +33,9 @@ class User(Base):
     
     # Relationships
     hostel = relationship("Hostel", back_populates="users")
+    supervisor_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    admin_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+
     refresh_tokens = relationship("RefreshToken", back_populates="user")
     audit_logs = relationship("AuditLog", back_populates="user")
     admin_hostel_mappings = relationship("AdminHostelMapping", back_populates="admin")
@@ -43,6 +46,12 @@ class User(Base):
     
     # FIX: Use full string path "app.models.booking.BookingRequest"
     bookings = relationship("app.models.booking.BookingRequest", back_populates="user")
+    supervisor = relationship("User", remote_side=[id], foreign_keys=[supervisor_id])
+    admin = relationship("User", remote_side=[id], foreign_keys=[admin_id])
+    student = relationship("Student", back_populates="user", uselist=False)
+    supervisor_data = relationship("Supervisor", back_populates="user", uselist=False)
+
+    admin_data = relationship("Admin", back_populates="user", uselist=False)  
     
 class OTP(Base):
     __tablename__ = "otps"
