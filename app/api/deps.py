@@ -56,13 +56,16 @@ def role_required(*allowed_roles):
     - `role_required('admin', 'superadmin')`
     - `role_required(['admin', 'superadmin'])`
     """
-    # Normalize allowed_roles: flatten any lists/tuples and convert to strings
+    # Normalize allowed_roles: flatten lists/tuples and convert Enum members
+    # to their underlying string values (eg 'admin') so comparisons with
+    # user.role (a plain string) work correctly.
     roles: List[str] = []
     for r in allowed_roles:
         if isinstance(r, (list, tuple)):
-            roles.extend([str(x) for x in r])
+            for x in r:
+                roles.append(getattr(x, "value", str(x)))
         else:
-            roles.append(str(r))
+            roles.append(getattr(r, "value", str(r)))
 
     def role_checker(current_user: User = Depends(get_current_user)) -> User:
         if current_user.role not in roles:

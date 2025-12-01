@@ -9,6 +9,7 @@ from app.api.v1.auth import (
 )
 from app.api.v1.admin import session as admin_session, audit, permissions, rbac, hostels, approvals, admins
 from app.api.v1.supervisor import audit as supervisor_audit, permissions as supervisor_permissions, approvals as supervisor_approvals
+from app.api.v1.supervisor import router as supervisor_module_router
 from app.api.v1.super_admin import dashboard
 from app.api.v1.student import complaints as student_complaints
 from app.api.v1.supervisor import complaints as supervisor_complaints
@@ -64,8 +65,12 @@ api_router.include_router(admin_reports.router, prefix="/api/v1")
 api_router.include_router(supervisor_audit.router, prefix="/supervisor", tags=["supervisor"])
 api_router.include_router(supervisor_permissions.router, prefix="/supervisor", tags=["supervisor"])
 api_router.include_router(supervisor_approvals.router, prefix="/supervisor", tags=["supervisor"])
-api_router.include_router(supervisor_complaints.router, prefix="/api/v1")
-api_router.include_router(supervisor_reports.router, prefix="/api/v1")
+# NOTE: supervisor complaints & reports are included as part of the
+# `supervisor_module_router` (see /api/v1/supervisor). Avoid including
+# these sub-routers separately to prevent duplicate route registrations
+# and duplicate OpenAPI operation ids.
+# Supervisor module (dashboard, complaints, attendance, leave)
+api_router.include_router(supervisor_module_router, prefix="/supervisor", tags=["Supervisor Module"])
 # Visitor routes have been disabled by admin request
 api_router.include_router(visitor_search.router, prefix="/api/v1")
 # Student routes

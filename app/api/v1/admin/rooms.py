@@ -31,7 +31,7 @@ from app.services.room_service import (
 )
 from app.models.rooms import RoomType, MaintenanceStatus
  
-router = APIRouter(prefix="/api/v1/admin/rooms", tags=["rooms"])
+router = APIRouter(prefix="/admin/rooms", tags=["rooms"])
  
  
 # -------------------------------------------------
@@ -114,26 +114,75 @@ def read_rooms(
  
  
 # -------------------------------------------------
-# GET ONE ROOM - Admin + Supervisor + Super Admin
+# EXPORT ROOMS - Admin + Supervisor + Super Admin
 # -------------------------------------------------
-@router.get(
-    "/{room_id}",
-    response_model=RoomOut,
-)
-def read_room(
-    room_id: int = Path(..., description="The ID of the room (must be an integer)"),
+@router.get("/export")
+def export_rooms(
+    room_type: Optional[str] = None,
+    maintenance_status: Optional[str] = None,
+    min_price: Optional[float] = None,
+    max_price: Optional[float] = None,
+    min_capacity: Optional[int] = None,
+    only_available: Optional[bool] = None,
+    amenities_like: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(
         role_required([Role.SUPERADMIN, Role.ADMIN, Role.SUPERVISOR])
     ),
     _: None = Depends(permission_required(Permission.READ_HOSTEL)),
 ):
-    room = service_get_room(db, room_id)
-    if not room:
-        raise HTTPException(status_code=404, detail="Room not found")
-    if hasattr(room, "hostel_id"):
-        room.hostel_id = str(room.hostel_id)
-    return room
+    rt = None
+    ms = None
+    if room_type:
+        try:
+            rt = RoomType(room_type)
+        except Exception:
+            raise HTTPException(status_code=400, detail=f"Invalid room_type: {room_type}")
+    if maintenance_status:
+        try:
+            ms = MaintenanceStatus(maintenance_status)
+        except Exception:
+            raise HTTPException(status_code=400, detail=f"Invalid maintenance_status: {maintenance_status}")
+
+    rows = service_list_rooms(
+        db,
+        skip=0,
+        limit=100000,
+        room_type=rt,
+        maintenance_status=ms,
+        min_price=min_price,
+        max_price=max_price,
+        min_capacity=min_capacity,
+        only_available=only_available,
+        amenities_like=amenities_like,
+    )
+
+    buf = StringIO()
+    writer = csv.writer(buf)
+    headers = [
+        "id",
+        "hostel_id",
+        "room_number",
+        "room_type",
+        "room_capacity",
+        "monthly_price",
+        "quarterly_price",
+        "annual_price",
+        "availability",
+        "amenities",
+        "maintenance_status",
+        "created_at",
+        "updated_at",
+    ]
+    writer.writerow(headers)
+    for r in rows:
+        writer.writerow([getattr(r, h, None) for h in headers])
+    buf.seek(0)
+    return StreamingResponse(
+        iter([buf.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=rooms.csv"},
+    )
  
  
 # -------------------------------------------------

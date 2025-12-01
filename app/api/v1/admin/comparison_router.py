@@ -290,7 +290,7 @@ def override_assign_hostel(
  
 # app/api/v1/comparison_router.py
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
  
 from app.core.database import get_db
@@ -311,9 +311,9 @@ from app.models.user import User
 router = APIRouter(prefix="/api/v1/hostels", tags=["hostels"])
  
  
-@router.post("/compare", response_model=List[HostelComparisonItem])
+@router.get("/compare", response_model=List[HostelComparisonItem])
 def compare_hostels(
-    payload: HostelComparisonRequest,
+    hostel_ids: List[int] = Query(..., description="List of hostel IDs to compare"),
     db: Session = Depends(get_db),
     current_user: User = Depends(
         role_required([
@@ -336,6 +336,8 @@ def compare_hostels(
  
     Endpoint kept under /api/v1/hostels/compare for backward compatibility.
     """
-    return service_compare_hostels(db, payload.hostel_ids)
+    # validate & normalize using pydantic schema (enforces non-empty and max 4)
+    req = HostelComparisonRequest(hostel_ids=hostel_ids)
+    return service_compare_hostels(db, req.hostel_ids)
  
  

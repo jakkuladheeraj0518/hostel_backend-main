@@ -674,11 +674,8 @@ app.include_router(
     prefix="/api/v1/auth",
     tags=["Supervisor Authentication"]
 )
-app.include_router(
-    supervisor_module_router,
-    prefix="/api/v1/supervisor",
-    tags=["Supervisor Module"]
-)
+# NOTE: supervisor_module_router is included on `api_router` (mounted under /api/v1)
+# to avoid registering the same routes twice and causing duplicate operationIds.
 
 # ---------------------------------------------------------
 # ⭐ NOTIFICATION ROUTERS (FINAL STEP)

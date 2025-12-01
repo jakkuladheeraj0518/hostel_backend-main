@@ -36,7 +36,7 @@ from app.services.bed_service import (
     find_bed_by_room_bed as service_find_bed_by_room_bed,
 )
  
-router = APIRouter(prefix="/api/v1/admin/beds", tags=["beds"])
+router = APIRouter(prefix="/admin/beds", tags=["beds"])
  
  
 # -------------------------------------------------

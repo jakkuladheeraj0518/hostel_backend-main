@@ -52,7 +52,7 @@ from app.services.student_service import (
     list_student_documents as service_list_student_documents,
 )
  
-router = APIRouter(prefix="/api/v1/admin/students", tags=["students"])
+router = APIRouter(prefix="/admin/students", tags=["students"])
  
  
 # -------------------------------------------------
@@ -84,6 +84,49 @@ def read_students(
     )
  
  
+# -------------------------------------------------
+# EXPORT STUDENTS - Hostel Admin + Super Admin
+# Student Search & Filter APIs (export)
+# -------------------------------------------------
+@router.get("/export")
+def export_students(
+    name: Optional[str] = None,
+    room: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        role_required([Role.SUPERADMIN, Role.ADMIN])
+    ),
+    _: None = Depends(permission_required(Permission.EXPORT_REPORTS)),
+):
+    rows = service_list_students(db, skip=0, limit=100000, name=name, room=room)
+    buf = StringIO()
+    writer = csv.writer(buf)
+    headers = [
+        "student_id",
+        "student_name",
+        "student_email",
+        "student_phone",
+        "date_of_birth",
+        "guardian_name",
+        "guardian_phone",
+        "emergency_contact",
+        "check_in_date",
+        "room_assignment",
+        "bed_assignment",
+        "status",
+    ]
+    writer.writerow(headers)
+    for s in rows:
+        writer.writerow([getattr(s, h, None) for h in headers])
+    buf.seek(0)
+
+    return StreamingResponse(
+        iter([buf.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=students.csv"},
+    )
+
+
 # -------------------------------------------------
 # GET ONE STUDENT - Admin + Supervisor + Super Admin
 # Student Profile Management APIs (read)
@@ -465,44 +508,4 @@ async def bulk_import_students(
     return {"created": created, "failed": failed, "errors": errors}
  
  
-# -------------------------------------------------
-# EXPORT STUDENTS - Hostel Admin + Super Admin
-# Student Search & Filter APIs (export)
-# -------------------------------------------------
-@router.get("/export")
-def export_students(
-    name: Optional[str] = None,
-    room: Optional[str] = None,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(
-        role_required([Role.SUPERADMIN, Role.ADMIN])
-    ),
-    _: None = Depends(permission_required(Permission.EXPORT_REPORTS)),
-):
-    rows = service_list_students(db, skip=0, limit=100000, name=name, room=room)
-    buf = StringIO()
-    writer = csv.writer(buf)
-    headers = [
-        "student_id",
-        "student_name",
-        "student_email",
-        "student_phone",
-        "date_of_birth",
-        "guardian_name",
-        "guardian_phone",
-        "emergency_contact",
-        "check_in_date",
-        "room_assignment",
-        "bed_assignment",
-        "status",
-    ]
-    writer.writerow(headers)
-    for s in rows:
-        writer.writerow([getattr(s, h, None) for h in headers])
-    buf.seek(0)
- 
-    return StreamingResponse(
-        iter([buf.getvalue()]),
-        media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=students.csv"},
-    )
+# (export moved above to avoid collision with /{student_id})
