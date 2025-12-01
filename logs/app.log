@@ -9654,3 +9654,39 @@ WHERE bookings.status = %(status_1)s AND bookings.created_at < %(created_at_1)s]
 2025-11-30 16:49:03,271 | INFO     | app | Elasticsearch ready.
 2025-11-30 16:49:03,287 | INFO     | app | BookingExpiryService started
 2025-11-30 16:49:03,352 | INFO     | app | Notification worker started.
+2025-11-30 17:26:24,545 | INFO     | app | Initializing database...
+2025-11-30 17:26:27,640 | INFO     | app | Database initialized.
+2025-11-30 17:26:27,645 | INFO     | app | Initializing Elasticsearch...
+2025-11-30 17:26:31,679 | INFO     | app | Elasticsearch ready.
+2025-11-30 17:26:31,695 | INFO     | app | BookingExpiryService started
+2025-11-30 17:26:31,741 | INFO     | app | Notification worker started.
+2025-11-30 17:27:08,622 | INFO     | app | Initializing database...
+2025-11-30 17:27:09,227 | INFO     | app | Database initialized.
+2025-11-30 17:27:09,227 | INFO     | app | Initializing Elasticsearch...
+2025-11-30 17:27:13,239 | INFO     | app | Elasticsearch ready.
+2025-11-30 17:27:13,255 | INFO     | app | BookingExpiryService started
+2025-11-30 17:27:13,303 | INFO     | app | Notification worker started.
+2025-12-01 09:15:41,031 | INFO     | app | Initializing database...
+2025-12-01 09:15:42,050 | INFO     | app | Database initialized.
+2025-12-01 09:15:42,050 | INFO     | app | Initializing Elasticsearch...
+2025-12-01 09:15:46,086 | INFO     | app | Elasticsearch ready.
+2025-12-01 09:15:46,100 | INFO     | app | BookingExpiryService started
+2025-12-01 09:15:46,144 | INFO     | app | Notification worker started.
+2025-12-01 10:20:49,380 | INFO     | app | Initializing database...
+2025-12-01 10:20:49,740 | INFO     | app | Database initialized.
+2025-12-01 10:20:49,745 | INFO     | app | Initializing Elasticsearch...
+2025-12-01 10:20:53,759 | INFO     | app | Elasticsearch ready.
+2025-12-01 10:20:53,775 | INFO     | app | BookingExpiryService started
+2025-12-01 10:20:53,825 | INFO     | app | Notification worker started.
+2025-12-01 10:33:54,431 | INFO     | app | Initializing database...
+2025-12-01 10:33:54,821 | INFO     | app | Database initialized.
+2025-12-01 10:33:54,821 | INFO     | app | Initializing Elasticsearch...
+2025-12-01 10:33:58,845 | INFO     | app | Elasticsearch ready.
+2025-12-01 10:33:58,861 | INFO     | app | BookingExpiryService started
+2025-12-01 10:33:58,933 | INFO     | app | Notification worker started.
+2025-12-01 10:35:13,314 | INFO     | app | Initializing database...
+2025-12-01 10:35:13,479 | INFO     | app | Database initialized.
+2025-12-01 10:35:13,479 | INFO     | app | Initializing Elasticsearch...
+2025-12-01 10:35:17,499 | INFO     | app | Elasticsearch ready.
+2025-12-01 10:35:17,514 | INFO     | app | BookingExpiryService started
+2025-12-01 10:35:17,602 | INFO     | app | Notification worker started.

@@ -112,7 +112,29 @@ from app.models.report_models import (
 )
 
 # Notifications
-from app.models.notification import Notification, NotificationTemplate, DeviceToken, Channel, NotificationStatus
+# Tolerant import for notification models — map available noti_models names to seeder names
+try:
+    # noti_models.py defines EmailLog/EmailTemplate/EmailProvider/EmailStatus
+    from app.models.noti_models import (
+        EmailLog as Notification,
+        EmailTemplate as NotificationTemplate,
+        EmailProvider as Channel,
+        EmailStatus as NotificationStatus,
+    )
+    # DeviceToken not present in noti_models; set to None so callers can handle absence
+    DeviceToken = None
+except Exception:
+    try:
+        from app.models.notification import Notification, NotificationTemplate, DeviceToken, Channel, NotificationStatus
+    except Exception:
+        try:
+            from app.models.notifications import Notification, NotificationTemplate, DeviceToken, Channel, NotificationStatus
+        except Exception as e:
+            raise ImportError(
+                "Cannot import notification model classes. Found app/models/noti_models.py with EmailLog/EmailTemplate; "
+                "if your seeder expects Notification/NotificationTemplate/DeviceToken/Channel/NotificationStatus, either "
+                "adjust the seeder or add/rename model definitions in app/models."
+            ) from e
 
 
 # ---------------------------------------------------------
@@ -1042,42 +1064,50 @@ def seed_report_models(db: Session, hostels, users):
 
 
 def seed_notifications(db: Session, users):
+    # EmailTemplate -> fields: name, subject, html_content, text_content, variables, is_active
     tmpl, _ = get_or_create(
         db,
         NotificationTemplate,
         name="welcome_email",
         defaults={
-            "channel": "email",
-            # model fields are `subject` / `body` (not *_template)
             "subject": "Welcome, {{name}}",
-            "body": "Hello {{name}}, welcome to {{app_name}}",
+            "html_content": "<p>Hello {{name}}, welcome to {{app_name}}</p>",
+            "text_content": "Hello {{name}}, welcome to {{app_name}}",
+            "variables": "name,app_name",
+            "is_active": True,
         },
     )
 
+    # EmailLog -> fields: recipient, subject, template_id, provider, status, ...
     notif, _ = get_or_create(
         db,
         Notification,
         id=1,
         defaults={
-            "recipient_id": users["student"].email,
-            "recipient_type": "student",
-            "channel": Channel.EMAIL.value,
+            "recipient": users["student"].email,
             "subject": "Welcome to Hostel",
-            "body": "Your registration is complete.",
-                "template_id": tmpl.id,
-                "status": NotificationStatus.pending.value,
+            "template_id": tmpl.id,
+            "provider": Channel.sendgrid if hasattr(Channel, "sendgrid") else list(Channel)[0],
+            "status": NotificationStatus.pending,
+            "created_at": datetime.utcnow(),
         },
     )
 
-    dev, _ = get_or_create(
-        db,
-        DeviceToken,
-        user_id=users["student"].id,
-        device_token="fcm_device_token",
-        defaults={
-            "platform": "android",
-        },
-    )
+    # Only create a DeviceToken if the model is available (some repos don't include it)
+    if DeviceToken is not None:
+        dev, _ = get_or_create(
+            db,
+            DeviceToken,
+            user_id=users["student"].id,
+            device_token="fcm_device_token",
+            defaults={
+                "platform": "android",
+            },
+        )
+    else:
+        # DeviceToken model not present in noti_models — skip
+        dev = None
+    return tmpl, notif, dev
 
 
 def seed_session_context(db: Session, users, hostels):
