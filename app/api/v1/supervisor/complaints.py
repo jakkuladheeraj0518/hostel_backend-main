@@ -4,6 +4,15 @@ from typing import Optional
 from datetime import datetime
 
 from app.core.database import get_db
+from app.core.roles import Role
+from app.core.permissions import Permission
+from app.api.deps import role_required, permission_required, get_current_active_user, get_repository_context, get_user_hostel_ids
+from app.core.exceptions import AccessDeniedException
+from app.models.user import User
+from app.schemas.user import UserCreate, UserUpdate, UserResponse, AdminCreate
+from app.repositories.user_repository import UserRepository
+from app.services.permission_service import PermissionService
+from app.core.security import get_password_hash
 from app.models.complaint import ComplaintStatus
 from app.repositories.complaint_repository import ComplaintRepository
 from app.services.complaint_service import ComplaintService
@@ -32,6 +41,7 @@ async def list_complaints(
     supervisor_email: str = Header(None, alias="X-User-Email"),
     page: int = 1,
     page_size: int = 10,
+    current_user: User = Depends(role_required(Role.SUPERVISOR)),
     db: AsyncSession = Depends(get_db)
 ):
     """List complaints for supervisor"""
@@ -64,6 +74,7 @@ async def list_complaints(
 @router.get("/{complaint_id}", response_model=ComplaintDetailResponse)
 async def get_complaint(
     complaint_id: int,
+    current_user: User = Depends(role_required(Role.SUPERVISOR)),
     db: AsyncSession = Depends(get_db)
 ):
     """Get complaint details"""
@@ -88,6 +99,7 @@ async def get_complaint(
 async def update_complaint(
     complaint_id: int,
     update_data: ComplaintUpdate,
+    current_user: User = Depends(role_required(Role.SUPERVISOR)),
     db: AsyncSession = Depends(get_db)
 ):
     """Update complaint details"""
@@ -106,6 +118,7 @@ async def update_complaint(
 async def assign_complaint(
     complaint_id: int,
     assignment_data: ComplaintAssignment,
+    current_user: User = Depends(role_required(Role.SUPERVISOR)),
     db: AsyncSession = Depends(get_db)
 ):
     """Assign complaint to supervisor/staff"""
@@ -125,6 +138,7 @@ async def resolve_complaint(
     complaint_id: int,
     resolution_data: ComplaintResolution,
     supervisor_email: str = Header(..., alias="X-User-Email"),
+    current_user: User = Depends(role_required(Role.SUPERVISOR)),
     db: AsyncSession = Depends(get_db)
 ):
     """Mark complaint as resolved"""
@@ -156,6 +170,7 @@ async def resolve_complaint(
 @router.post("/{complaint_id}/close", response_model=ComplaintResponse)
 async def close_complaint(
     complaint_id: int,
+    current_user: User = Depends(role_required(Role.SUPERVISOR)),
     db: AsyncSession = Depends(get_db)
 ):
     """Close a resolved complaint"""
@@ -181,6 +196,7 @@ async def add_note(
     is_internal: bool = True,
     user_name: str = Header(..., alias="X-User-Name"),
     user_email: str = Header(..., alias="X-User-Email"),
+    current_user: User = Depends(role_required(Role.SUPERVISOR)),
     db: AsyncSession = Depends(get_db)
 ):
     """Add internal or public note to complaint"""
@@ -212,6 +228,7 @@ async def get_my_performance(
     supervisor_email: str = Header(..., alias="X-User-Email"),
     start_date: Optional[datetime] = Query(None),
     end_date: Optional[datetime] = Query(None),
+    current_user: User = Depends(role_required(Role.SUPERVISOR)),
     db: AsyncSession = Depends(get_db)
 ):
     """Get personal performance metrics"""
@@ -231,6 +248,7 @@ async def get_my_performance(
 async def get_unresolved_complaints(
     supervisor_email: str = Header(..., alias="X-User-Email"),
     hostel_name: Optional[str] = None,
+    current_user: User = Depends(role_required(Role.SUPERVISOR)),
     db: AsyncSession = Depends(get_db)
 ):
     """Get unresolved complaints with aging information"""

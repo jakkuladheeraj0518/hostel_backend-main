@@ -1,12 +1,24 @@
 from typing import List, Optional
 from uuid import UUID  # Unused, kept for reference
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Path
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, JSONResponse
 from sqlalchemy.orm import Session
 import csv
 from io import StringIO
-
+ 
 from app.core.database import get_db
+from app.core.roles import Role
+from app.core.permissions import Permission
+from app.api.deps import (
+    role_required,
+    permission_required,
+    get_current_active_user,
+    get_repository_context,
+    get_user_hostel_ids,
+)
+from app.core.exceptions import AccessDeniedException
+from app.models.user import User
+ 
 from app.schemas.rooms import RoomCreate, RoomOut, RoomUpdate
 from app.services.room_service import (
     create_room as service_create_room,
@@ -18,21 +30,42 @@ from app.services.room_service import (
     set_room_availability as service_set_room_availability,
 )
 from app.models.rooms import RoomType, MaintenanceStatus
-
+ 
 router = APIRouter(prefix="/api/v1/admin/rooms", tags=["rooms"])
-
-
-@router.post("/", response_model=RoomOut, status_code=status.HTTP_201_CREATED)
-def create_room(item: RoomCreate, db: Session = Depends(get_db)):
+ 
+ 
+# -------------------------------------------------
+# CREATE ROOM - Hostel Admin + Super Admin
+# -------------------------------------------------
+@router.post(
+    "/",
+    response_model=RoomOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_room(
+    item: RoomCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        role_required([Role.SUPERADMIN, Role.ADMIN])
+    ),
+    _: None = Depends(permission_required(Permission.MANAGE_ROOM_TYPES)),
+):
     try:
+        # TODO: if needed, restrict by current_user hostel_ids here
         room = service_create_room(db, item)
         room.hostel_id = str(room.hostel_id)  # Ensure hostel_id is returned as a string
         return room
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/", response_model=List[RoomOut])
+ 
+ 
+# -------------------------------------------------
+# LIST ROOMS - Admin + Supervisor + Super Admin
+# -------------------------------------------------
+@router.get(
+    "/",
+    response_model=List[RoomOut],
+)
 def read_rooms(
     skip: int = 0,
     limit: int = 100,
@@ -44,6 +77,10 @@ def read_rooms(
     only_available: Optional[bool] = None,
     amenities_like: Optional[str] = None,
     db: Session = Depends(get_db),
+    current_user: User = Depends(
+        role_required([Role.SUPERADMIN, Role.ADMIN, Role.SUPERVISOR])
+    ),
+    _: None = Depends(permission_required(Permission.READ_HOSTEL)),
 ):
     rt = None
     ms = None
@@ -57,7 +94,11 @@ def read_rooms(
             ms = MaintenanceStatus(maintenance_status)
         except Exception:
             raise HTTPException(status_code=400, detail=f"Invalid maintenance_status: {maintenance_status}")
-
+ 
+    # Optional: filter by hostel_ids based on current_user + SOW
+    # hostel_ids = get_user_hostel_ids(current_user)
+    # return service_list_rooms(db, ..., hostel_ids=hostel_ids)
+ 
     return service_list_rooms(
         db,
         skip=skip,
@@ -70,43 +111,92 @@ def read_rooms(
         only_available=only_available,
         amenities_like=amenities_like,
     )
-
-
-@router.get("/{room_id}", response_model=RoomOut)
+ 
+ 
+# -------------------------------------------------
+# GET ONE ROOM - Admin + Supervisor + Super Admin
+# -------------------------------------------------
+@router.get(
+    "/{room_id}",
+    response_model=RoomOut,
+)
 def read_room(
     room_id: int = Path(..., description="The ID of the room (must be an integer)"),
     db: Session = Depends(get_db),
+    current_user: User = Depends(
+        role_required([Role.SUPERADMIN, Role.ADMIN, Role.SUPERVISOR])
+    ),
+    _: None = Depends(permission_required(Permission.READ_HOSTEL)),
 ):
     room = service_get_room(db, room_id)
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
-    if hasattr(room, 'hostel_id'):
+    if hasattr(room, "hostel_id"):
         room.hostel_id = str(room.hostel_id)
     return room
-
-
-@router.put("/{room_id}", response_model=RoomOut)
-def update_room(room_id: int, payload: RoomUpdate, db: Session = Depends(get_db)):
+ 
+ 
+# -------------------------------------------------
+# UPDATE ROOM - Hostel Admin + Super Admin
+# -------------------------------------------------
+@router.put(
+    "/{room_id}",
+    response_model=RoomOut,
+)
+def update_room(
+    room_id: int,
+    payload: RoomUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        role_required([Role.SUPERADMIN, Role.ADMIN])
+    ),
+    _: None = Depends(permission_required(Permission.MANAGE_ROOM_TYPES)),
+):
     updated = service_update_room(db, room_id, payload)
     if not updated:
         raise HTTPException(status_code=404, detail="Room not found")
-    if hasattr(updated, 'hostel_id'):
+    if hasattr(updated, "hostel_id"):
         updated.hostel_id = str(updated.hostel_id)
     return updated
-
-
-from fastapi.responses import JSONResponse
-
-@router.delete("/{room_id}", status_code=status.HTTP_200_OK)
-def delete_room(room_id: int, db: Session = Depends(get_db)):
+ 
+ 
+# -------------------------------------------------
+# DELETE ROOM - Hostel Admin + Super Admin
+# -------------------------------------------------
+@router.delete(
+    "/{room_id}",
+    status_code=status.HTTP_200_OK,
+)
+def delete_room(
+    room_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        role_required([Role.SUPERADMIN, Role.ADMIN])
+    ),
+    _: None = Depends(permission_required(Permission.MANAGE_ROOM_TYPES)),
+):
     ok = service_delete_room(db, room_id)
     if not ok:
         raise HTTPException(status_code=404, detail="Room not found")
     return JSONResponse(content={"detail": "Room deleted successfully"})
-
-
-@router.post("/{room_id}/maintenance", response_model=RoomOut)
-def set_maintenance(room_id: int, maintenance_status: str, db: Session = Depends(get_db)):
+ 
+ 
+# -------------------------------------------------
+# SET MAINTENANCE STATUS - Supervisor + Hostel Admin + Super Admin
+# -------------------------------------------------
+@router.post(
+    "/{room_id}/maintenance",
+    response_model=RoomOut,
+)
+def set_maintenance(
+    room_id: int,
+    maintenance_status: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        role_required([Role.SUPERADMIN, Role.ADMIN, Role.SUPERVISOR])
+    ),
+    _: None = Depends(permission_required(Permission.MANAGE_MAINTENANCE)),
+):
     try:
         ms = MaintenanceStatus(maintenance_status)
     except Exception:
@@ -114,23 +204,50 @@ def set_maintenance(room_id: int, maintenance_status: str, db: Session = Depends
     updated = service_set_room_maintenance(db, room_id, ms)
     if not updated:
         raise HTTPException(status_code=404, detail="Room not found")
-    if hasattr(updated, 'hostel_id'):
+    if hasattr(updated, "hostel_id"):
         updated.hostel_id = str(updated.hostel_id)
     return updated
-
-
-@router.post("/{room_id}/availability", response_model=RoomOut)
-def set_availability(room_id: int, availability: int, db: Session = Depends(get_db)):
+ 
+ 
+# -------------------------------------------------
+# SET AVAILABILITY - Supervisor + Hostel Admin + Super Admin
+# -------------------------------------------------
+@router.post(
+    "/{room_id}/availability",
+    response_model=RoomOut,
+)
+def set_availability(
+    room_id: int,
+    availability: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        role_required([Role.SUPERADMIN, Role.ADMIN, Role.SUPERVISOR])
+    ),
+    _: None = Depends(permission_required(Permission.MANAGE_MAINTENANCE)),
+):
     updated = service_set_room_availability(db, room_id, availability)
     if not updated:
         raise HTTPException(status_code=404, detail="Room not found")
-    if hasattr(updated, 'hostel_id'):
+    if hasattr(updated, "hostel_id"):
         updated.hostel_id = str(updated.hostel_id)
     return updated
-
-
-@router.post("/bulk", status_code=status.HTTP_201_CREATED)
-async def bulk_import_rooms(file: UploadFile = File(...), db: Session = Depends(get_db)):
+ 
+ 
+# -------------------------------------------------
+# BULK IMPORT ROOMS - Hostel Admin + Super Admin
+# -------------------------------------------------
+@router.post(
+    "/bulk",
+    status_code=status.HTTP_201_CREATED,
+)
+async def bulk_import_rooms(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        role_required([Role.SUPERADMIN, Role.ADMIN])
+    ),
+    _: None = Depends(permission_required(Permission.MANAGE_ROOM_TYPES)),
+):
     content = (await file.read()).decode("utf-8")
     reader = csv.DictReader(StringIO(content))
     created = 0
@@ -142,8 +259,11 @@ async def bulk_import_rooms(file: UploadFile = File(...), db: Session = Depends(
         except Exception:
             continue
     return {"created": created}
-
-
+ 
+ 
+# -------------------------------------------------
+# EXPORT ROOMS - Admin + Supervisor + Super Admin
+# -------------------------------------------------
 @router.get("/export")
 def export_rooms(
     room_type: Optional[str] = None,
@@ -154,6 +274,10 @@ def export_rooms(
     only_available: Optional[bool] = None,
     amenities_like: Optional[str] = None,
     db: Session = Depends(get_db),
+    current_user: User = Depends(
+        role_required([Role.SUPERADMIN, Role.ADMIN, Role.SUPERVISOR])
+    ),
+    _: None = Depends(permission_required(Permission.READ_HOSTEL)),
 ):
     rt = None
     ms = None
@@ -167,7 +291,7 @@ def export_rooms(
             ms = MaintenanceStatus(maintenance_status)
         except Exception:
             raise HTTPException(status_code=400, detail=f"Invalid maintenance_status: {maintenance_status}")
-
+ 
     rows = service_list_rooms(
         db,
         skip=0,
@@ -180,13 +304,30 @@ def export_rooms(
         only_available=only_available,
         amenities_like=amenities_like,
     )
+ 
     buf = StringIO()
     writer = csv.writer(buf)
     headers = [
-        "id","hostel_id","room_number","room_type","room_capacity","monthly_price","quarterly_price","annual_price","availability","amenities","maintenance_status","created_at","updated_at"
+        "id",
+        "hostel_id",
+        "room_number",
+        "room_type",
+        "room_capacity",
+        "monthly_price",
+        "quarterly_price",
+        "annual_price",
+        "availability",
+        "amenities",
+        "maintenance_status",
+        "created_at",
+        "updated_at",
     ]
     writer.writerow(headers)
     for r in rows:
         writer.writerow([getattr(r, h, None) for h in headers])
     buf.seek(0)
-    return StreamingResponse(iter([buf.getvalue()]), media_type="text/csv", headers={"Content-Disposition": "attachment; filename=rooms.csv"})
+    return StreamingResponse(
+        iter([buf.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=rooms.csv"},
+    )

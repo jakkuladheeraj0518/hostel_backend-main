@@ -101,8 +101,9 @@ class AnalyticsService:
         
         # `current_occupancy` stores occupied beds; compute occupancy and available beds from it
         current_occupancy = hostel.current_occupancy or 0
+        total_beds = hostel.total_beds or 0  # Default to 0 if NULL
         occupied_beds = current_occupancy
-        occupancy_rate = (occupied_beds / hostel.total_beds * 100) if hostel.total_beds and hostel.total_beds > 0 else 0
+        occupancy_rate = (occupied_beds / total_beds * 100) if total_beds and total_beds > 0 else 0
         
         return HostelKPI(
             hostel_id=hostel.id,
@@ -111,7 +112,7 @@ class AnalyticsService:
             expenses=expenses,
             profit=revenue - expenses,
             occupancy_rate=occupancy_rate,
-            total_beds=hostel.total_beds,
+            total_beds=total_beds,
             occupied_beds=occupied_beds,
             complaint_count=complaint_stats['total'],
             resolved_complaints=complaint_stats['resolved'],
@@ -203,7 +204,8 @@ class AnalyticsService:
                 if hostel:
                     current_occupancy = hostel.current_occupancy or 0
                     occupied = current_occupancy
-                    occupancy_rate = (occupied / hostel.total_beds * 100) if hostel.total_beds and hostel.total_beds > 0 else 0
+                    total_beds = hostel.total_beds or 0  # Default to 0 if NULL
+                    occupancy_rate = (occupied / total_beds * 100) if total_beds and total_beds > 0 else 0
 
                     trends.append(OccupancyTrend(
                         hostel_id=hostel_id,
@@ -211,7 +213,7 @@ class AnalyticsService:
                         date=current_date,
                         occupancy_rate=occupancy_rate,
                         occupied_beds=occupied,
-                        total_beds=hostel.total_beds
+                        total_beds=total_beds
                     ))
             
             current_date += timedelta(days=1)

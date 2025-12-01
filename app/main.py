@@ -416,6 +416,10 @@ from app.core.database import SessionLocal
 # from app.middleware.audit_trail import AuditTrailMiddleware
 
 
+from app.api.v1.super_admin import (
+    hostels, dashboard, admins, subscription,
+    analytics, reports, shift_coordination
+)
 # ---------------------------------------------------------
 # ⭐ NOTIFICATION ROUTERS
 # ---------------------------------------------------------
@@ -428,25 +432,13 @@ from app.api.v1.admin.sms_router import router as admin_sms_router
 
 
 # Routers (core / existing)
+
 from app.api.v1.router import api_router
-from app.api.v1.student import complaints as student_complaints
-from app.api.v1.supervisor import complaints as supervisor_complaints
-from app.api.v1.admin import complaints as admin_complaints
-from app.api.v1.visitor import search as visitor_search
-from app.api.v1.super_admin import (
-    hostels, dashboard, admins, subscription,
-    analytics, reports, shift_coordination
-)
-from app.api.v1.super_admin import report as super_admin_reports
-from app.api.v1.admin import reports as admin_reports
-from app.api.v1.supervisor import reports as supervisor_reports
+
+
 
 # Admin model-wise routers
-from app.api.v1.admin.rooms import router as rooms_router
-from app.api.v1.admin.beds import router as beds_router
-from app.api.v1.admin.students import router as students_router
-from app.api.v1.admin.supervisors import router as supervisors_router
-from app.api.v1.admin.comparison_router import router as comparison_router
+
 from app.api.v1.admin import (
     fee_structure_configuration,
     payment_routers as payment_routes,
@@ -609,13 +601,12 @@ async def startup_event():
 # Core routers
 app.include_router(auth_router.router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(api_router, prefix="/api/v1")
-app.include_router(student_complaints.router, prefix="/api/v1")
-app.include_router(supervisor_complaints.router, prefix="/api/v1")
-app.include_router(supervisor_reports.router, prefix="/api/v1")
-app.include_router(admin_complaints.router, prefix="/api/v1")
-app.include_router(admin_reports.router, prefix="/api/v1")
-app.include_router(super_admin_reports.router, prefix="/api/v1")
-app.include_router(visitor_search.router, prefix="/api/v1")
+
+
+
+
+
+
 
 # ⭐ Added Visitor Authentication/Booking/Payment Routers
 app.include_router(booking_router.router, prefix="/api/v1/bookings", tags=["Bookings"])
@@ -632,13 +623,7 @@ app.include_router(analytics.router)
 app.include_router(shift_coordination.router)
 
 # Admin model-wise
-app.include_router(rooms_router)
-app.include_router(beds_router)
-app.include_router(students_router)
-app.include_router(supervisors_router)
 
-# Comparison
-app.include_router(comparison_router)
 
 # Additional routers
 app.include_router(visitor_booking_router)

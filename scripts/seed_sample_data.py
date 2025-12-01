@@ -35,27 +35,27 @@ def seed_sample_data():
             VALUES
             ('Elite Hostel', 'Modern hostel in Hyderabad', '12 Road St, Hyderabad', 'Men',
              'elite@example.com', '9876543210', 'WiFi, AC, Laundry', 'No smoking',
-             '09:00', '21:00', 60, 55, 35000.50, 'public', TRUE, (SELECT id FROM locations WHERE city='Hyderabad')),
+             '09:00', '21:00', 60, 55, 35000.50, 'public', TRUE, (SELECT id FROM locations WHERE city='Hyderabad' LIMIT 1)),
 
             ('Sunrise Hostel', 'Comfort stay near city center', '45 Park Ave, Bangalore', 'Women',
              'sunrise@example.com', '9876543211', 'WiFi, Gym, Breakfast', 'No loud music',
-             '09:00', '22:00', 50, 44, 31000.00, 'public', TRUE, (SELECT id FROM locations WHERE city='Bangalore')),
+             '09:00', '22:00', 50, 44, 31000.00, 'public', TRUE, (SELECT id FROM locations WHERE city='Bangalore' LIMIT 1)),
 
             ('GreenStay Hostel', 'Eco-friendly hostel', '88 Green Rd, Chennai', 'Co-ed',
              'greenstay@example.com', '9876543212', 'WiFi, Garden, Hot Water', 'No smoking',
-             '08:00', '20:00', 40, 34, 28000.30, 'public', FALSE, (SELECT id FROM locations WHERE city='Chennai')),
+             '08:00', '20:00', 40, 34, 28000.30, 'public', FALSE, (SELECT id FROM locations WHERE city='Chennai' LIMIT 1)),
 
             ('BlueMoon Hostel', 'Quiet and peaceful stay', '5 Beach Rd, Pune', 'Men',
              'bluemoon@example.com', '9876543213', 'WiFi, Laundry, TV Lounge', 'No alcohol',
-             '10:00', '21:00', 45, 35, 21000.00, 'public', FALSE, (SELECT id FROM locations WHERE city='Pune')),
+             '10:00', '21:00', 45, 35, 21000.00, 'public', FALSE, (SELECT id FROM locations WHERE city='Pune' LIMIT 1)),
 
             ('CozyNest Hostel', 'Budget stay for students', '10 Hill St, Mumbai', 'Co-ed',
              'cozynest@example.com', '9876543214', 'WiFi, Breakfast', 'No parties',
-             '09:00', '22:00', 55, 40, 20000.00, 'public', FALSE, (SELECT id FROM locations WHERE city='Mumbai')),
+             '09:00', '22:00', 55, 40, 20000.00, 'public', FALSE, (SELECT id FROM locations WHERE city='Mumbai' LIMIT 1)),
 
             ('Sample Hostel', 'A sample hostel for testing.', '123 Test Street', 'public',
              'test@example.com', '1234567890', 'WiFi, Parking', 'No smoking',
-             '14:00:00', '10:00:00', 100, 50, 10000, 'public', FALSE, (SELECT id FROM locations WHERE city='Hyderabad'))
+             '14:00:00', '10:00:00', 100, 50, 10000, 'public', FALSE, (SELECT id FROM locations WHERE city='Hyderabad' LIMIT 1))
             ON CONFLICT DO NOTHING;
         """))
         db.commit()
@@ -79,7 +79,7 @@ def seed_sample_data():
         # ================================
         db.execute(text("""
             INSERT INTO revenues (hostel_id, month, revenue)
-            SELECT id, date_trunc('month', current_date)::date, monthly_revenue 
+            SELECT id, date_trunc('month', current_date)::date, COALESCE(monthly_revenue, 0)
             FROM hostels
             ON CONFLICT DO NOTHING;
         """))

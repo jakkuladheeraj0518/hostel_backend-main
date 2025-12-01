@@ -5,6 +5,15 @@ from datetime import datetime
 from sqlalchemy import select
 
 from app.core.database import get_db
+from app.core.roles import Role
+from app.core.permissions import Permission
+from app.api.deps import role_required, permission_required, get_current_active_user, get_repository_context, get_user_hostel_ids
+from app.core.exceptions import AccessDeniedException
+from app.models.user import User
+from app.schemas.user import UserCreate, UserUpdate, UserResponse, AdminCreate
+from app.repositories.user_repository import UserRepository
+from app.services.permission_service import PermissionService
+from app.core.security import get_password_hash
 from app.repositories.complaint_repository import ComplaintRepository
 from app.services.complaint_service import ComplaintService
 from app.models.complaint import Complaint, ComplaintStatus
@@ -37,6 +46,7 @@ async def list_all_complaints(
     end_date: Optional[datetime] = Query(None),
     page: int = 1,
     page_size: int = 10,
+    current_user: User = Depends(role_required(Role.ADMIN)),
     db: Session = Depends(get_db)
 ):
     filters = ComplaintFilter(
@@ -69,7 +79,9 @@ async def list_all_complaints(
 # GET SINGLE COMPLAINT
 # ------------------------------------------------------------------------------------
 @router.get("/{complaint_id}", response_model=ComplaintDetailResponse)
-async def get_complaint(complaint_id: int, db: Session = Depends(get_db)):
+async def get_complaint(complaint_id: int,
+    current_user: User = Depends(role_required(Role.ADMIN)), 
+    db: Session = Depends(get_db)):
     service = ComplaintService(ComplaintRepository(db))
     result = await service.get_complaint_with_details(complaint_id)
 
@@ -89,7 +101,7 @@ async def get_complaint(complaint_id: int, db: Session = Depends(get_db)):
 # UPDATE COMPLAINT
 # ------------------------------------------------------------------------------------
 @router.patch("/{complaint_id}", response_model=ComplaintResponse)
-async def update_complaint(complaint_id: int, update_data: ComplaintUpdate, db: Session = Depends(get_db)):
+async def update_complaint(complaint_id: int, update_data: ComplaintUpdate,current_user: User = Depends(role_required(Role.ADMIN)), db: Session = Depends(get_db)):
     service = ComplaintService(ComplaintRepository(db))
     complaint = await service.update_complaint(complaint_id, update_data)
 
@@ -103,7 +115,7 @@ async def update_complaint(complaint_id: int, update_data: ComplaintUpdate, db: 
 # REASSIGN COMPLAINT
 # ------------------------------------------------------------------------------------
 @router.post("/{complaint_id}/reassign", response_model=ComplaintResponse)
-async def reassign_complaint(complaint_id: int, assignment_data: ComplaintAssignment, db: Session = Depends(get_db)):
+async def reassign_complaint(complaint_id: int, assignment_data: ComplaintAssignment, current_user: User = Depends(role_required(Role.ADMIN)),db: Session = Depends(get_db)):
     service = ComplaintService(ComplaintRepository(db))
 
     complaint = await service.reassign_complaint(
@@ -126,6 +138,7 @@ async def get_complaint_analytics(
     hostel_name: Optional[str] = Query(None),
     start_date: Optional[datetime] = Query(None),
     end_date: Optional[datetime] = Query(None),
+    current_user: User = Depends(role_required(Role.ADMIN)),
     db: Session = Depends(get_db)
 ):
     service = ComplaintService(ComplaintRepository(db))
@@ -140,6 +153,7 @@ async def get_complaint_analytics(
 async def get_cross_hostel_analytics(
     start_date: Optional[datetime] = Query(None),
     end_date: Optional[datetime] = Query(None),
+    current_user: User = Depends(role_required(Role.ADMIN)),
     db: Session = Depends(get_db)
 ):
     service = ComplaintService(ComplaintRepository(db))
@@ -177,6 +191,7 @@ async def get_all_supervisor_performance(
     hostel_name: Optional[str] = Query(None),
     start_date: Optional[datetime] = Query(None),
     end_date: Optional[datetime] = Query(None),
+    current_user: User = Depends(role_required(Role.ADMIN)),
     db: Session = Depends(get_db)
 ):
     service = ComplaintService(ComplaintRepository(db))
@@ -221,6 +236,7 @@ async def get_all_supervisor_performance(
 @router.get("/analytics/sla-violations")
 async def get_sla_violations(
     hostel_name: Optional[str] = Query(None),
+    current_user: User = Depends(role_required(Role.ADMIN)),
     db: Session = Depends(get_db)
 ):
     now = datetime.utcnow()
@@ -263,6 +279,7 @@ async def get_escalated_complaints(
     hostel_name: Optional[str] = Query(None),
     page: int = 1,
     page_size: int = 10,
+    current_user: User = Depends(role_required(Role.ADMIN)),
     db: Session = Depends(get_db)
 ):
     filters = ComplaintFilter(
@@ -288,7 +305,7 @@ async def get_escalated_complaints(
 # DELETE COMPLAINT
 # ------------------------------------------------------------------------------------
 @router.delete("/{complaint_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_complaint(complaint_id: int, db: Session = Depends(get_db)):
+async def delete_complaint(complaint_id: int,current_user: User = Depends(role_required(Role.ADMIN)), db: Session = Depends(get_db)):
     repo = ComplaintRepository(db)
     complaint = repo.get_by_id(complaint_id)
 

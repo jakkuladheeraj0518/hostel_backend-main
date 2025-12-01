@@ -49,14 +49,28 @@ def get_user_hostel_ids(user_id: int, user_role: str, db: Session) -> List[int]:
         return []
 
 
-def role_required(*allowed_roles: str):
-    """Dependency to check if user has required role"""
+def role_required(*allowed_roles):
+    """Dependency to check if user has required role.
+
+    Accepts roles as multiple string args or as lists/tuples. Examples:
+    - `role_required('admin', 'superadmin')`
+    - `role_required(['admin', 'superadmin'])`
+    """
+    # Normalize allowed_roles: flatten any lists/tuples and convert to strings
+    roles: List[str] = []
+    for r in allowed_roles:
+        if isinstance(r, (list, tuple)):
+            roles.extend([str(x) for x in r])
+        else:
+            roles.append(str(r))
+
     def role_checker(current_user: User = Depends(get_current_user)) -> User:
-        if current_user.role not in allowed_roles:
+        if current_user.role not in roles:
             raise AccessDeniedException(
-                f"Access denied. Required roles: {', '.join(allowed_roles)}"
+                f"Access denied. Required roles: {', '.join(roles)}"
             )
         return current_user
+
     return role_checker
 
 

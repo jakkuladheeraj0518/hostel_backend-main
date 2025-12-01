@@ -2,6 +2,15 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from datetime import date, datetime, timedelta
 from app.core.database import get_db
+from app.core.roles import Role
+from app.core.permissions import Permission
+from app.api.deps import role_required, permission_required, get_current_active_user, get_repository_context, get_user_hostel_ids
+from app.core.exceptions import AccessDeniedException
+from app.models.user import User
+from app.schemas.user import UserCreate, UserUpdate, UserResponse, AdminCreate
+from app.repositories.user_repository import UserRepository
+from app.services.permission_service import PermissionService
+from app.core.security import get_password_hash
 from app.schemas.reports import AttendanceReport, AttendanceTrend
 from app.services.analytics_service import AnalyticsService
 from app.repositories.hostel_repository import HostelRepository
@@ -16,7 +25,7 @@ def _validate_hostel(db: Session, hostel_id: int):
 router = APIRouter(prefix="/supervisor/reports", tags=["Supervisor Reports"])
 
 @router.get("/daily-summary")
-def get_daily_summary(hostel_id: int, report_date: date = None, db: Session = Depends(get_db)):
+def get_daily_summary(hostel_id: int, report_date: date = None, current_user: User = Depends(role_required(Role.SUPERVISOR)), db: Session = Depends(get_db)):
     """Get end-of-day operational summary"""
     if not report_date:
         report_date = date.today()
@@ -58,7 +67,7 @@ def get_daily_summary(hostel_id: int, report_date: date = None, db: Session = De
     }
 
 @router.get("/weekly-summary")
-def get_weekly_summary(hostel_id: int, end_date: date = None, db: Session = Depends(get_db)):
+def get_weekly_summary(hostel_id: int, end_date: date = None, current_user: User = Depends(role_required(Role.SUPERVISOR)), db: Session = Depends(get_db)):
     """Get weekly performance overview"""
     from app.repositories.complaint_repository import ComplaintRepository
     
@@ -89,7 +98,7 @@ def get_weekly_summary(hostel_id: int, end_date: date = None, db: Session = Depe
     }
 
 @router.get("/monthly-performance")
-def get_monthly_performance(hostel_id: int, month: int, year: int, db: Session = Depends(get_db)):
+def get_monthly_performance(hostel_id: int, month: int, year: int, current_user: User = Depends(role_required(Role.SUPERVISOR)), db: Session = Depends(get_db)):
     """Get detailed monthly operational analysis"""
     from calendar import monthrange
     from app.services.analytics_service import AnalyticsService
@@ -129,7 +138,7 @@ def get_monthly_performance(hostel_id: int, month: int, year: int, db: Session =
     }
 
 @router.get("/attendance/daily")
-def get_daily_attendance(hostel_id: int, report_date: date, db: Session = Depends(get_db)):
+def get_daily_attendance(hostel_id: int, report_date: date, current_user: User = Depends(role_required(Role.SUPERVISOR)), db: Session = Depends(get_db)):
     """Get attendance report for specific date"""
     _validate_hostel(db, hostel_id)
 

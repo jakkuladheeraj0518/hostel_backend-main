@@ -6,6 +6,15 @@ import aiofiles
 import uuid
 
 from app.core.database import get_db
+from app.core.roles import Role
+from app.core.permissions import Permission
+from app.api.deps import role_required, permission_required, get_current_active_user, get_repository_context, get_user_hostel_ids
+from app.core.exceptions import AccessDeniedException
+from app.models.user import User
+from app.schemas.user import UserCreate, UserUpdate, UserResponse, AdminCreate
+from app.repositories.user_repository import UserRepository
+from app.services.permission_service import PermissionService
+from app.core.security import get_password_hash
 from app.models.complaint import ComplaintStatus
 from app.repositories.complaint_repository import ComplaintRepository
 from app.services.complaint_service import ComplaintService
@@ -29,6 +38,7 @@ router = APIRouter(prefix="/student/complaints", tags=["Student Complaints"])
 @router.post("/", response_model=ComplaintResponse, status_code=status.HTTP_201_CREATED)
 async def create_complaint(
     complaint_data: ComplaintCreate,
+    current_user: User = Depends(role_required(Role.STUDENT)),
     db: Session = Depends(get_db)
 ):
     """Submit a new complaint"""
@@ -72,6 +82,7 @@ async def list_student_complaints(
     status_filter: Optional[str] = None,
     page: int = 1,
     page_size: int = 10,
+    current_user: User = Depends(role_required(Role.STUDENT)),
     db: Session = Depends(get_db)
 ):
     """List complaints by student email"""
@@ -104,6 +115,7 @@ async def list_student_complaints(
 async def get_complaint(
     complaint_id: int,
     student_email: str = Header(..., alias="X-User-Email"),
+    current_user: User = Depends(role_required(Role.STUDENT)),
     db: Session = Depends(get_db)
 ):
     """Get complaint details with attachments and notes"""
@@ -136,6 +148,7 @@ async def upload_attachment(
     complaint_id: int,
     file: UploadFile = File(...),
     student_email: str = Header(..., alias="X-User-Email"),
+    current_user: User = Depends(role_required(Role.STUDENT)),
     db: Session = Depends(get_db)
 ):
     """Upload attachment for a complaint"""
@@ -200,6 +213,7 @@ async def submit_feedback(
     complaint_id: int,
     feedback_data: ComplaintFeedback,
     student_email: str = Header(..., alias="X-User-Email"),
+    current_user: User = Depends(role_required(Role.STUDENT)),
     db: Session = Depends(get_db)
 ):
     """Submit feedback for a resolved complaint"""
@@ -232,6 +246,7 @@ async def reopen_complaint(
     complaint_id: int,
     reopen_data: ComplaintReopen,
     student_email: str = Header(..., alias="X-User-Email"),
+    current_user: User = Depends(role_required(Role.STUDENT)),
     db: Session = Depends(get_db)
 ):
     """Reopen a closed complaint"""
@@ -262,6 +277,7 @@ async def add_note(
     note: str,
     student_name: str = Header(..., alias="X-User-Name"),
     student_email: str = Header(..., alias="X-User-Email"),
+    current_user: User = Depends(role_required(Role.STUDENT)),
     db: Session = Depends(get_db)
 ):
     """Add a note to the complaint"""

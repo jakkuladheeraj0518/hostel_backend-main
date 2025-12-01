@@ -3,6 +3,15 @@ from sqlalchemy.orm import Session
 from datetime import date, datetime, timedelta
 from typing import List
 from app.core.database import get_db
+from app.core.roles import Role
+from app.core.permissions import Permission
+from app.api.deps import role_required, permission_required, get_current_active_user, get_repository_context, get_user_hostel_ids
+from app.core.exceptions import AccessDeniedException
+from app.models.user import User
+from app.schemas.user import UserCreate, UserUpdate, UserResponse, AdminCreate
+from app.repositories.user_repository import UserRepository
+from app.services.permission_service import PermissionService
+from app.core.security import get_password_hash
 from app.schemas.reports import *
 from app.services.analytics_service import AnalyticsService
 from app.repositories.hostel_repository import HostelRepository
@@ -23,6 +32,7 @@ def get_admin_dashboard(
     hostel_id: int,
     start_date: date = None,
     end_date: date = None,
+    current_user: User = Depends(role_required(Role.ADMIN)),
     db: Session = Depends(get_db)
 ):
     """Get comprehensive dashboard for a single hostel"""
@@ -73,6 +83,7 @@ def get_income_statement(
     hostel_id: int,
     start_date: date,
     end_date: date,
+    current_user: User = Depends(role_required(Role.ADMIN)),
     db: Session = Depends(get_db)
 ):
     """Get income statement for hostel"""
@@ -115,7 +126,7 @@ def get_income_statement(
     }
 
 @router.get("/financial/outstanding-payments")
-def get_outstanding_payments(hostel_id: int, db: Session = Depends(get_db)):
+def get_outstanding_payments(hostel_id: int, current_user: User = Depends(role_required(Role.ADMIN)), db: Session = Depends(get_db)):
     """Get outstanding payment tracking"""
     from sqlalchemy import text
     
@@ -149,7 +160,7 @@ def get_outstanding_payments(hostel_id: int, db: Session = Depends(get_db)):
     }
 
 @router.get("/operational/occupancy")
-def get_occupancy_report(hostel_id: int, start_date: date, end_date: date, 
+def get_occupancy_report(hostel_id: int, start_date: date, end_date: date, current_user: User = Depends(role_required(Role.ADMIN)),
                         db: Session = Depends(get_db)):
     """Get occupancy reports"""
     # Validate hostel
@@ -182,7 +193,7 @@ def get_student_demographics(hostel_id: int, db: Session = Depends(get_db)):
     }
 
 @router.get("/operational/attendance-patterns")
-def get_attendance_patterns(hostel_id: int, start_date: date, end_date: date,
+def get_attendance_patterns(hostel_id: int, start_date: date, end_date: date, current_user: User = Depends(role_required(Role.ADMIN)),
                            db: Session = Depends(get_db)):
     """Get attendance patterns and trends"""
     # Validate hostel
@@ -191,7 +202,7 @@ def get_attendance_patterns(hostel_id: int, start_date: date, end_date: date,
     return AnalyticsService.get_attendance_trends(db, hostel_id, start_date, end_date)
 
 @router.get("/operational/complaints")
-def get_complaint_metrics(hostel_id: int, start_date: date, end_date: date,
+def get_complaint_metrics(hostel_id: int, start_date: date, end_date: date, current_user: User = Depends(role_required(Role.ADMIN)),
                          db: Session = Depends(get_db)):
     """Get complaint resolution metrics"""
     # Validate hostel
@@ -201,7 +212,7 @@ def get_complaint_metrics(hostel_id: int, start_date: date, end_date: date,
     return metrics[0] if metrics else {}
 
 @router.get("/operational/maintenance-costs")
-def get_maintenance_costs(hostel_id: int, start_date: date, end_date: date,
+def get_maintenance_costs(hostel_id: int, start_date: date, end_date: date, current_user: User = Depends(role_required(Role.ADMIN)),
                          db: Session = Depends(get_db)):
     """Get maintenance costs and trend analysis"""
     from sqlalchemy import text
@@ -245,7 +256,7 @@ def get_maintenance_costs(hostel_id: int, start_date: date, end_date: date,
     }
 
 @router.get("/marketing/profile-views")
-def get_profile_analytics(hostel_id: int, start_date: date, end_date: date,
+def get_profile_analytics(hostel_id: int, start_date: date, end_date: date, current_user: User = Depends(role_required(Role.ADMIN)),
                          db: Session = Depends(get_db)):
     """Get hostel profile view analytics"""
     # Validate hostel
@@ -259,6 +270,7 @@ def compare_hostels(
     hostel_ids: List[int] = Query(...),
     start_date: date = Query(...),
     end_date: date = Query(...),
+    current_user: User = Depends(role_required(Role.ADMIN)),
     db: Session = Depends(get_db)
 ):
     """Compare revenue and performance across hostels"""
