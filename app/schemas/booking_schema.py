@@ -17,7 +17,6 @@ class BookingCreate(BaseModel):
     email: EmailStr
     id_type: str
     id_number: str
-    id_document: Optional[str] = None
     emergency_contact_name: str
     emergency_contact_number: str
     emergency_contact_relation: Optional[str] = None

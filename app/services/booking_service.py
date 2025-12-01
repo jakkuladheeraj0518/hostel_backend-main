@@ -205,7 +205,6 @@ def create_booking(db: Session, user_id: int, booking_data: BookingCreate):
         email=booking_data.email,
         id_type=booking_data.id_type,
         id_number=booking_data.id_number,
-        id_document=booking_data.id_document,
         emergency_contact_name=booking_data.emergency_contact_name,
         emergency_contact_number=booking_data.emergency_contact_number,
         emergency_contact_relation=booking_data.emergency_contact_relation,

@@ -416,10 +416,7 @@ from app.core.database import SessionLocal
 # from app.middleware.audit_trail import AuditTrailMiddleware
 
 
-from app.api.v1.super_admin import (
-    hostels, dashboard, admins, subscription,
-    analytics, reports, shift_coordination
-)
+
 # ---------------------------------------------------------
 # ⭐ NOTIFICATION ROUTERS
 # ---------------------------------------------------------
@@ -443,6 +440,11 @@ from app.api.v1.admin import (
     fee_structure_configuration,
     payment_routers as payment_routes,
     transactions,
+)
+
+from app.api.v1.super_admin import (
+    hostels, dashboard, admins, subscription,
+    analytics, reports, shift_coordination
 )
 
 
@@ -595,7 +597,13 @@ app.include_router(auth_router.router, prefix="/api/v1/auth", tags=["Authenticat
 app.include_router(api_router, prefix="/api/v1")
 
 
-
+api_router.include_router(hostels.router)
+api_router.include_router(dashboard.router)
+api_router.include_router(admins.router)
+api_router.include_router(subscription.router)
+api_router.include_router(reports.router)
+api_router.include_router(analytics.router)
+api_router.include_router(shift_coordination.router)
 
 
 
@@ -606,13 +614,7 @@ app.include_router(payment_routers.router, prefix="/api/v1/payments", tags=["Pay
 app.include_router(simple_payment_router.router, prefix="/api/v1/simple-payments", tags=["SimplePayments"])
 
 # Super-admin
-app.include_router(hostels.router)
-app.include_router(dashboard.router)
-app.include_router(admins.router)
-app.include_router(subscription.router)
-app.include_router(reports.router)
-app.include_router(analytics.router)
-app.include_router(shift_coordination.router)
+
 
 # Admin model-wise
 

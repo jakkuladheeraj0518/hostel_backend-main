@@ -19,8 +19,6 @@ class UserResponse(BaseModel):
 
 class OTPVerify(BaseModel):
     otp_code: str
-    email: Optional[EmailStr] = None
-    phone: Optional[str] = None
 
 class OTPResend(BaseModel):
     email: Optional[EmailStr] = None

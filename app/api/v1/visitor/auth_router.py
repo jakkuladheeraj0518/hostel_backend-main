@@ -46,7 +46,7 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
 
 @router.post("/verify-otp", response_model=Token, operation_id="visitor_verify_otp")
 async def verify_otp(otp_data: OTPVerify, db: Session = Depends(get_db)):
-    otp_record = repo.get_valid_otp(db, otp_data.otp_code, email=otp_data.email, phone=otp_data.phone)
+    otp_record = repo.get_valid_otp(db, otp_data.otp_code)
     if not otp_record:
         raise HTTPException(400, "Invalid or expired OTP")
 
@@ -111,23 +111,21 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
 
 @router.post("/verify-otp", response_model=Token, operation_id="visitor_verify_otp_response")
 async def verify_otp(otp_data: OTPVerify, db: Session = Depends(get_db)):
-    if not otp_data.email and not otp_data.phone:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Either email or phone must be provided")
-    
-    print(f"\nVerifying OTP: {otp_data.otp_code} for email: {otp_data.email}, phone: {otp_data.phone}")
-    
-    otp_record = repo.get_valid_otp(db, otp_data.otp_code, email=otp_data.email, phone=otp_data.phone)
+    # Now we verify OTP by code only (email/phone removed from request body)
+    print(f"\nVerifying OTP: {otp_data.otp_code}")
+
+    otp_record = repo.get_valid_otp(db, otp_data.otp_code)
     if not otp_record:
-        # Let's check if we can find the OTP regardless of usage status
+        # Let's check if we can find the OTP regardless of usage status for debugging
         all_otps = db.query(OTP).filter(OTP.otp_code == otp_data.otp_code).all()
         if all_otps:
             print(f"Found OTPs but they were invalid:")
             for otp in all_otps:
                 print(f"OTP: {otp.otp_code}, Used: {otp.is_used}, Expires: {otp.expires_at}, Email: {otp.email}, Phone: {otp.phone}")
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid OTP")
-    
+
     print(f"Found valid OTP record: {otp_record.otp_code}, Expires: {otp_record.expires_at}")
-    
+
     if datetime.utcnow() > otp_record.expires_at:
         print(f"OTP expired at {otp_record.expires_at}, current time: {datetime.utcnow()}")
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="OTP has expired")
