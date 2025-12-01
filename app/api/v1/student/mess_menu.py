@@ -1,6 +1,17 @@
 from fastapi import APIRouter, Depends, Query, status
 from typing import List, Optional
 from datetime import date
+from sqlalchemy.orm import Session
+from app.core.database import get_db
+from app.core.roles import Role
+from app.core.permissions import Permission
+from app.api.deps import role_required, permission_required, get_current_active_user, get_repository_context, get_user_hostel_ids
+from app.core.exceptions import AccessDeniedException
+from app.models.user import User
+from app.schemas.user import UserCreate, UserUpdate, UserResponse, AdminCreate
+from app.repositories.user_repository import UserRepository
+from app.services.permission_service import PermissionService
+from app.core.security import get_password_hash
 from app.schemas.mess_menu import (
     MessMenuResponse,
     MenuFeedbackCreate, MenuFeedbackResponse,
@@ -19,7 +30,9 @@ def view_hostel_menus(
     limit: int = Query(100, ge=1, le=1000),
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
-    service: MessMenuService = Depends(get_mess_menu_service)
+    service: MessMenuService = Depends(get_mess_menu_service),
+    current_user: User = Depends(role_required(Role.STUDENT)),
+    db: Session = Depends(get_db)
 ):
     """
     View mess menus for daily meal planning (Student)
@@ -34,7 +47,9 @@ def view_hostel_menus(
 @router.get("/{menu_id}", response_model=MessMenuResponse)
 def view_menu_details(
     menu_id: int,
-    service: MessMenuService = Depends(get_mess_menu_service)
+    service: MessMenuService = Depends(get_mess_menu_service),
+    current_user: User = Depends(role_required(Role.STUDENT)),
+    db: Session = Depends(get_db)
 ):
     """
     View specific menu details (Student)
@@ -46,7 +61,9 @@ def view_menu_details(
 @router.post("/feedback", response_model=MenuFeedbackResponse, status_code=status.HTTP_201_CREATED)
 def submit_feedback(
     feedback: MenuFeedbackCreate,
-    service: MessMenuService = Depends(get_mess_menu_service)
+    service: MessMenuService = Depends(get_mess_menu_service),
+    current_user: User = Depends(role_required(Role.STUDENT)),
+    db: Session = Depends(get_db)
 ):
     """
     Submit feedback on meal quality (Student)
@@ -59,7 +76,9 @@ def submit_feedback(
 @router.post("/preferences", response_model=MealPreferenceResponse, status_code=status.HTTP_201_CREATED)
 def create_meal_preference(
     preference: MealPreferenceCreate,
-    service: MessMenuService = Depends(get_mess_menu_service)
+    service: MessMenuService = Depends(get_mess_menu_service),
+    current_user: User = Depends(role_required(Role.STUDENT)),
+    db: Session = Depends(get_db)
 ):
     """
     Create meal preference profile (Student)
@@ -74,7 +93,9 @@ def create_meal_preference(
 def get_my_preference(
     student_id: int,
     hostel_id: int,
-    service: MessMenuService = Depends(get_mess_menu_service)
+    service: MessMenuService = Depends(get_mess_menu_service),
+    current_user: User = Depends(role_required(Role.STUDENT)),
+    db: Session = Depends(get_db)
 ):
     """
     Get student's meal preference (Student)
@@ -86,7 +107,9 @@ def get_my_preference(
 def update_meal_preference(
     preference_id: int,
     preference_update: MealPreferenceUpdate,
-    service: MessMenuService = Depends(get_mess_menu_service)
+    service: MessMenuService = Depends(get_mess_menu_service),
+    current_user: User = Depends(role_required(Role.STUDENT)),
+    db: Session = Depends(get_db)
 ):
     """
     Update meal preference (Student)
@@ -99,7 +122,9 @@ def update_meal_preference(
 @router.get("/hostel/{hostel_id}/today", response_model=List[MessMenuResponse])
 def get_today_menu(
     hostel_id: int,
-    service: MessMenuService = Depends(get_mess_menu_service)
+    service: MessMenuService = Depends(get_mess_menu_service),
+    current_user: User = Depends(role_required(Role.STUDENT)),
+    db: Session = Depends(get_db)
 ):
     """
     Get today's published menus (Student)

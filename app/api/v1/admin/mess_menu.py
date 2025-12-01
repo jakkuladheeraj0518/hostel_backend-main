@@ -1,6 +1,17 @@
 from fastapi import APIRouter, Depends, Query, status
 from typing import List, Optional
 from datetime import date
+from sqlalchemy.orm import Session
+from app.core.database import get_db
+from app.core.roles import Role
+from app.core.permissions import Permission
+from app.api.deps import role_required, permission_required, get_current_active_user, get_repository_context, get_user_hostel_ids
+from app.core.exceptions import AccessDeniedException
+from app.models.user import User
+from app.schemas.user import UserCreate, UserUpdate, UserResponse, AdminCreate
+from app.repositories.user_repository import UserRepository
+from app.services.permission_service import PermissionService
+from app.core.security import get_password_hash
 from app.schemas.mess_menu import (
     MessMenuCreate, MessMenuUpdate, MessMenuResponse,
     MenuDuplicationRequest, MenuApprovalRequest
@@ -14,7 +25,9 @@ router = APIRouter(prefix="/admin/mess-menu", tags=["Admin - Mess Menu"])
 @router.post("/", response_model=MessMenuResponse, status_code=status.HTTP_201_CREATED)
 def create_menu(
     menu: MessMenuCreate,
-    service: MessMenuService = Depends(get_mess_menu_service)
+    service: MessMenuService = Depends(get_mess_menu_service),
+    current_user: User = Depends(role_required(Role.ADMIN)),
+    db: Session = Depends(get_db)
 ):
     """
     Create a new mess menu (Admin only)
@@ -28,7 +41,9 @@ def create_menu(
 @router.get("/{menu_id}", response_model=MessMenuResponse)
 def get_menu(
     menu_id: int,
-    service: MessMenuService = Depends(get_mess_menu_service)
+    service: MessMenuService = Depends(get_mess_menu_service),
+    current_user: User = Depends(role_required(Role.ADMIN)),
+    db: Session = Depends(get_db)
 ):
     """
     Get specific menu by ID (Admin only)
@@ -44,7 +59,9 @@ def get_hostel_menus(
     menu_type: Optional[str] = None,
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
-    service: MessMenuService = Depends(get_mess_menu_service)
+    service: MessMenuService = Depends(get_mess_menu_service),
+    current_user: User = Depends(role_required(Role.ADMIN)),
+    db: Session = Depends(get_db)
 ):
     """
     Get all menus for a specific hostel with filters (Admin only)
@@ -60,7 +77,9 @@ def get_hostel_menus(
 def update_menu(
     menu_id: int,
     menu_update: MessMenuUpdate,
-    service: MessMenuService = Depends(get_mess_menu_service)
+    service: MessMenuService = Depends(get_mess_menu_service),
+    current_user: User = Depends(role_required(Role.ADMIN)),
+    db: Session = Depends(get_db)
 ):
     """
     Update an existing menu (Admin only)
@@ -72,7 +91,9 @@ def update_menu(
 @router.delete("/{menu_id}", status_code=status.HTTP_200_OK)
 def delete_menu(
     menu_id: int,
-    service: MessMenuService = Depends(get_mess_menu_service)
+    service: MessMenuService = Depends(get_mess_menu_service),
+    current_user: User = Depends(role_required(Role.ADMIN)),
+    db: Session = Depends(get_db)
 ):
     """
     Delete a menu (Admin only)
@@ -83,7 +104,9 @@ def delete_menu(
 @router.post("/duplicate", response_model=List[MessMenuResponse])
 def duplicate_menu(
     duplication_request: MenuDuplicationRequest,
-    service: MessMenuService = Depends(get_mess_menu_service)
+    service: MessMenuService = Depends(get_mess_menu_service),
+    current_user: User = Depends(role_required(Role.ADMIN)),
+    db: Session = Depends(get_db)
 ):
     """
     Duplicate menu across multiple hostels (Admin only)
@@ -97,7 +120,9 @@ def duplicate_menu(
 def approve_menu(
     menu_id: int,
     approval: MenuApprovalRequest,
-    service: MessMenuService = Depends(get_mess_menu_service)
+    service: MessMenuService = Depends(get_mess_menu_service),
+    current_user: User = Depends(role_required(Role.ADMIN)),
+    db: Session = Depends(get_db)
 ):
     """
     Approve a menu proposed by supervisor (Admin only)
@@ -109,7 +134,9 @@ def approve_menu(
 @router.get("/hostel/{hostel_id}/dietary-restrictions", response_model=dict)
 def get_dietary_restrictions_report(
     hostel_id: int,
-    service: MessMenuService = Depends(get_mess_menu_service)
+    service: MessMenuService = Depends(get_mess_menu_service),
+    current_user: User = Depends(role_required(Role.ADMIN)),
+    db: Session = Depends(get_db)
 ):
     """
     Get dietary restrictions report for a hostel (Admin only)

@@ -1,6 +1,17 @@
 from fastapi import APIRouter, Depends, Query, status
 from typing import List, Optional
 from datetime import date
+from sqlalchemy.orm import Session
+from app.core.database import get_db
+from app.core.roles import Role
+from app.core.permissions import Permission
+from app.api.deps import role_required, permission_required, get_current_active_user, get_repository_context, get_user_hostel_ids
+from app.core.exceptions import AccessDeniedException
+from app.models.user import User
+from app.schemas.user import UserCreate, UserUpdate, UserResponse, AdminCreate
+from app.repositories.user_repository import UserRepository
+from app.services.permission_service import PermissionService
+from app.core.security import get_password_hash
 from app.schemas.mess_menu import (
     MessMenuCreate, MessMenuUpdate, MessMenuResponse,
     MenuFeedbackResponse, MealPreferenceResponse
@@ -14,7 +25,9 @@ router = APIRouter(prefix="/supervisor/mess-menu", tags=["Supervisor - Mess Menu
 @router.post("/", response_model=MessMenuResponse, status_code=status.HTTP_201_CREATED)
 def propose_menu(
     menu: MessMenuCreate,
-    service: MessMenuService = Depends(get_mess_menu_service)
+    service: MessMenuService = Depends(get_mess_menu_service),
+    current_user: User = Depends(role_required(Role.SUPERVISOR)),
+    db: Session = Depends(get_db)
 ):
     """
     Propose a new menu for admin approval (Supervisor)
@@ -27,7 +40,9 @@ def propose_menu(
 @router.get("/{menu_id}", response_model=MessMenuResponse)
 def get_menu(
     menu_id: int,
-    service: MessMenuService = Depends(get_mess_menu_service)
+    service: MessMenuService = Depends(get_mess_menu_service),
+    current_user: User = Depends(role_required(Role.SUPERVISOR)),
+    db: Session = Depends(get_db)
 ):
     """
     Get specific menu by ID (Supervisor)
@@ -43,7 +58,9 @@ def get_hostel_menus(
     menu_type: Optional[str] = None,
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
-    service: MessMenuService = Depends(get_mess_menu_service)
+    service: MessMenuService = Depends(get_mess_menu_service),
+    current_user: User = Depends(role_required(Role.SUPERVISOR)),
+    db: Session = Depends(get_db)
 ):
     """
     Get all menus for supervised hostel (Supervisor)
@@ -58,7 +75,9 @@ def get_hostel_menus(
 def update_menu(
     menu_id: int,
     menu_update: MessMenuUpdate,
-    service: MessMenuService = Depends(get_mess_menu_service)
+    service: MessMenuService = Depends(get_mess_menu_service),
+    current_user: User = Depends(role_required(Role.SUPERVISOR)),
+    db: Session = Depends(get_db)
 ):
     """
     Update menu for minor modifications (Supervisor)
@@ -72,7 +91,9 @@ def update_menu(
 @router.post("/{menu_id}/publish", response_model=MessMenuResponse)
 def publish_menu(
     menu_id: int,
-    service: MessMenuService = Depends(get_mess_menu_service)
+    service: MessMenuService = Depends(get_mess_menu_service),
+    current_user: User = Depends(role_required(Role.SUPERVISOR)),
+    db: Session = Depends(get_db)
 ):
     """
     Publish approved menu for students (Supervisor)
@@ -84,7 +105,9 @@ def publish_menu(
 @router.get("/{menu_id}/feedback", response_model=List[MenuFeedbackResponse])
 def get_menu_feedback(
     menu_id: int,
-    service: MessMenuService = Depends(get_mess_menu_service)
+    service: MessMenuService = Depends(get_mess_menu_service),
+    current_user: User = Depends(role_required(Role.SUPERVISOR)),
+    db: Session = Depends(get_db)
 ):
     """
     Get feedback for a specific menu (Supervisor)
@@ -97,7 +120,9 @@ def get_menu_feedback(
 @router.get("/{menu_id}/feedback/summary", response_model=dict)
 def get_feedback_summary(
     menu_id: int,
-    service: MessMenuService = Depends(get_mess_menu_service)
+    service: MessMenuService = Depends(get_mess_menu_service),
+    current_user: User = Depends(role_required(Role.SUPERVISOR)),
+    db: Session = Depends(get_db)
 ):
     """
     Get feedback summary with averages (Supervisor)
@@ -110,7 +135,9 @@ def get_feedback_summary(
 @router.get("/hostel/{hostel_id}/preferences", response_model=List[MealPreferenceResponse])
 def get_hostel_preferences(
     hostel_id: int,
-    service: MessMenuService = Depends(get_mess_menu_service)
+    service: MessMenuService = Depends(get_mess_menu_service),
+    current_user: User = Depends(role_required(Role.SUPERVISOR)),
+    db: Session = Depends(get_db)
 ):
     """
     Get all meal preferences for hostel students (Supervisor)
@@ -123,7 +150,9 @@ def get_hostel_preferences(
 @router.get("/hostel/{hostel_id}/dietary-restrictions", response_model=dict)
 def get_dietary_restrictions_report(
     hostel_id: int,
-    service: MessMenuService = Depends(get_mess_menu_service)
+    service: MessMenuService = Depends(get_mess_menu_service),
+    current_user: User = Depends(role_required(Role.SUPERVISOR)),
+    db: Session = Depends(get_db)
 ):
     """
     Get dietary restrictions report (Supervisor)

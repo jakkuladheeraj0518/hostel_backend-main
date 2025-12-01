@@ -445,14 +445,6 @@ from app.api.v1.admin import (
     transactions,
 )
 
-# ⭐ Mess Menu & Announcement Imports
-from app.api.v1.admin import mess_menu as admin_mess_menu
-from app.api.v1.supervisor import mess_menu as supervisor_mess_menu
-from app.api.v1.student import mess_menu as student_mess_menu
-
-from app.api.v1.admin import announcement as admin_announcement
-from app.api.v1.supervisor import announcement as supervisor_announcement
-from app.api.v1.student import announcement as student_announcement
 
 # ⭐ NEW: Supervisor Module (Dashboard, Complaints, Attendance, Leave Management)
 from app.api.v1.supervisor import router as supervisor_module_router
@@ -659,14 +651,11 @@ app.include_router(reminder_template_router)
 # app.include_router(reminder_router)
 
 # ⭐ Mess Menu Routers
-app.include_router(admin_mess_menu.router, prefix="/api/v1")
-app.include_router(supervisor_mess_menu.router, prefix="/api/v1")
-app.include_router(student_mess_menu.router, prefix="/api/v1")
 
-# ⭐ Announcement Routers
-app.include_router(admin_announcement.router, prefix="/api/v1")
-app.include_router(supervisor_announcement.router, prefix="/api/v1")
-app.include_router(student_announcement.router, prefix="/api/v1")
+
+
+
+# ⭐ Announcement Rout
 
 # ⭐ NEW: Supervisor Module Routes (Dashboard, Complaints, Attendance, Leave Management)
 app.include_router(
