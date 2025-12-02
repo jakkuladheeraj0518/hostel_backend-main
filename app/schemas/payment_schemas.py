@@ -325,6 +325,7 @@ class PaymentReminderResponse(BaseModel):
 # =====================================================================
 
 class TemplateCreate(BaseModel):
+    hostel_id: int 
     name: str
     reminder_type: ReminderType
     email_subject: str
@@ -334,6 +335,7 @@ class TemplateCreate(BaseModel):
 
 class TemplateResponse(BaseModel):
     id: int
+    hostel_id: int 
     name: str
     reminder_type: ReminderType
     is_default: bool

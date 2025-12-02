@@ -792,6 +792,7 @@ def seed_reminder_system(db: Session, hostels, invoices):
     tmpl, _ = get_or_create(
         db,
         ReminderTemplate,
+        hostel_id=hostels[0].id,
         name="Default Pre-Due Template",
         reminder_type=ReminderType.PRE_DUE,
         defaults={

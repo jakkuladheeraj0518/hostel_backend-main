@@ -360,6 +360,7 @@ class ReminderTemplate(Base):
     __tablename__ = "reminder_templates"
 
     id = Column(Integer, primary_key=True)
+    hostel_id = Column(Integer, ForeignKey("hostels.id"), nullable=False, index=True)
     name = Column(String)
     reminder_type = Column(SQLEnum(ReminderType))
 
@@ -369,3 +370,4 @@ class ReminderTemplate(Base):
 
     is_default = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    hostel = relationship("Hostel", back_populates="reminder_templates")

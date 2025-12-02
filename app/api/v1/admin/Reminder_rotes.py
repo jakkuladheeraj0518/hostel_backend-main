@@ -1,17 +1,17 @@
-# app/api/v1/routers/reminders.py
+# # app/api/v1/routers/reminders.py
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
-from sqlalchemy.orm import Session
-from app.core.database import SessionLocal,get_db
-from app.models.payment_models import PaymentReminder, Invoice
-from app.schemas.payment_schemas import PaymentReminderResponse
-from app.services.reminder_services import (
-    create_and_schedule_reminder,
-    process_single_reminder
-)
-from app.models.payment_models import ReminderType, ReminderChannel
+# from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+# from sqlalchemy.orm import Session
+# from app.core.database import SessionLocal,get_db
+# from app.models.payment_models import PaymentReminder, Invoice
+# from app.schemas.payment_schemas import PaymentReminderResponse
+# from app.services.reminder_services import (
+#     create_and_schedule_reminder,
+#     process_single_reminder
+# )
+# from app.models.payment_models import ReminderType, ReminderChannel
 
-router = APIRouter(prefix="/reminders", tags=["Reminders"])
+# router = APIRouter(prefix="/reminders", tags=["Reminders"])
 
 
 # def get_db():

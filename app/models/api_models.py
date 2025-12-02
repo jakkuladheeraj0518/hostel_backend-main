@@ -43,11 +43,11 @@ class NotificationPriority(str, enum.Enum):
 
 class NotificationStatus(str, enum.Enum):
     pending = "pending"
-    
     sent = "sent"
     partially_sent = "partially_sent"
     failed = "failed"
     delivered = "delivered"
+    read = "read"
 
 class FallbackStrategy(str, enum.Enum):
     none = "none"

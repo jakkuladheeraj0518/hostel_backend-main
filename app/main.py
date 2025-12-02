@@ -435,17 +435,22 @@ from app.api.v1.router import api_router
 
 
 # Admin model-wise routers
+#fee & Payment
 
-from app.api.v1.admin import (
-    fee_structure_configuration,
-    payment_routers as payment_routes,
-    transactions,
-)
+# from app.api.v1.admin import (
+#     fee_structure_configuration,
+#     payment_routers as payment_routes,
+#     transactions,
+# )
+# from app.api.v1.admin import invoices, transactions, receipts, refunds
+# from app.api.v1.admin.ledger_routes import router as ledger_router
+# from app.api.v1.admin.reminder_configs import router as reminder_config_router
+# from app.api.v1.admin.reminder_templates import router as reminder_template_router
 
-from app.api.v1.super_admin import (
-    hostels, dashboard, admins, subscription,
-    analytics, reports, shift_coordination
-)
+# from app.api.v1.super_admin import (
+#     hostels, dashboard, admins, subscription,
+#     analytics, reports, shift_coordination
+# )
 
 
 # ⭐ NEW: Supervisor Module (Dashboard, Complaints, Attendance, Leave Management)
@@ -597,13 +602,7 @@ app.include_router(auth_router.router, prefix="/api/v1/auth", tags=["Authenticat
 app.include_router(api_router, prefix="/api/v1")
 
 
-api_router.include_router(hostels.router)
-api_router.include_router(dashboard.router)
-api_router.include_router(admins.router)
-api_router.include_router(subscription.router)
-api_router.include_router(reports.router)
-api_router.include_router(analytics.router)
-api_router.include_router(shift_coordination.router)
+
 
 
 
@@ -614,6 +613,13 @@ app.include_router(payment_routers.router, prefix="/api/v1/payments", tags=["Pay
 app.include_router(simple_payment_router.router, prefix="/api/v1/simple-payments", tags=["SimplePayments"])
 
 # Super-admin
+# api_router.include_router(hostels.router)
+# api_router.include_router(dashboard.router)
+# api_router.include_router(admins.router)
+# api_router.include_router(subscription.router)
+# api_router.include_router(reports.router)
+# api_router.include_router(analytics.router)
+# api_router.include_router(shift_coordination.router)
 
 
 # Admin model-wise
@@ -630,24 +636,16 @@ app.include_router(visitor_waitlist_router)
 app.include_router(admin_jobs_router)
 
 # Fee & Payment
-app.include_router(fee_structure_configuration.router)
+# app.include_router(fee_structure_configuration.router)
+# app.include_router(invoices.router, prefix="/invoices", tags=["Invoices"])
+# app.include_router(payment_routes.router)
+# app.include_router(transactions.router, prefix="/transactions", tags=["Transactions"])
+# app.include_router(receipts.router, prefix="/receipts", tags=["Receipts"])
+# app.include_router(refunds.router, prefix="/refunds", tags=["Refunds"])
+# app.include_router(ledger_router)
+# app.include_router(reminder_config_router)
+# app.include_router(reminder_template_router)
 
-
-from app.api.v1.admin import invoices, transactions, receipts, refunds
-app.include_router(invoices.router, prefix="/invoices", tags=["Invoices"])
-app.include_router(payment_routes.router)
-app.include_router(transactions.router, prefix="/transactions", tags=["Transactions"])
-app.include_router(receipts.router, prefix="/receipts", tags=["Receipts"])
-app.include_router(refunds.router, prefix="/refunds", tags=["Refunds"])
-
-from app.api.v1.admin.ledger_routes import router as ledger_router
-app.include_router(ledger_router)
-
-from app.api.v1.admin.reminder_configs import router as reminder_config_router
-app.include_router(reminder_config_router)
-
-from app.api.v1.admin.reminder_templates import router as reminder_template_router
-app.include_router(reminder_template_router)
 
 # from app.api.v1.admin.Reminder_rotes import router as reminder_router
 # app.include_router(reminder_router)

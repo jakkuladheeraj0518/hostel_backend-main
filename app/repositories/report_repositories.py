@@ -163,26 +163,55 @@ def generate_revenue_report(db: Session, start_date: datetime, end_date: datetim
     return report
 
 def generate_commission_report(db: Session, start_date: datetime, end_date: datetime, user_id: str):
+    # Ensure end_date includes the full day by setting to end of day
+    end_date_inclusive = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
+    
+    print(f"\n[DEBUG] Commission Report Query Parameters:")
+    print(f"  start_date: {start_date}")
+    print(f"  end_date_inclusive: {end_date_inclusive}")
+    
+    # Count total commissions in database
+    total_count = db.query(func.count(Commission.id)).scalar()
+    print(f"  Total commissions in DB: {total_count}")
+    
+    # Count commissions matching date range
+    matching_count = db.query(func.count(Commission.id)).filter(
+        and_(Commission.earned_date >= start_date, Commission.earned_date <= end_date_inclusive)
+    ).scalar()
+    print(f"  Commissions matching date range: {matching_count}")
+    
     commissions_by_hostel = db.query(
         Commission.hostel_id,
         BookingReport.hostel_name,
         func.sum(Commission.amount).label('total_commission'),
         func.count(Commission.id).label('booking_count')
     ).join(BookingReport).filter(
-        and_(Commission.earned_date >= start_date, Commission.earned_date <= end_date)
+        and_(Commission.earned_date >= start_date, Commission.earned_date <= end_date_inclusive)
     ).group_by(Commission.hostel_id, BookingReport.hostel_name).all()
 
     pending_total = db.query(func.sum(Commission.amount)).filter(
         and_(Commission.earned_date >= start_date,
-             Commission.earned_date <= end_date,
+             Commission.earned_date <= end_date_inclusive,
              Commission.status == CommissionStatus.PENDING)
     ).scalar() or Decimal("0.00")
 
     paid_total = db.query(func.sum(Commission.amount)).filter(
         and_(Commission.earned_date >= start_date,
-             Commission.earned_date <= end_date,
+             Commission.earned_date <= end_date_inclusive,
              Commission.status == CommissionStatus.PAID)
     ).scalar() or Decimal("0.00")
+    
+    print(f"  pending_total: {pending_total}")
+    print(f"  paid_total: {paid_total}")
+
+    # Fetch detailed commission records
+    detailed_commissions = db.query(Commission).filter(
+        and_(Commission.earned_date >= start_date, Commission.earned_date <= end_date_inclusive)
+    ).order_by(Commission.earned_date.desc()).all()
+    
+    print(f"  detailed_commissions count: {len(detailed_commissions)}")
+    for c in detailed_commissions:
+        print(f"    - {c.id}: amount={c.amount}, earned_date={c.earned_date}, status={c.status}")
 
     report = Report(
         name=f"Commission Report ({start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')})",
@@ -200,6 +229,19 @@ def generate_commission_report(db: Session, start_date: datetime, end_date: date
                 {"hostel_id": c.hostel_id, "hostel_name": c.hostel_name,
                  "total_commission": str(c.total_commission), "booking_count": c.booking_count}
                 for c in commissions_by_hostel
+            ],
+            "commissions": [
+                {
+                    "id": c.id,
+                    "booking_id": c.booking_id,
+                    "amount": str(c.amount),
+                    "status": c.status.value if c.status else "unknown",
+                    "earned_date": c.earned_date.strftime('%Y-%m-%d %H:%M:%S') if c.earned_date else "",
+                    "paid_date": c.paid_date.strftime('%Y-%m-%d %H:%M:%S') if c.paid_date else "Not Paid",
+                    "hostel_id": c.hostel_id,
+                    "platform_revenue": str(c.platform_revenue)
+                }
+                for c in detailed_commissions
             ]
         },
         generated_by=user_id

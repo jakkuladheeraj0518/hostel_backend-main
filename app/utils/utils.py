@@ -45,6 +45,35 @@ def generate_pdf_report(data: dict) -> io.BytesIO:
                 c.setFont("Helvetica", 12)
                 y = 750
 
+    # Add detailed commissions section if available
+    y -= 20
+    commissions = result_data.get("commissions", [])
+    if commissions:
+        c.drawString(50, y, "Detailed Commissions:")
+        y -= 20
+        
+        # Header row for commissions table
+        headers = ["Booking ID", "Amount", "Status", "Earned Date"]
+        header_line = " | ".join(headers)
+        c.setFont("Helvetica", 10)
+        c.drawString(60, y, header_line)
+        y -= 16
+        
+        # Commission rows
+        for comm in commissions:
+            booking_id = str(comm.get("booking_id", ""))[:12]
+            amount = str(comm.get("amount", ""))
+            status = str(comm.get("status", ""))
+            earned_date = str(comm.get("earned_date", ""))[:10]
+            line = f"{booking_id} | {amount} | {status} | {earned_date}"
+            c.drawString(60, y, line[:95])
+            y -= 16
+            
+            if y < 50:
+                c.showPage()
+                c.setFont("Helvetica", 10)
+                y = 750
+
     c.save()
     buffer.seek(0)
     return buffer

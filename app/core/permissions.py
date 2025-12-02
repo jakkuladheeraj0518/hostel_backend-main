@@ -31,6 +31,7 @@ class Permission:
     # Subscriptions & finance
     MANAGE_SUBSCRIPTIONS = "manage_subscriptions"
     VIEW_PAYMENTS = "view_payments"
+    VIEW_INVOICES = "view_invoices"
     MANAGE_PAYMENTS = "manage_payments"
  
     # Supervisor and hostel management
@@ -119,6 +120,45 @@ class Permission:
     SEND_NOTIFICATION = "send_notification"
     UPDATE_NOTIFICATION = "update_notification"
     DELETE_NOTIFICATION = "delete_notification"
+    READ_NOTIFICATIONS = "read_notifications"
+    # Management helpers for notifications and reminders
+    MANAGE_NOTIFICATIONS = "manage_notifications"
+    MANAGE_REMINDERS = "manage_reminders"
+    READ_REMINDERS = "read_reminders"
+    # 📧 Email service (MISSING → must add)
+    MANAGE_EMAIL = "manage_email"
+    READ_EMAIL = "read_email"
+    SEND_EMAIL = "send_email"
+    MANAGE_SMS = "manage_sms"
+    READ_SMS = "read_sms"
+    SEND_SMS = "send_sms"
+    VIEW_SMS = "view_sms" 
+    VIEW_DASHBOARD = "view_dashboard"
+    MANAGE_ADMINS = "manage_admins"
+    READ_ADMINS = "read_admins"
+    READ_SUBSCRIPTIONS = "read_subscriptions"
+    CREATE_SUBSCRIPTIONS = "create_subscriptions"
+    UPDATE_SUBSCRIPTIONS = "update_subscriptions"
+    DELETE_SUBSCRIPTIONS = "delete_subscriptions"
+    VIEW_ANALYTICS = "view_analytics"
+    MANAGE_COMMISSIONS = "manage_commissions"
+    VIEW_FINANCIALS = "view_financials"
+    MANAGE_REPORTS = "manage_reports"
+    VIEW_REPORTS = "view_reports"
+    READ_SHIFTS = "read_shifts"
+    UPDATE_SHIFTS = "update_shifts"
+    DELETE_SHIFTS = "delete_shifts"
+    MANAGE_SHIFTS = "manage_shifts"
+    MANAGE_TASKS = "manage_tasks"
+    MANAGE_HANDOVER = "manage_handover"
+    MANAGE_MEETINGS = "manage_meetings"
+    READ_MEETINGS = "read_meetings"
+
+
+
+
+
+
  
  
  
@@ -150,8 +190,10 @@ PERMISSION_MATRIX: Dict[str, Set[str]] = {
         Permission.VIEW_FINANCIAL_REPORTS,
         Permission.VIEW_OPERATIONAL_REPORTS,
         Permission.VIEW_MARKETING_REPORTS,
+        Permission.VIEW_INVOICES,
         Permission.VIEW_SUPERVISOR_PERFORMANCE,
         Permission.VIEW_CONSOLIDATED_REPORTS,
+        Permission.VIEW_ANALYTICS,
         Permission.MULTI_HOSTEL_DASHBOARD,
         Permission.SWITCH_HOSTEL,
         Permission.HOSTEL_SELECTOR,
@@ -169,9 +211,34 @@ PERMISSION_MATRIX: Dict[str, Set[str]] = {
         Permission.MANAGE_COMPLAINTS,
         Permission.MANAGE_MAINTENANCE,
         Permission.VIEW_NOTIFICATIONS,
+        Permission.READ_NOTIFICATIONS,
         Permission.SEND_NOTIFICATION,
+        Permission.MANAGE_NOTIFICATIONS,
         Permission.UPDATE_NOTIFICATION,
         Permission.DELETE_NOTIFICATION,
+        Permission.MANAGE_REMINDERS,
+        Permission.READ_REMINDERS,
+        Permission.MANAGE_EMAIL,
+        Permission.READ_EMAIL,
+        Permission.SEND_EMAIL,
+        Permission.MANAGE_SMS,
+        Permission.READ_SMS,
+        Permission.SEND_SMS,
+        Permission.VIEW_SMS,
+        Permission.VIEW_DASHBOARD,
+        Permission.MANAGE_ADMINS,
+        Permission.READ_ADMINS,
+        Permission.READ_SUBSCRIPTIONS,
+        Permission.MANAGE_COMMISSIONS,
+        Permission.VIEW_FINANCIALS,
+        Permission.MANAGE_REPORTS,
+        Permission.VIEW_REPORTS,
+        Permission.MANAGE_SHIFTS,
+        Permission.MANAGE_TASKS,
+        Permission.MANAGE_HANDOVER,
+        Permission.MANAGE_MEETINGS,
+        Permission.READ_MEETINGS,
+
  
     },
     Role.ADMIN: {
@@ -193,8 +260,10 @@ PERMISSION_MATRIX: Dict[str, Set[str]] = {
         Permission.VIEW_FINANCIAL_REPORTS,
         Permission.VIEW_OPERATIONAL_REPORTS,
         Permission.VIEW_MARKETING_REPORTS,
+            Permission.VIEW_INVOICES,
         Permission.VIEW_SUPERVISOR_PERFORMANCE,
         Permission.VIEW_CONSOLIDATED_REPORTS,
+        Permission.VIEW_ANALYTICS,
         Permission.MANAGE_PAYMENTS,
         Permission.MANAGE_ANNOUNCEMENTS,
         Permission.MULTI_HOSTEL_DASHBOARD,
@@ -208,9 +277,34 @@ PERMISSION_MATRIX: Dict[str, Set[str]] = {
         Permission.MANAGE_WAITLIST,
         Permission.MANAGE_STUDENTS,
         Permission.VIEW_NOTIFICATIONS,
+        Permission.READ_NOTIFICATIONS,
+            Permission.VIEW_INVOICES,
         Permission.SEND_NOTIFICATION,
+        Permission.MANAGE_NOTIFICATIONS,
         Permission.UPDATE_NOTIFICATION,
         Permission.DELETE_NOTIFICATION,
+        Permission.MANAGE_REMINDERS,
+        Permission.READ_REMINDERS,
+        Permission.MANAGE_EMAIL,
+        Permission.READ_EMAIL,
+        Permission.SEND_EMAIL,
+        Permission.MANAGE_SMS,
+        Permission.READ_SMS,
+        Permission.SEND_SMS,
+        Permission.VIEW_SMS,
+        Permission.VIEW_DASHBOARD,
+        Permission.READ_ADMINS,
+        Permission.READ_SUBSCRIPTIONS,
+        Permission.MANAGE_COMMISSIONS,
+        Permission.VIEW_FINANCIALS,
+        Permission.MANAGE_REPORTS,
+        Permission.VIEW_REPORTS,
+        Permission.MANAGE_SHIFTS,
+        Permission.MANAGE_TASKS,
+        Permission.MANAGE_HANDOVER,
+        Permission.MANAGE_MEETINGS,
+        Permission.READ_MEETINGS,
+
  
     },
     Role.SUPERVISOR: {
@@ -239,6 +333,17 @@ PERMISSION_MATRIX: Dict[str, Set[str]] = {
         Permission.SUPERVISOR_VIEW_AUDIT,
         Permission.VIEW_SUPERVISOR_PERFORMANCE,
         Permission.VIEW_NOTIFICATIONS,
+        Permission.READ_NOTIFICATIONS,
+        Permission.READ_REMINDERS,
+        Permission.SEND_EMAIL,
+        Permission.READ_SMS,
+        Permission.SEND_SMS,
+        Permission.VIEW_ANALYTICS,
+        Permission.VIEW_ANALYTICS,
+        Permission.VIEW_ANALYTICS,
+        Permission.VIEW_REPORTS,
+        Permission.READ_SHIFTS
+
  
     },
     Role.STUDENT: {
@@ -248,12 +353,14 @@ PERMISSION_MATRIX: Dict[str, Set[str]] = {
         Permission.CREATE_COMPLAINT,
         Permission.VIEW_PAYMENTS,
         Permission.VIEW_HOSTEL_ANNOUNCEMENTS,
+        Permission.VIEW_INVOICES,
         Permission.INITIATE_BOOKING,
         Permission.SAVE_FAVOURITE_HOSTEL,
         Permission.MANAGE_WISHLIST,
         Permission.RATE_HOSTEL,
         Permission.WRITE_REVIEW,
         Permission.VIEW_NOTIFICATIONS,
+        Permission.READ_NOTIFICATIONS,
  
     },
     Role.VISITOR: {
@@ -276,6 +383,7 @@ PERMISSION_MATRIX: Dict[str, Set[str]] = {
         Permission.VOTE_REVIEW,
         Permission.REQUEST_CALLBACK,
         Permission.NEGOTIATE_PRICE,
+
     },
 }
  
