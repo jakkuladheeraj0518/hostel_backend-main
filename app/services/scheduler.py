@@ -37,7 +37,7 @@ def expire_pending_bookings_once(expiry_hours: int = DEFAULT_EXPIRY_HOURS):
     try:
         # Find pending bookings older than cutoff
         pending_q = db.query(Booking).filter(
-            Booking.status == BookingStatus.pending,
+            Booking.status == BookingStatus.pending.value,
             Booking.created_at < cutoff
         )
 
@@ -50,11 +50,11 @@ def expire_pending_bookings_once(expiry_hours: int = DEFAULT_EXPIRY_HOURS):
         for booking in pending_list:
             try:
                 # Extra-safety: if booking was somehow confirmed already, skip expiry
-                if booking.status != BookingStatus.pending:
+                if booking.status != BookingStatus.pending.value:
                     continue
 
-                # mark booking as rejected
-                booking.status = BookingStatus.rejected
+                # mark booking as rejected (store string value)
+                booking.status = BookingStatus.rejected.value
 
                 # If the booking had reserved/consumed a bed (shouldn't for pending),
                 # ensure bed counts are correct. This is defensive: only decrement/increment

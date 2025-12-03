@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Optional
 from datetime import date, datetime, time
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field, root_validator
 from app.models.students import (
     PaymentType, PaymentMethod, AttendanceMode
 )
@@ -33,6 +33,19 @@ class StudentCreate(StudentBase):
     student_name: str
     student_email: EmailStr
     student_phone: str
+    # Login credentials for student account
+    password: str = Field(..., min_length=8, description="Password for student login")
+    confirm_password: str = Field(..., min_length=8, description="Confirm password (must match password)")
+
+    @root_validator(skip_on_failure=True)
+    def passwords_match(cls, values):
+        pw = values.get("password")
+        cpw = values.get("confirm_password")
+        if pw is None or cpw is None:
+            raise ValueError("Both password and confirm_password are required")
+        if pw != cpw:
+            raise ValueError("password and confirm_password do not match")
+        return values
 
 
 class StudentUpdate(BaseModel):

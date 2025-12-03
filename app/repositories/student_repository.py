@@ -7,6 +7,9 @@ from app.models.students import Student, StudentPayment, Attendance, StudentDocu
 from app.models.beds import Bed, BedStatus
 from app.repositories.bed_repository import find_bed_by_room_and_bed_number
 from app.schemas.students import StudentCreate, StudentUpdate
+from app.repositories.user_repository import UserRepository
+from app.schemas.user import UserCreate as SchemaUserCreate
+from app.core.roles import Role as UserRole
 
 
 def list_students(
@@ -104,7 +107,63 @@ def get_student(db: Session, student_id: str) -> Optional[Student]:
 
 
 def create_student(db: Session, student_in: StudentCreate) -> Student:
-    obj = Student(**student_in.dict())
+    data = student_in.dict()
+    # extract password fields if present
+    password = data.pop("password", None)
+    data.pop("confirm_password", None)
+    # If student already exists, return it (idempotent create)
+    existing = db.query(Student).filter(
+        (Student.student_id == student_in.student_id) | (Student.student_email == student_in.student_email)
+    ).first()
+    if existing:
+        return existing
+
+    # Try to find an existing user by email or phone; if found, reuse and ensure role
+    from app.models.user import User as UserModel
+
+    existing_user = None
+    if student_in.student_email:
+        existing_user = db.query(UserModel).filter(UserModel.email == student_in.student_email).first()
+    if not existing_user and student_in.student_phone:
+        existing_user = db.query(UserModel).filter(UserModel.phone_number == student_in.student_phone).first()
+
+    user_repo = UserRepository(db)
+    if existing_user:
+        # Ensure role is student
+        if existing_user.role != UserRole.STUDENT.value:
+            existing_user.role = UserRole.STUDENT.value
+            db.add(existing_user)
+            db.commit()
+            db.refresh(existing_user)
+        user = existing_user
+    else:
+        # Build a username and ensure it's unique to avoid DB unique constraint failures
+        base_username = (student_in.student_email.split("@")[0] if student_in.student_email else student_in.student_id)
+        username = base_username
+        suffix = 0
+        from app.models.user import User as UserModel
+        while db.query(UserModel).filter(UserModel.username == username).first():
+            suffix += 1
+            username = f"{base_username}{suffix}"
+
+        user_payload = SchemaUserCreate(
+            email=student_in.student_email,
+            phone_number=student_in.student_phone,
+            country_code=None,
+            username=username,
+            full_name=student_in.student_name,
+            role=UserRole.STUDENT.value,
+            hostel_id=student_in.hostel_id,
+            password=password,
+        )
+
+        try:
+            user = user_repo.create(user_payload)
+        except Exception as e:
+            # Surface a clearer message for upstream handling
+            raise ValueError(f"Failed to create linked user: {e}")
+
+    obj = Student(**data, user_id=user.id)
     db.add(obj)
     db.commit()
     db.refresh(obj)

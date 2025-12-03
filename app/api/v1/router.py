@@ -26,7 +26,6 @@ from app.api.v1.admin import (
  
 # Super-admin module routers (alias to avoid name collisions with admin package)
 from app.api.v1.super_admin import (
-    admins as super_admin_admins,
     reports as super_admin_reports,
     hostels as super_admin_hostels,
     dashboard as super_admin_dashboard,
@@ -110,15 +109,15 @@ api_router.include_router(me.router, prefix="/auth", tags=["auth"])
 #=============================================================
 #superadmin dashboard
 #superadmin dashboard
+api_router.include_router(super_admin_hostels.router)
 api_router.include_router(admin_admins.router, prefix="/admin", tags=["admin"])
 api_router.include_router(permissions.router, prefix="/admin", tags=["admin"])
 api_router.include_router(rbac.router, prefix="/admin", tags=["admin"])
 api_router.include_router(admin_hostels.router, prefix="/admin", tags=["admin"])
  
 # Include super-admin routers as they define their own prefixes/tags internally.
-api_router.include_router(super_admin_hostels.router)
+
 api_router.include_router(super_admin_dashboard.router)
-api_router.include_router(super_admin_admins.router)
 api_router.include_router(super_admin_subscription.router)
 api_router.include_router(super_admin_reports.router)
 api_router.include_router(super_admin_analytics.router)

@@ -84,7 +84,7 @@ def hostel_calendar(hostel_id: int, db: Session = Depends(get_db)):
 
             if b.status == BookingStatus.confirmed.value:
                 booked_dates.extend(days)
-            elif b.status == BookingStatus.pending:
+            elif b.status == BookingStatus.pending.value:
                 pending_dates.extend(days)
 
         hostel_calendar_data.append({
@@ -128,7 +128,7 @@ def validate_drag_drop(
         db.query(Booking)
         .filter(
             Booking.room_id == new_room_id,
-            Booking.status == BookingStatus.confirmed,
+            Booking.status == BookingStatus.confirmed.value,
             Booking.id != booking_id,
             Booking.check_in < new_check_out,
             Booking.check_out > new_check_in

@@ -17,7 +17,7 @@ from pathlib import Path
 from app.core.database import get_db
 from app.core.roles import Role
 from app.core.permissions import Permission
-from app.api.deps import role_required, permission_required, get_current_active_user, get_repository_context, get_repository_context_direct, get_user_hostel_ids
+from app.api.deps import role_required, permission_required, get_current_active_user, get_repository_context, get_user_hostel_ids
 from app.core.exceptions import AccessDeniedException
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate, UserResponse, AdminCreate
@@ -73,7 +73,8 @@ def save_profile_picture(file: UploadFile, user_id: int) -> str:
 async def create_admin(
     admin_data: AdminCreate,
     current_user: User = Depends(role_required(Role.SUPERADMIN)),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    repo_context: dict = Depends(get_repository_context),
 ):
     """
     Create new hostel admin (SuperAdmin only)
@@ -91,12 +92,11 @@ async def create_admin(
     # Password validation is handled by AdminCreate schema validator
     # confirm_password is validated to match password
     
-    context = get_repository_context(current_user, None, db)
     user_repo = UserRepository(
         db=db,
-        user_role=context["user_role"],
-        active_hostel_id=context["active_hostel_id"],
-        user_hostel_ids=context["user_hostel_ids"]
+        user_role=repo_context["user_role"],
+        active_hostel_id=repo_context["active_hostel_id"],
+        user_hostel_ids=repo_context["user_hostel_ids"]
     )
     
     # Check if email already exists
@@ -164,19 +164,19 @@ async def list_admins(
     limit: int = Query(100, ge=1, le=100),
     hostel_id: Optional[int] = Query(None, description="Filter by hostel ID"),
     current_user: User = Depends(role_required(Role.SUPERADMIN)),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    repo_context: dict = Depends(get_repository_context),
 ):
     """
     List all admins (SuperAdmin only)
     
     Returns a list of all admin users. Can optionally filter by hostel_id.
     """
-    context = get_repository_context(current_user, None, db)
     user_repo = UserRepository(
         db=db,
-        user_role=context["user_role"],
-        active_hostel_id=context["active_hostel_id"],
-        user_hostel_ids=context["user_hostel_ids"]
+        user_role=repo_context["user_role"],
+        active_hostel_id=repo_context["active_hostel_id"],
+        user_hostel_ids=repo_context["user_hostel_ids"]
     )
     
     # Get all users and filter by admin role
@@ -199,17 +199,17 @@ async def list_admins(
 async def get_admin(
     admin_id: int,
     current_user: User = Depends(role_required(Role.SUPERADMIN)),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    repo_context: dict = Depends(get_repository_context),
 ):
     """
     Get admin by ID (SuperAdmin only)
     """
-    context = get_repository_context(current_user, None, db)
     user_repo = UserRepository(
         db=db,
-        user_role=context["user_role"],
-        active_hostel_id=context["active_hostel_id"],
-        user_hostel_ids=context["user_hostel_ids"]
+        user_role=repo_context["user_role"],
+        active_hostel_id=repo_context["active_hostel_id"],
+        user_hostel_ids=repo_context["user_hostel_ids"]
     )
     
     admin = user_repo.get_by_id(admin_id)
@@ -235,17 +235,17 @@ async def update_admin(
     admin_id: int,
     admin_data: UserUpdate,
     current_user: User = Depends(role_required(Role.SUPERADMIN)),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    repo_context: dict = Depends(get_repository_context),
 ):
     """
     Update admin (SuperAdmin only)
     """
-    context = get_repository_context(current_user, None, db)
     user_repo = UserRepository(
         db=db,
-        user_role=context["user_role"],
-        active_hostel_id=context["active_hostel_id"],
-        user_hostel_ids=context["user_hostel_ids"]
+        user_role=repo_context["user_role"],
+        active_hostel_id=repo_context["active_hostel_id"],
+        user_hostel_ids=repo_context["user_hostel_ids"]
     )
     
     # Get existing admin
@@ -309,7 +309,8 @@ async def update_admin(
 async def delete_admin(
     admin_id: int,
     current_user: User = Depends(role_required(Role.SUPERADMIN)),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    repo_context: dict = Depends(get_repository_context),
 ):
     """
     Delete admin (SuperAdmin only)
@@ -321,12 +322,11 @@ async def delete_admin(
             detail="Cannot delete your own account"
         )
     
-    context = get_repository_context(current_user, None, db)
     user_repo = UserRepository(
         db=db,
-        user_role=context["user_role"],
-        active_hostel_id=context["active_hostel_id"],
-        user_hostel_ids=context["user_hostel_ids"]
+        user_role=repo_context["user_role"],
+        active_hostel_id=repo_context["active_hostel_id"],
+        user_hostel_ids=repo_context["user_hostel_ids"]
     )
     
     # Get admin to verify
@@ -381,7 +381,8 @@ async def upload_profile_picture(
     admin_id: int,
     file: UploadFile = File(...),
     current_user: User = Depends(role_required(Role.SUPERADMIN)),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    repo_context: dict = Depends(get_repository_context),
 ):
     """Upload profile picture for a user (SuperAdmin only).
 
@@ -396,12 +397,11 @@ async def upload_profile_picture(
             detail=f"Invalid file type. Allowed: {', '.join(ALLOWED_EXTENSIONS)}"
         )
     
-    context = get_repository_context(current_user, None, db)
     user_repo = UserRepository(
         db=db,
-        user_role=context["user_role"],
-        active_hostel_id=context["active_hostel_id"],
-        user_hostel_ids=context["user_hostel_ids"]
+        user_role=repo_context["user_role"],
+        active_hostel_id=repo_context["active_hostel_id"],
+        user_hostel_ids=repo_context["user_hostel_ids"]
     )
     
     # Get user (admin/supervisor/student)
@@ -448,321 +448,4 @@ async def assign_hostels_to_admin(
     """Assign multiple hostels to an admin (SuperAdmin only). Idempotent."""
     tenant_service = __import__('app.services.tenant_service', fromlist=['TenantService']).TenantService(db)
     return tenant_service.assign_admin_to_hostels(admin_id, hostel_ids, current_user.role)
-
-
-@router.post("/users/supervisors", response_model=UserResponse, status_code=status.HTTP_201_CREATED, tags=["admin"])
-async def create_supervisor(
-    supervisor_data: AdminCreate,
-    current_user: User = Depends(role_required(Role.SUPERADMIN, Role.ADMIN)),
-    _perm: User = Depends(permission_required(Permission.MANAGE_SUPERVISORS)),
-    db: Session = Depends(get_db)
-):
-    """Create a supervisor (SuperAdmin or Hostel Admin for their hostels)"""
-    # reuse creation flow similar to create_admin but set role to supervisor
-    context = get_repository_context(current_user, None, db)
-    user_repo = UserRepository(
-        db=db,
-        user_role=context["user_role"],
-        active_hostel_id=context["active_hostel_id"],
-        user_hostel_ids=context["user_hostel_ids"]
-    )
-
-    # uniqueness checks
-    if supervisor_data.email and user_repo.get_by_email(supervisor_data.email):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
-    if user_repo.get_by_username(supervisor_data.username):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already taken")
-    if supervisor_data.phone_number and user_repo.get_by_phone_number(supervisor_data.phone_number):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Phone number already registered")
-
-    supervisor_data.role = Role.SUPERVISOR.value
-
-    # If current_user is an ADMIN, ensure they can only create supervisors for hostels they manage
-    if current_user.role == Role.ADMIN:
-        allowed_hostels = get_user_hostel_ids(current_user.id, current_user.role, db)
-        target_hostel = getattr(supervisor_data, 'hostel_id', None)
-        if target_hostel and target_hostel not in allowed_hostels:
-            raise AccessDeniedException("Admin cannot assign supervisor to a hostel they do not manage")
-
-    user_create_data = UserCreate(
-        email=supervisor_data.email,
-        phone_number=supervisor_data.phone_number,
-        country_code=supervisor_data.country_code,
-        username=supervisor_data.username,
-        full_name=supervisor_data.full_name,
-        role=supervisor_data.role,
-        hostel_id=getattr(supervisor_data, 'hostel_id', None),
-        password=supervisor_data.password
-    )
-
-    user = user_repo.create(user_create_data)
-    user.is_active = True
-    user.is_email_verified = True
-    db.commit()
-    db.refresh(user)
-    return user
-
-
-@router.post("/users/students", response_model=UserResponse, status_code=status.HTTP_201_CREATED, tags=["admin"])
-async def create_student(
-    student_data: AdminCreate,
-    current_user: User = Depends(role_required(Role.SUPERADMIN, Role.ADMIN)),
-    _perm: User = Depends(permission_required(Permission.CREATE_REGISTRATION)),
-    db: Session = Depends(get_db)
-):
-    """Create a student (SuperAdmin or Hostel Admin for their hostels)"""
-    context = get_repository_context(current_user, None, db)
-    user_repo = UserRepository(
-        db=db,
-        user_role=context["user_role"],
-        active_hostel_id=context["active_hostel_id"],
-        user_hostel_ids=context["user_hostel_ids"]
-    )
-
-    # uniqueness checks
-    if student_data.email and user_repo.get_by_email(student_data.email):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
-    if user_repo.get_by_username(student_data.username):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already taken")
-    if student_data.phone_number and user_repo.get_by_phone_number(student_data.phone_number):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Phone number already registered")
-
-    student_data.role = Role.STUDENT.value
-
-    # If current_user is ADMIN, ensure student is assigned to their hostel
-    if current_user.role == Role.ADMIN:
-        allowed_hostels = get_user_hostel_ids(current_user.id, current_user.role, db)
-        target_hostel = getattr(student_data, 'hostel_id', None)
-        if target_hostel and target_hostel not in allowed_hostels:
-            raise AccessDeniedException("Admin cannot create student for a hostel they do not manage")
-
-    user_create_data = UserCreate(
-        email=student_data.email,
-        phone_number=student_data.phone_number,
-        country_code=student_data.country_code,
-        username=student_data.username,
-        full_name=student_data.full_name,
-        role=student_data.role,
-        hostel_id=getattr(student_data, 'hostel_id', None),
-        password=student_data.password
-    )
-
-    user = user_repo.create(user_create_data)
-    user.is_active = True
-    user.is_email_verified = True
-    db.commit()
-    db.refresh(user)
-    return user
-
-
-
-@router.put("/users/supervisors/{supervisor_id}", response_model=UserResponse, tags=["admin"])
-async def update_supervisor(
-    supervisor_id: int,
-    supervisor_data: UserUpdate,
-    current_user: User = Depends(role_required(Role.SUPERADMIN, Role.ADMIN)),
-    _perm: User = Depends(permission_required(Permission.MANAGE_SUPERVISORS)),
-    db: Session = Depends(get_db)
-):
-    """Update supervisor (SuperAdmin or Hostel Admin for their hostels)"""
-    context = get_repository_context(current_user, None, db)
-    user_repo = UserRepository(
-        db=db,
-        user_role=context["user_role"],
-        active_hostel_id=context["active_hostel_id"],
-        user_hostel_ids=context["user_hostel_ids"]
-    )
-
-    existing = user_repo.get_by_id(supervisor_id)
-    if not existing:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Supervisor not found")
-
-    if existing.role != Role.SUPERVISOR.value:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User is not a supervisor")
-
-    # Prevent role change
-    if supervisor_data.role and supervisor_data.role != Role.SUPERVISOR.value:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot change supervisor role")
-
-    # If ADMIN is updating, ensure the target supervisor belongs to one of their hostels
-    if current_user.role == Role.ADMIN:
-        allowed_hostels = get_user_hostel_ids(current_user.id, current_user.role, db)
-        if existing.hostel_id and existing.hostel_id not in allowed_hostels:
-            raise AccessDeniedException("Admin cannot modify a supervisor outside their hostels")
-
-    # Check email uniqueness if updating
-    if supervisor_data.email and supervisor_data.email != existing.email:
-        if user_repo.get_by_email(supervisor_data.email):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
-
-    # Check username uniqueness if updating
-    if supervisor_data.username and supervisor_data.username != existing.username:
-        if user_repo.get_by_username(supervisor_data.username):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already taken")
-
-    # Check phone uniqueness if updating
-    if supervisor_data.phone_number and supervisor_data.phone_number != existing.phone_number:
-        if user_repo.get_by_phone_number(supervisor_data.phone_number):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Phone number already registered")
-
-    updated = user_repo.update(supervisor_id, supervisor_data)
-    if not updated:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Supervisor not found")
-
-    return updated
-
-
-@router.delete("/users/supervisors/{supervisor_id}", status_code=status.HTTP_200_OK, tags=["admin"])
-async def delete_supervisor(
-    supervisor_id: int,
-    current_user: User = Depends(role_required(Role.SUPERADMIN, Role.ADMIN)),
-    _perm: User = Depends(permission_required(Permission.MANAGE_SUPERVISORS)),
-    db: Session = Depends(get_db)
-):
-    """Delete supervisor (SuperAdmin or Hostel Admin for their hostels)"""
-    # Prevent self-deletion
-    if supervisor_id == current_user.id:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot delete your own account")
-
-    context = get_repository_context(current_user, None, db)
-    user_repo = UserRepository(
-        db=db,
-        user_role=context["user_role"],
-        active_hostel_id=context["active_hostel_id"],
-        user_hostel_ids=context["user_hostel_ids"]
-    )
-
-    supervisor = user_repo.get_by_id(supervisor_id)
-    if not supervisor:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Supervisor not found")
-
-    if supervisor.role != Role.SUPERVISOR.value:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User is not a supervisor")
-
-    # Delete profile picture if exists
-    if hasattr(supervisor, 'profile_picture_url') and supervisor.profile_picture_url:
-        profile_path = Path(supervisor.profile_picture_url.lstrip('/'))
-        if profile_path.exists():
-            profile_path.unlink()
-
-    # If ADMIN deleting, ensure supervisor within allowed hostels
-    if current_user.role == Role.ADMIN:
-        allowed_hostels = get_user_hostel_ids(current_user.id, current_user.role, db)
-        if supervisor.hostel_id and supervisor.hostel_id not in allowed_hostels:
-            raise AccessDeniedException("Admin cannot delete a supervisor outside their hostels")
-
-    # Soft-delete (deactivate and anonymize) to preserve FK integrity
-    try:
-        import uuid as _uuid
-        supervisor.is_active = False
-        supervisor.is_email_verified = False
-        supervisor.is_phone_verified = False
-        supervisor.email = None
-        supervisor.phone_number = None
-        supervisor.profile_picture_url = None
-        supervisor.username = f"deleted_supervisor_{supervisor.id}_{_uuid.uuid4().hex[:8]}"
-        supervisor.hashed_password = None
-
-        db.commit()
-        db.refresh(supervisor)
-    except Exception:
-        db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to deactivate supervisor")
-
-    return {"message": "Supervisor deactivated"}
-
-
-@router.put("/users/students/{student_id}", response_model=UserResponse, tags=["admin"])
-async def update_student(
-    student_id: int,
-    student_data: UserUpdate,
-    current_user: User = Depends(role_required(Role.SUPERADMIN, Role.ADMIN)),
-    _perm: User = Depends(permission_required(Permission.UPDATE_USER)),
-    db: Session = Depends(get_db)
-):
-    """Update student (SuperAdmin or Hostel Admin for their hostels)"""
-    context = get_repository_context(current_user, None, db)
-    user_repo = UserRepository(
-        db=db,
-        user_role=context["user_role"],
-        active_hostel_id=context["active_hostel_id"],
-        user_hostel_ids=context["user_hostel_ids"]
-    )
-
-    existing = user_repo.get_by_id(student_id)
-    if not existing:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Student not found")
-
-    if existing.role != Role.STUDENT.value:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User is not a student")
-
-    # Prevent role change
-    if student_data.role and student_data.role != Role.STUDENT.value:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot change student role")
-
-    # If ADMIN is updating, ensure the student belongs to one of their hostels
-    if current_user.role == Role.ADMIN:
-        allowed_hostels = get_user_hostel_ids(current_user.id, current_user.role, db)
-        if existing.hostel_id and existing.hostel_id not in allowed_hostels:
-            raise AccessDeniedException("Admin cannot modify a student outside their hostels")
-
-    # Check email uniqueness if updating
-    if student_data.email and student_data.email != existing.email:
-        if user_repo.get_by_email(student_data.email):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
-
-    # Check username uniqueness if updating
-    if student_data.username and student_data.username != existing.username:
-        if user_repo.get_by_username(student_data.username):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already taken")
-
-    # Check phone uniqueness if updating
-    if student_data.phone_number and student_data.phone_number != existing.phone_number:
-        if user_repo.get_by_phone_number(student_data.phone_number):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Phone number already registered")
-
-    updated = user_repo.update(student_id, student_data)
-    if not updated:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Student not found")
-
-    return updated
-
-
-@router.delete("/users/students/{student_id}", status_code=status.HTTP_200_OK, tags=["admin"])
-async def delete_student(
-    student_id: int,
-    current_user: User = Depends(role_required(Role.SUPERADMIN)),
-    db: Session = Depends(get_db)
-):
-    """Delete student (SuperAdmin only)"""
-    # Prevent self-deletion
-    if student_id == current_user.id:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot delete your own account")
-
-    context = get_repository_context(current_user, None, db)
-    user_repo = UserRepository(
-        db=db,
-        user_role=context["user_role"],
-        active_hostel_id=context["active_hostel_id"],
-        user_hostel_ids=context["user_hostel_ids"]
-    )
-
-    student = user_repo.get_by_id(student_id)
-    if not student:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Student not found")
-
-    if student.role != Role.STUDENT.value:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User is not a student")
-
-    # Delete profile picture if exists
-    if hasattr(student, 'profile_picture_url') and student.profile_picture_url:
-        profile_path = Path(student.profile_picture_url.lstrip('/'))
-        if profile_path.exists():
-            profile_path.unlink()
-
-    success = user_repo.delete(student_id)
-    if not success:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Student not found")
-
-    return {"message": "Student deleted"}
 

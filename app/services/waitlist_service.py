@@ -88,7 +88,7 @@ class WaitlistService:
                 check_in=datetime.utcnow(),           # placeholder; system can set proper dates later
                 check_out=datetime.utcnow(),          # placeholder; adapt as needed
                 amount_paid=0.0,
-                status=BookingStatus.confirmed,
+                status=BookingStatus.confirmed.value,
                 created_at=datetime.utcnow()
             )
 

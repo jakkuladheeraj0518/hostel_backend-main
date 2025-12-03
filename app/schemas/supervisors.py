@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, root_validator, Field
 from app.models.supervisors import SupervisorRole, Department, AccessLevel
 
 # SUPERVISOR SCHEMAS
@@ -24,6 +24,19 @@ class SupervisorCreate(SupervisorBase):
     supervisor_email: EmailStr
     supervisor_phone: str
     role: SupervisorRole
+    # Login credentials for supervisor account
+    password: str = Field(..., min_length=8, description="Password for supervisor login")
+    confirm_password: str = Field(..., min_length=8, description="Confirm password (must match password)")
+
+    @root_validator(skip_on_failure=True)
+    def passwords_match(cls, values):
+        pw = values.get("password")
+        cpw = values.get("confirm_password")
+        if pw is None or cpw is None:
+            raise ValueError("Both password and confirm_password are required")
+        if pw != cpw:
+            raise ValueError("password and confirm_password do not match")
+        return values
 
 
 class SupervisorUpdate(BaseModel):

@@ -4,10 +4,37 @@ from sqlalchemy import text
 
 from app.models.supervisors import Supervisor, AdminOverride
 from app.schemas.supervisors import SupervisorCreate, SupervisorUpdate
+from app.core.security import get_password_hash
+from app.repositories.auth_repository import create_user as repo_create_user
+from app.repositories.user_repository import UserRepository
+from app.schemas.user import UserCreate as SchemaUserCreate
+from app.core.roles import Role as UserRole
 
 
 def create_supervisor(db: Session, sup_in: SupervisorCreate) -> Supervisor:
-    obj = Supervisor(**sup_in.dict())
+    # Create linked User account for supervisor with hashed password
+    data = sup_in.dict()
+    password = data.pop("password", None)
+    # remove confirm_password as well
+    data.pop("confirm_password", None)
+
+    # Use UserRepository to create user with proper role and username
+    user_repo = UserRepository(db)
+    user_payload = SchemaUserCreate(
+        email=sup_in.supervisor_email,
+        phone_number=sup_in.supervisor_phone,
+        country_code=None,
+        username=(sup_in.supervisor_email.split('@')[0] if sup_in.supervisor_email else sup_in.employee_id),
+        full_name=sup_in.supervisor_name,
+        role=UserRole.SUPERVISOR.value,
+        hostel_id=None,
+        password=password,
+    )
+
+    user = user_repo.create(user_payload)
+
+    # Build Supervisor record from remaining fields and attach user_id
+    obj = Supervisor(**data, user_id=user.id)
     db.add(obj)
     db.commit()
     db.refresh(obj)

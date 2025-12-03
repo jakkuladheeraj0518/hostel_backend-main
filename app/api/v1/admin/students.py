@@ -262,7 +262,7 @@ def read_student(
 # --------------------------------------------------------------------
 # CREATE STUDENT – Profile create
 # --------------------------------------------------------------------
-@router.post("/", response_model=StudentOut, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=StudentOut, status_code=status.HTTP_200_OK)
 def create_student(
     item: StudentCreate,
     db: Session = Depends(get_db),
@@ -273,6 +273,24 @@ def create_student(
         return service_create_student(db, item)
     except IntegrityError as e:
         db.rollback()
+        # Attempt to be idempotent: if student already exists, return it with 200
+        try:
+            # Try by student_id first
+            if getattr(item, "student_id", None):
+                existing = service_get_student(db, item.student_id)
+                if existing:
+                    return existing
+
+            # Next try by email
+            if getattr(item, "student_email", None):
+                rows = service_list_students(db, skip=0, limit=1, student_email=item.student_email)
+                if rows:
+                    return rows[0]
+        except Exception:
+            # ignore lookup errors and fall back to raising conflict
+            pass
+
+        # If we couldn't locate an existing student, map DB error to clearer 409 responses
         error_msg = str(e.orig)
         if "student_email" in error_msg:
             raise HTTPException(
@@ -284,10 +302,49 @@ def create_student(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"Student with id '{item.student_id}' already exists",
             )
+        # Map common user table unique constraint errors to clearer messages
+        if "users" in error_msg and "email" in error_msg:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(f"A user with email '{getattr(item, 'student_email', None)}' already exists"),
+            )
+        if "users" in error_msg and ("username" in error_msg or "user_name" in error_msg):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(f"A user with username '{getattr(item, 'student_email', item.student_id)}' already exists"),
+            )
+
+        # Fallback generic conflict
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="A student with this information already exists",
         )
+    except ValueError as e:
+        # Repository/service raised a validation / pre-check error (e.g., duplicate email/username)
+        # Try to return existing student where possible (idempotent create)
+        try:
+            if getattr(item, "student_id", None):
+                existing = service_get_student(db, item.student_id)
+                if existing:
+                    return existing
+            if getattr(item, "student_email", None):
+                rows = service_list_students(db, skip=0, limit=1, student_email=item.student_email)
+                if rows:
+                    return rows[0]
+        except Exception:
+            pass
+
+        # If the error originates from a DB FK violation (e.g., hostel_id not present),
+        # surface a clear 400 Bad Request instead of returning raw DB error text.
+        err_text = str(e)
+        low = err_text.lower()
+        if "violates foreign key constraint" in low or "foreign key" in low or "violates foreign key" in low:
+            # Prefer to use provided hostel_id for message when available
+            hid = getattr(item, "hostel_id", None)
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=(
+                f"Invalid hostel_id: {hid}. Ensure the hostel exists before assigning a student."))
+
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
 # --------------------------------------------------------------------

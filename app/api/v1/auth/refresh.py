@@ -11,15 +11,6 @@ from app.schemas.auth import RefreshTokenRequest, RefreshTokenResponse
 router = APIRouter()
 
 
-@router.post("/refresh", response_model=RefreshTokenResponse, status_code=status.HTTP_200_OK)
-async def refresh_token(
-    token_data: RefreshTokenRequest,
-    db: Session = Depends(get_db)
-):
-    """Refresh access token using refresh token"""
-    auth_service = AuthService(db)
-    return auth_service.refresh_access_token(token_data.refresh_token)
-
 
 
 @router.post("/logout", status_code=status.HTTP_200_OK)
