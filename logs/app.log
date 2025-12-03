@@ -10907,3 +10907,9 @@ WHERE bookings.status = %(status_1)s AND bookings.created_at < %(created_at_1)s]
 2025-12-03 21:31:28,605 | INFO     | app | Elasticsearch ready.
 2025-12-03 21:31:28,619 | INFO     | app | BookingExpiryService started
 2025-12-03 21:31:28,666 | INFO     | app | Notification worker started.
+2025-12-03 21:36:32,981 | INFO     | app | Initializing database...
+2025-12-03 21:36:33,356 | INFO     | app | Database initialized.
+2025-12-03 21:36:33,356 | INFO     | app | Initializing Elasticsearch...
+2025-12-03 21:36:37,378 | INFO     | app | Elasticsearch ready.
+2025-12-03 21:36:37,389 | INFO     | app | BookingExpiryService started
+2025-12-03 21:36:37,395 | INFO     | app | Notification worker started.
