@@ -13,7 +13,7 @@ from app.core.roles import Role
 from app.core.permissions import Permission
 from app.api.deps import role_required, permission_required
 
-router = APIRouter(prefix="/api/v1/admin/overrides", tags=["overrides"])
+router = APIRouter(prefix="/admin/overrides", tags=["overrides"])
 
 
 # --------------------------------------------------------------------

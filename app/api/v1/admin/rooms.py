@@ -33,7 +33,7 @@ from app.core.roles import Role
 from app.core.permissions import Permission
 from app.api.deps import role_required, permission_required
 
-router = APIRouter(prefix="/api/v1/admin/rooms", tags=["rooms"])
+router = APIRouter(prefix="/admin/rooms", tags=["rooms"])
 
 
 # ---------------------------------------------------------------------
@@ -99,6 +99,100 @@ def read_rooms(
         min_capacity=min_capacity,
         only_available=only_available,
         amenities_like=amenities_like,
+    )
+
+
+# ---------------------------------------------------------------------
+# BULK IMPORT ROOMS (must come before /{room_id})
+# ---------------------------------------------------------------------
+@router.post("/bulk", status_code=status.HTTP_201_CREATED)
+async def bulk_import_rooms(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(role_required([Role.SUPERADMIN, Role.ADMIN])),
+    _: None = Depends(permission_required(Permission.IMPORT_ROOMS)),
+):
+    content = (await file.read()).decode("utf-8")
+    reader = csv.DictReader(StringIO(content))
+
+    created = 0
+    for row in reader:
+        try:
+            payload = {k: (v if v else None) for k, v in row.items()}
+            service_create_room(db, RoomCreate(**payload))
+            created += 1
+        except Exception:
+            continue
+
+    return {"created": created}
+
+
+# ---------------------------------------------------------------------
+# EXPORT ROOMS (must come before /{room_id})
+# ---------------------------------------------------------------------
+@router.get("/export")
+def export_rooms(
+    room_type: Optional[str] = None,
+    maintenance_status: Optional[str] = None,
+    min_price: Optional[float] = None,
+    max_price: Optional[float] = None,
+    min_capacity: Optional[int] = None,
+    only_available: Optional[bool] = None,
+    amenities_like: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(role_required([Role.SUPERADMIN, Role.ADMIN])),
+    _: None = Depends(permission_required(Permission.EXPORT_ROOMS)),
+):
+    rt = None
+    ms = None
+
+    if room_type:
+        rt = RoomType(room_type)
+    if maintenance_status:
+        ms = MaintenanceStatus(maintenance_status)
+
+    rows = service_list_rooms(
+        db,
+        skip=0,
+        limit=999999,
+        room_type=rt,
+        maintenance_status=ms,
+        min_price=min_price,
+        max_price=max_price,
+        min_capacity=min_capacity,
+        only_available=only_available,
+        amenities_like=amenities_like,
+    )
+
+    buf = StringIO()
+    writer = csv.writer(buf)
+
+    headers = [
+        "id",
+        "hostel_id",
+        "room_number",
+        "room_type",
+        "room_capacity",
+        "monthly_price",
+        "quarterly_price",
+        "annual_price",
+        "availability",
+        "amenities",
+        "maintenance_status",
+        "created_at",
+        "updated_at",
+    ]
+    writer.writerow(headers)
+
+    for r in rows:
+        writer.writerow([getattr(r, h, None) for h in headers])
+
+    buf.seek(0)
+
+    return StreamingResponse(
+        iter([buf.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=rooms.csv"},
     )
 
 
@@ -197,97 +291,3 @@ def set_availability(
         raise HTTPException(404, "Room not found")
 
     return updated
-
-
-# ---------------------------------------------------------------------
-# BULK IMPORT ROOMS
-# ---------------------------------------------------------------------
-@router.post("/bulk", status_code=status.HTTP_201_CREATED)
-async def bulk_import_rooms(
-    file: UploadFile = File(...),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(role_required([Role.SUPERADMIN, Role.ADMIN])),
-    _: None = Depends(permission_required(Permission.IMPORT_ROOMS)),
-):
-    content = (await file.read()).decode("utf-8")
-    reader = csv.DictReader(StringIO(content))
-
-    created = 0
-    for row in reader:
-        try:
-            payload = {k: (v if v else None) for k, v in row.items()}
-            service_create_room(db, RoomCreate(**payload))
-            created += 1
-        except Exception:
-            continue
-
-    return {"created": created}
-
-
-# ---------------------------------------------------------------------
-# EXPORT ROOMS
-# ---------------------------------------------------------------------
-@router.get("/export")
-def export_rooms(
-    room_type: Optional[str] = None,
-    maintenance_status: Optional[str] = None,
-    min_price: Optional[float] = None,
-    max_price: Optional[float] = None,
-    min_capacity: Optional[int] = None,
-    only_available: Optional[bool] = None,
-    amenities_like: Optional[str] = None,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(role_required([Role.SUPERADMIN, Role.ADMIN])),
-    _: None = Depends(permission_required(Permission.EXPORT_ROOMS)),
-):
-    rt = None
-    ms = None
-
-    if room_type:
-        rt = RoomType(room_type)
-    if maintenance_status:
-        ms = MaintenanceStatus(maintenance_status)
-
-    rows = service_list_rooms(
-        db,
-        skip=0,
-        limit=999999,
-        room_type=rt,
-        maintenance_status=ms,
-        min_price=min_price,
-        max_price=max_price,
-        min_capacity=min_capacity,
-        only_available=only_available,
-        amenities_like=amenities_like,
-    )
-
-    buf = StringIO()
-    writer = csv.writer(buf)
-
-    headers = [
-        "id",
-        "hostel_id",
-        "room_number",
-        "room_type",
-        "room_capacity",
-        "monthly_price",
-        "quarterly_price",
-        "annual_price",
-        "availability",
-        "amenities",
-        "maintenance_status",
-        "created_at",
-        "updated_at",
-    ]
-    writer.writerow(headers)
-
-    for r in rows:
-        writer.writerow([getattr(r, h, None) for h in headers])
-
-    buf.seek(0)
-
-    return StreamingResponse(
-        iter([buf.getvalue()]),
-        media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=rooms.csv"},
-    )

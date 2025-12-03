@@ -139,11 +139,11 @@ api_router.include_router(admin_override_router)
 # Comparison
 api_router.include_router(comparison_router)
 
-api_router.include_router(admin_complaints.router, prefix="/api/v1")
-api_router.include_router(admin_reports.router, prefix="/api/v1")
+api_router.include_router(admin_complaints.router)
+api_router.include_router(admin_reports.router)
 
-api_router.include_router(admin_mess_menu.router, prefix="/api/v1")
-api_router.include_router(admin_announcement.router, prefix="/api/v1")
+api_router.include_router(admin_mess_menu.router)
+api_router.include_router(admin_announcement.router)
 
 #fee and payment
 api_router.include_router(fee_structure_configuration.router)
@@ -163,19 +163,19 @@ api_router.include_router(supervisor_audit.router, prefix="/supervisor", tags=["
 api_router.include_router(supervisor_permissions.router, prefix="/supervisor", tags=["supervisor"])
 api_router.include_router(supervisor_approvals.router, prefix="/supervisor", tags=["supervisor"])
 
-api_router.include_router(supervisor_complaints.router, prefix="/api/v1")
-api_router.include_router(supervisor_reports.router, prefix="/api/v1")
-api_router.include_router(supervisor_mess_menu.router, prefix="/api/v1")
-api_router.include_router(supervisor_announcement.router, prefix="/api/v1")
+api_router.include_router(supervisor_complaints.router)
+api_router.include_router(supervisor_reports.router)
+api_router.include_router(supervisor_mess_menu.router)
+api_router.include_router(supervisor_announcement.router)
 api_router.include_router(supervisor_module_router, prefix="/supervisor", tags=["Supervisor Module"])
 
 #=============================================================
 
 #=============================================================
 #student dashboard
-api_router.include_router(student_complaints.router, prefix="/api/v1")
-api_router.include_router(student_mess_menu.router, prefix="/api/v1")
-api_router.include_router(student_announcement.router, prefix="/api/v1")
+api_router.include_router(student_complaints.router)
+api_router.include_router(student_mess_menu.router)
+api_router.include_router(student_announcement.router)
  
 #=============================================================
 

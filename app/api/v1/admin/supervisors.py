@@ -32,7 +32,7 @@ from app.core.roles import Role
 from app.core.permissions import Permission
 from app.api.deps import role_required, permission_required
 
-router = APIRouter(prefix="/api/v1/admin/supervisors", tags=["supervisors"])
+router = APIRouter(prefix="/admin/supervisors", tags=["supervisors"])
 
 
 # -------------------------------------------------------------------
@@ -100,9 +100,7 @@ def read_supervisors(
     )
 
 
-# -------------------------------------------------------------------
-# ADMIN OVERRIDES  (Admin Override Mechanism)
-# -------------------------------------------------------------------
+
 
 @router.post(
     "/overrides",
@@ -158,7 +156,6 @@ def list_overrides(
         admin_employee_id=admin_employee_id,
         target_supervisor_id=target_supervisor_id,
     )
-
 
 
 @router.get("/{employee_id}", response_model=SupervisorOut)
@@ -295,62 +292,6 @@ def activity(
 # ADMIN OVERRIDES  (Admin Override Mechanism)
 # -------------------------------------------------------------------
 
-@router.post(
-    "/overrides",
-    response_model=AdminOverrideOut,
-    status_code=status.HTTP_201_CREATED,
-)
-def create_override(
-    payload: AdminOverrideCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(
-        role_required([Role.SUPERADMIN, Role.ADMIN])
-    ),
-    _: None = Depends(
-        permission_required(Permission.MANAGE_OVERRIDES)
-    ),
-):
-    try:
-        return service_create_admin_override(
-            db,
-            payload.admin_employee_id,
-            payload.target_supervisor_id,
-            payload.action,
-            payload.details,
-            payload.dict().get("old_state"),
-            payload.dict().get("new_state"),
-        )
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
-        )
-
-
-@router.get("/overrides")
-def list_overrides(
-    skip: int = 0,
-    limit: int = 100,
-    admin_employee_id: Optional[str] = None,
-    target_supervisor_id: Optional[str] = None,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(
-        role_required([Role.SUPERADMIN, Role.ADMIN])
-    ),
-    _: None = Depends(
-        permission_required(Permission.VIEW_OVERRIDES)
-    ),
-):
-    """List admin override records (audit trail)."""
-    from app.repositories.supervisor_repository import list_admin_overrides
-
-    return list_admin_overrides(
-        db,
-        skip=skip,
-        limit=limit,
-        admin_employee_id=admin_employee_id,
-        target_supervisor_id=target_supervisor_id,
-    )
 
 
 @router.post(

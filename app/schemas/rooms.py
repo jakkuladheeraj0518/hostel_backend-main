@@ -7,7 +7,7 @@ from app.models.rooms import RoomType, MaintenanceStatus
 # ROOM SCHEMAS
 
 class RoomBase(BaseModel):
-    hostel_id: Optional[str] = None
+    hostel_id: Optional[int] = None
     room_number: str
     room_type: RoomType = RoomType.SINGLE
     room_capacity: int = 1
@@ -24,7 +24,7 @@ class RoomCreate(RoomBase):
 
 
 class RoomUpdate(BaseModel):
-    hostel_id: Optional[str] = None
+    hostel_id: Optional[int] = None
     room_number: Optional[str] = None
     room_type: Optional[RoomType] = None
     room_capacity: Optional[int] = None
