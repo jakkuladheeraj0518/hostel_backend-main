@@ -43,7 +43,9 @@ from app.api.v1.admin.rooms import router as rooms_router
 from app.api.v1.admin.beds import router as beds_router
 from app.api.v1.admin.students import router as students_router
 from app.api.v1.admin.supervisors import router as supervisors_router
+from app.api.v1.admin.admin_override import router as admin_override_router
 from app.api.v1.admin.comparison_router import router as comparison_router
+
 
 from app.api.v1.admin import complaints as admin_complaints
 from app.api.v1.admin import reports as admin_reports
@@ -134,6 +136,7 @@ api_router.include_router(supervisors_router)
 api_router.include_router(students_router)
 api_router.include_router(rooms_router)
 api_router.include_router(beds_router)
+api_router.include_router(admin_override_router)
 # Comparison
 api_router.include_router(comparison_router)
 

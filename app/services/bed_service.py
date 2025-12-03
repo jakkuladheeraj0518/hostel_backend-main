@@ -71,3 +71,49 @@ def transfer_student_bed(db: Session, student_id: str, new_bed_id: int) -> Optio
 
 def find_bed_by_room_bed(db: Session, room_number: str, bed_number: str) -> Optional[Bed]:
     return repo_find_bed_by_room_and_bed_number(db, room_number, bed_number)
+
+
+def bulk_assign_beds(db: Session, assignments: List[dict]) -> dict:
+    """Bulk assign students to beds.
+
+    assignments: list of dicts with keys `student_id`, `room_number`, `bed_number`.
+    Returns a summary dict with counts and error details.
+    """
+    summary = {"assigned": 0, "errors": []}
+
+    for idx, a in enumerate(assignments, start=1):
+        student_id = a.get("student_id")
+        room_number = a.get("room_number")
+        bed_number = a.get("bed_number")
+
+        if not student_id or not room_number or not bed_number:
+            summary["errors"].append({
+                "row": idx,
+                "error": "missing_field",
+                "detail": "student_id, room_number and bed_number are required",
+                "input": a,
+            })
+            continue
+
+        bed = repo_find_bed_by_room_and_bed_number(db, room_number, bed_number)
+        if not bed:
+            summary["errors"].append({
+                "row": idx,
+                "error": "bed_not_found",
+                "detail": f"Bed not found for room={room_number} bed={bed_number}",
+                "input": a,
+            })
+            continue
+
+        try:
+            repo_assign_bed_to_student(db, bed, student_id)
+            summary["assigned"] += 1
+        except Exception as e:
+            summary["errors"].append({
+                "row": idx,
+                "error": "assignment_failed",
+                "detail": str(e),
+                "input": a,
+            })
+
+    return summary

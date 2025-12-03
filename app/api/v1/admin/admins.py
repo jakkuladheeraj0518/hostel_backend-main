@@ -17,7 +17,7 @@ from pathlib import Path
 from app.core.database import get_db
 from app.core.roles import Role
 from app.core.permissions import Permission
-from app.api.deps import role_required, permission_required, get_current_active_user, get_repository_context, get_user_hostel_ids
+from app.api.deps import role_required, permission_required, get_current_active_user, get_repository_context, get_repository_context_direct, get_user_hostel_ids
 from app.core.exceptions import AccessDeniedException
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate, UserResponse, AdminCreate

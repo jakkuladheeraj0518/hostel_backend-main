@@ -164,3 +164,21 @@ def admin_override_assign_supervisor_hostel(db: Session, admin_employee_id: str,
         {"eid": target_supervisor_id, "hid": int(new_hostel_id)}
     )
     db.commit()
+
+
+def list_admin_overrides(
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    admin_employee_id: Optional[str] = None,
+    target_supervisor_id: Optional[str] = None
+) -> List[AdminOverride]:
+    """List admin override records with optional filtering."""
+    query = db.query(AdminOverride)
+
+    if admin_employee_id:
+        query = query.filter(AdminOverride.admin_employee_id == admin_employee_id)
+    if target_supervisor_id:
+        query = query.filter(AdminOverride.target_supervisor_id == target_supervisor_id)
+
+    return query.order_by(AdminOverride.created_at.desc()).offset(skip).limit(limit).all()

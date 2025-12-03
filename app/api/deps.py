@@ -101,17 +101,31 @@ def get_current_active_user(
 
 
 def get_repository_context(
+    request: Request,
     current_user: User = Depends(get_current_active_user),
-    request: Optional[Request] = None,
     db: Session = Depends(get_db)
 ) -> dict:
     """Get context for repositories (user role, active hostel, accessible hostels)"""
-    active_hostel_id = get_active_hostel_id(request) if request else None
+    active_hostel_id = get_active_hostel_id(request)
     user_hostel_ids = get_user_hostel_ids(current_user.id, current_user.role, db)
     
     return {
         "user_role": current_user.role,
         "active_hostel_id": active_hostel_id,
+        "user_hostel_ids": user_hostel_ids
+    }
+
+
+def get_repository_context_direct(
+    current_user: User,
+    db: Session
+) -> dict:
+    """Get context for repositories (direct call without Request)"""
+    user_hostel_ids = get_user_hostel_ids(current_user.id, current_user.role, db)
+    
+    return {
+        "user_role": current_user.role,
+        "active_hostel_id": None,  # No request context available
         "user_hostel_ids": user_hostel_ids
     }
 

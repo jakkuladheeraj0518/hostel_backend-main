@@ -54,6 +54,11 @@ class Permission:
     ASSIGN_SUPERVISOR = "assign_supervisor"
     CONFIGURE_SUPERVISOR_PERMISSIONS = "configure_supervisor_permissions"
     OVERRIDE_SUPERVISOR = "override_supervisor"
+    MANAGE_SUPERVISORS = "manage_supervisors"
+    READ_SUPERVISORS = "read_supervisors"
+    MANAGE_OVERRIDES = "manage_overrides"
+    VIEW_OVERRIDES = "view_overrides"
+    READ_SUPERVISOR_ACTIVITY = "read_supervisor_activity"
  
     # Supervisor operational permissions
     SUPERVISOR_DASHBOARD_VIEW = "supervisor_dashboard_view"
@@ -72,6 +77,10 @@ class Permission:
     # Hostel profile & room/booking management
     MANAGE_HOSTEL_LISTINGS = "manage_hostel_listings"
     MANAGE_ROOM_TYPES = "manage_room_types"
+    MANAGE_ROOMS = "manage_rooms"
+    READ_ROOMS = "read_rooms"
+    IMPORT_ROOMS = "import_rooms"
+    EXPORT_ROOMS = "export_rooms"
     MANAGE_BOOKINGS = "manage_bookings"
     DELETE_BOOKING = "delete_booking"
     MANAGE_WAITLIST = "manage_waitlist"
@@ -200,8 +209,17 @@ PERMISSION_MATRIX: Dict[str, Set[str]] = {
         Permission.ASSIGN_SUPERVISOR,
         Permission.CONFIGURE_SUPERVISOR_PERMISSIONS,
         Permission.OVERRIDE_SUPERVISOR,
+        Permission.MANAGE_SUPERVISORS,
+        Permission.READ_SUPERVISORS,
+        Permission.MANAGE_OVERRIDES,
+        Permission.VIEW_OVERRIDES,
+        Permission.READ_SUPERVISOR_ACTIVITY,
         Permission.MANAGE_HOSTEL_LISTINGS,
         Permission.MANAGE_ROOM_TYPES,
+        Permission.MANAGE_ROOMS,
+        Permission.READ_ROOMS,
+        Permission.IMPORT_ROOMS,
+        Permission.EXPORT_ROOMS,
         Permission.MANAGE_BOOKINGS,
         Permission.DELETE_BOOKING,
         Permission.MANAGE_WAITLIST,
@@ -271,8 +289,17 @@ PERMISSION_MATRIX: Dict[str, Set[str]] = {
         Permission.HOSTEL_SELECTOR,
         Permission.ASSIGN_SUPERVISOR,
         Permission.CONFIGURE_SUPERVISOR_PERMISSIONS,
+        Permission.MANAGE_SUPERVISORS,
+        Permission.READ_SUPERVISORS,
+        Permission.MANAGE_OVERRIDES,
+        Permission.VIEW_OVERRIDES,
+        Permission.READ_SUPERVISOR_ACTIVITY,
         Permission.MANAGE_HOSTEL_LISTINGS,
         Permission.MANAGE_ROOM_TYPES,
+        Permission.MANAGE_ROOMS,
+        Permission.READ_ROOMS,
+        Permission.IMPORT_ROOMS,
+        Permission.EXPORT_ROOMS,
         Permission.MANAGE_BOOKINGS,
         Permission.MANAGE_WAITLIST,
         Permission.MANAGE_STUDENTS,

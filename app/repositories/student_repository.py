@@ -17,11 +17,35 @@ def list_students(
     room: Optional[str] = None,
     payment_status: Optional[str] = None,
     attendance_status: Optional[str] = None,
+    student_id: Optional[str] = None,
+    student_email: Optional[str] = None,
+    student_phone: Optional[str] = None,
+    hostel_id: Optional[int] = None,
+    bed: Optional[str] = None,
+    status: Optional[str] = None,
+    checkin_from: Optional[date] = None,
+    checkin_to: Optional[date] = None,
+    sort_by: Optional[str] = None,
+    sort_order: Optional[str] = "asc",
+    payment_due_min: Optional[float] = None,
+    payment_due_max: Optional[float] = None,
+    attendance_pct_lt: Optional[float] = None,
+    attendance_pct_gt: Optional[float] = None,
+    complaint_count_lt: Optional[int] = None,
+    complaint_count_gt: Optional[int] = None,
+    user_hostel_ids: Optional[List[int]] = None,
+    active_hostel_id: Optional[int] = None,
 ) -> List[Student]:
     query = db.query(Student)
     
     if name:
         query = query.filter(Student.student_name.ilike(f"%{name}%"))
+    if student_id:
+        query = query.filter(Student.student_id.ilike(f"%{student_id}%"))
+    if student_email:
+        query = query.filter(Student.student_email.ilike(f"%{student_email}%"))
+    if student_phone:
+        query = query.filter(Student.student_phone.ilike(f"%{student_phone}%"))
     if room:
         # support numeric room ids as well as room_number strings
         try:
@@ -29,6 +53,16 @@ def list_students(
             query = query.filter(Student.room_id == room_id_val)
         except Exception:
             query = query.filter(Student.room_assignment == room)
+    if bed:
+        query = query.filter(Student.bed_assignment == bed)
+    if hostel_id:
+        query = query.filter(Student.hostel_id == hostel_id)
+    if status:
+        query = query.filter(Student.status == status)
+    if checkin_from:
+        query = query.filter(Student.check_in_date >= checkin_from)
+    if checkin_to:
+        query = query.filter(Student.check_in_date <= checkin_to)
     if payment_status:
         query = query.filter(
             db.query(StudentPayment.id)
@@ -41,8 +75,22 @@ def list_students(
               .filter(Attendance.student_id == Student.student_id, Attendance.status == attendance_status)
               .exists()
         )
+    
+    # Tenant filtering (if user_hostel_ids provided)
+    if user_hostel_ids:
+        query = query.filter(Student.hostel_id.in_(user_hostel_ids))
+    
+    # Sort
+    if sort_by:
+        sort_col = getattr(Student, sort_by, Student.student_id)
+        if sort_order and sort_order.lower() == "desc":
+            query = query.order_by(sort_col.desc())
+        else:
+            query = query.order_by(sort_col.asc())
+    else:
+        query = query.order_by(Student.student_id)
 
-    return query.order_by(Student.student_id).offset(skip).limit(limit).all()
+    return query.offset(skip).limit(limit).all()
 
 
 def get_student(db: Session, student_id: str) -> Optional[Student]:
