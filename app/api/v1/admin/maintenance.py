@@ -8,8 +8,10 @@ from sqlalchemy import desc, func
 from typing import Optional
 from datetime import datetime
 from app.core.database import get_db
-from app.dependencies import get_current_user
+from app.core.security import get_current_user
+from app.models.user import User
 from app.core.roles import Role
+from app.api.deps import role_required
 from app.models.maintenance import MaintenanceRequest
 from app.schemas.maintenance_schema import MaintenanceCreate, MaintenanceUpdate, MaintenanceOut
 
@@ -20,15 +22,21 @@ def create_maintenance_request(
     data: MaintenanceCreate,
     hostel_id: int = Query(..., description="Hostel ID"),
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
 ):
     """Log a new maintenance request with categorization, priority, photo uploads, cost estimation"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
+    # Validate hostel exists
+    from app.models.hostel import Hostel
+    hostel = db.query(Hostel).filter(Hostel.id == hostel_id).first()
+    if not hostel:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Hostel with id {hostel_id} not found"
+        )
     
     request = MaintenanceRequest(
         hostel_id=hostel_id,
-        created_by_id=user.get("id"),
+        created_by_id=user.id,
         category=data.category,
         priority=data.priority,
         description=data.description,
@@ -54,11 +62,9 @@ def get_maintenance_requests(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
 ):
     """Get maintenance requests with filtering by category, priority, status, assignment"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
     
     query = db.query(MaintenanceRequest)
     
@@ -100,11 +106,9 @@ def get_maintenance_requests(
 def get_maintenance_request(
     request_id: int,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
 ):
     """Get a specific maintenance request by ID"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
     
     request = db.query(MaintenanceRequest).filter(MaintenanceRequest.id == request_id).first()
     if not request:
@@ -134,11 +138,9 @@ def update_maintenance_request(
     request_id: int,
     data: MaintenanceUpdate,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
 ):
     """Update maintenance request status, priority, assignment, costs"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
     
     request = db.query(MaintenanceRequest).filter(MaintenanceRequest.id == request_id).first()
     if not request:
@@ -168,11 +170,9 @@ def update_maintenance_request(
 def delete_maintenance_request(
     request_id: int,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
 ):
     """Delete a maintenance request"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
     
     request = db.query(MaintenanceRequest).filter(MaintenanceRequest.id == request_id).first()
     if not request:
@@ -186,11 +186,9 @@ def delete_maintenance_request(
 def get_maintenance_stats(
     hostel_id: Optional[int] = None,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
 ):
     """Get maintenance request statistics and analytics"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
     
     query = db.query(MaintenanceRequest)
     if hostel_id:

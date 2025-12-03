@@ -8,8 +8,10 @@ from sqlalchemy import desc
 from typing import Optional
 from datetime import datetime
 from app.core.database import get_db
-from app.dependencies import get_current_user
+from app.core.security import get_current_user
+from app.models.user import User
 from app.core.roles import Role
+from app.api.deps import role_required
 from app.models.maintenance import MaintenanceTask, MaintenanceRequest
 from app.schemas.maintenance_schema import MaintenanceTaskCreate, MaintenanceTaskUpdate, MaintenanceTaskOut
 
@@ -19,18 +21,30 @@ router = APIRouter(prefix="/maintenance/tasks", tags=["Admin Maintenance Tasks"]
 def create_maintenance_task(
     data: MaintenanceTaskCreate,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
 ):
     """Assign maintenance task to staff or vendor with tracking"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
     
     # Verify maintenance request exists
     request = db.query(MaintenanceRequest).filter(
         MaintenanceRequest.id == data.maintenance_request_id
     ).first()
     if not request:
-        raise HTTPException(404, "Maintenance request not found")
+        raise HTTPException(
+            status_code=404, 
+            detail=f"Maintenance request with id {data.maintenance_request_id} not found"
+        )
+    
+    # Validate assigned user exists
+    from app.models.user import User as UserModel
+    assigned_user = db.query(UserModel).filter(
+        UserModel.id == data.assigned_to_id
+    ).first()
+    if not assigned_user:
+        raise HTTPException(
+            status_code=404,
+            detail=f"User with id {data.assigned_to_id} not found"
+        )
     
     task = MaintenanceTask(
         maintenance_request_id=data.maintenance_request_id,
@@ -67,11 +81,9 @@ def get_maintenance_tasks(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
 ):
     """Get maintenance tasks with filtering"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
     
     query = db.query(MaintenanceTask)
     
@@ -114,11 +126,9 @@ def get_maintenance_tasks(
 def get_maintenance_task(
     task_id: int,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
 ):
     """Get specific maintenance task details"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
     
     task = db.query(MaintenanceTask).filter(MaintenanceTask.id == task_id).first()
     if not task:
@@ -151,11 +161,9 @@ def update_task_progress(
     task_id: int,
     data: MaintenanceTaskUpdate,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
 ):
     """Update task progress, status, and completion details"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
     
     task = db.query(MaintenanceTask).filter(MaintenanceTask.id == task_id).first()
     if not task:
@@ -186,12 +194,9 @@ def verify_task_completion(
     quality_rating: int = Query(..., ge=1, le=5, description="Quality rating 1-5"),
     verification_notes: Optional[str] = None,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
 ):
     """Verify task completion with quality check"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
-    
     task = db.query(MaintenanceTask).filter(MaintenanceTask.id == task_id).first()
     if not task:
         raise HTTPException(404, "Task not found")
@@ -202,7 +207,7 @@ def verify_task_completion(
     task.status = "VERIFIED"
     task.quality_rating = quality_rating
     task.verification_notes = verification_notes
-    task.verified_by_id = user.get("id")
+    task.verified_by_id = user.id
     task.verified_date = datetime.now()
     
     # Update maintenance request status
@@ -226,11 +231,9 @@ def reassign_task(
     new_assigned_to_id: int = Query(..., description="New staff/vendor ID"),
     reason: Optional[str] = None,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
 ):
     """Reassign task to different staff or vendor"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
     
     task = db.query(MaintenanceTask).filter(MaintenanceTask.id == task_id).first()
     if not task:
@@ -259,11 +262,9 @@ def reassign_task(
 def delete_task(
     task_id: int,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
 ):
     """Delete a maintenance task"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
     
     task = db.query(MaintenanceTask).filter(MaintenanceTask.id == task_id).first()
     if not task:

@@ -4,19 +4,26 @@ from sqlalchemy import func, desc
 from typing import Optional
 from datetime import datetime, timedelta
 from app.core.database import get_db
-from app.dependencies import get_current_user
+from app.core.security import get_current_user
+from app.models.user import User
 from app.core.roles import Role
+from app.api.deps import role_required
 from app.models.review import Review
 
 router = APIRouter(prefix="/reviews", tags=["Admin Reviews"])
 
 @router.get("/reviews")
-def get_reviews(hostel_id: Optional[int] = None, status: Optional[str] = None, 
-                rating: Optional[int] = None, is_spam: Optional[bool] = None,
-                skip: int = 0, limit: int = 100, sort_by: str = "newest",
-                db: Session = Depends(get_db), user=Depends(get_current_user)):
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
+def get_reviews(
+    hostel_id: Optional[int] = None, 
+    status: Optional[str] = None, 
+    rating: Optional[int] = None, 
+    is_spam: Optional[bool] = None,
+    skip: int = 0, 
+    limit: int = 100, 
+    sort_by: str = "newest",
+    db: Session = Depends(get_db), 
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
+):
     
     query = db.query(Review)
     
@@ -51,10 +58,13 @@ def get_reviews(hostel_id: Optional[int] = None, status: Optional[str] = None,
                         "helpful_count": r.helpful_count, "created_at": r.created_at} for r in reviews]}
 
 @router.get("/reviews/pending")
-def get_pending_reviews(skip: int = 0, limit: int = 50, db: Session = Depends(get_db), user=Depends(get_current_user)):
+def get_pending_reviews(
+    skip: int = 0, 
+    limit: int = 50, 
+    db: Session = Depends(get_db), 
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
+):
     """Get reviews pending moderation"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
     
     reviews = db.query(Review).filter(
         Review.is_approved == False,
@@ -66,11 +76,14 @@ def get_pending_reviews(skip: int = 0, limit: int = 50, db: Session = Depends(ge
                         "created_at": r.created_at} for r in reviews]}
 
 @router.put("/reviews/{review_id}/moderate")
-def moderate_review(review_id: int, action: str, reason: Optional[str] = None, 
-                   db: Session = Depends(get_db), user=Depends(get_current_user)):
+def moderate_review(
+    review_id: int, 
+    action: str, 
+    reason: Optional[str] = None, 
+    db: Session = Depends(get_db), 
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
+):
     """Comprehensive review moderation with spam detection"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
     
     review = db.query(Review).filter(Review.id == review_id).first()
     if not review:
@@ -93,21 +106,26 @@ def moderate_review(review_id: int, action: str, reason: Optional[str] = None,
     return {"ok": True, "action": action}
 
 @router.get("/reviews/spam")
-def get_spam_reviews(skip: int = 0, limit: int = 50, db: Session = Depends(get_db), user=Depends(get_current_user)):
+def get_spam_reviews(
+    skip: int = 0, 
+    limit: int = 50, 
+    db: Session = Depends(get_db), 
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
+):
     """Get reviews marked as spam"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
     
     reviews = db.query(Review).filter(Review.is_spam == True).offset(skip).limit(limit).all()
     return {"reviews": [{"id": r.id, "hostel_id": r.hostel_id, "rating": r.rating, 
                         "text": r.text, "created_at": r.created_at} for r in reviews]}
 
 @router.get("/reviews/analytics")
-def get_review_analytics(hostel_id: Optional[int] = None, days: int = 30, 
-                        db: Session = Depends(get_db), user=Depends(get_current_user)):
+def get_review_analytics(
+    hostel_id: Optional[int] = None, 
+    days: int = 30, 
+    db: Session = Depends(get_db), 
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
+):
     """Get review analytics and insights"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
     
     start_date = datetime.now() - timedelta(days=days)
     
@@ -140,9 +158,11 @@ def get_review_analytics(hostel_id: Optional[int] = None, days: int = 30,
     }
 
 @router.delete("/reviews/{review_id}")
-def delete_review(review_id: int, db: Session = Depends(get_db), user=Depends(get_current_user)):
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
+def delete_review(
+    review_id: int, 
+    db: Session = Depends(get_db), 
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
+):
     
     review = db.query(Review).filter(Review.id == review_id).first()
     if not review:

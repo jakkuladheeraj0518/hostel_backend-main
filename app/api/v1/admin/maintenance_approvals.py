@@ -8,8 +8,10 @@ from sqlalchemy import desc
 from typing import Optional
 from datetime import datetime
 from app.core.database import get_db
-from app.dependencies import get_current_user
+from app.core.security import get_current_user
+from app.models.user import User
 from app.core.roles import Role
+from app.api.deps import role_required
 from app.models.maintenance import MaintenanceRequest
 
 router = APIRouter(prefix="/maintenance/approvals", tags=["Admin Maintenance Approvals"])
@@ -19,11 +21,9 @@ HIGH_VALUE_THRESHOLD = 5000.0  # Default threshold in currency units
 
 @router.get("/threshold")
 def get_approval_threshold(
-    user=Depends(get_current_user)
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
 ):
     """Get the current high-value repair threshold"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
     
     return {
         "threshold": HIGH_VALUE_THRESHOLD,
@@ -37,11 +37,9 @@ def get_pending_approvals(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
 ):
     """Get maintenance requests pending approval (high-value repairs)"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
     
     query = db.query(MaintenanceRequest).filter(
         MaintenanceRequest.approved == False,
@@ -80,12 +78,9 @@ def submit_for_approval(
     request_id: int = Query(..., description="Maintenance request ID"),
     justification: Optional[str] = Query(None, description="Justification for high-value repair"),
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN, Role.SUPERVISOR))
 ):
     """Submit a maintenance request for admin approval (supervisor action)"""
-    # Supervisors can submit for approval
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN, "SUPERVISOR"]:
-        raise HTTPException(403, "Forbidden")
     
     request = db.query(MaintenanceRequest).filter(MaintenanceRequest.id == request_id).first()
     if not request:
@@ -115,12 +110,9 @@ def approve_high_value_repair(
     request_id: int,
     approval_notes: Optional[str] = Query(None, description="Admin approval notes"),
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
 ):
     """Approve a high-value maintenance repair (admin only)"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Only admins can approve high-value repairs")
-    
     request = db.query(MaintenanceRequest).filter(MaintenanceRequest.id == request_id).first()
     if not request:
         raise HTTPException(404, "Maintenance request not found")
@@ -137,7 +129,7 @@ def approve_high_value_repair(
         "message": "High-value repair approved",
         "request_id": request_id,
         "est_cost": request.est_cost,
-        "approved_by_id": user.get("id"),
+        "approved_by_id": user.id,
         "approval_notes": approval_notes
     }
 
@@ -146,12 +138,9 @@ def reject_high_value_repair(
     request_id: int,
     rejection_reason: str = Query(..., description="Reason for rejection"),
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
 ):
     """Reject a high-value maintenance repair (admin only)"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Only admins can reject high-value repairs")
-    
     request = db.query(MaintenanceRequest).filter(MaintenanceRequest.id == request_id).first()
     if not request:
         raise HTTPException(404, "Maintenance request not found")
@@ -168,7 +157,7 @@ def reject_high_value_repair(
         "message": "High-value repair rejected",
         "request_id": request_id,
         "est_cost": request.est_cost,
-        "rejected_by_id": user.get("id"),
+        "rejected_by_id": user.id,
         "rejection_reason": rejection_reason
     }
 
@@ -179,11 +168,9 @@ def get_approval_history(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
 ):
     """Get approval history for high-value repairs"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
     
     query = db.query(MaintenanceRequest).filter(
         MaintenanceRequest.est_cost >= HIGH_VALUE_THRESHOLD
@@ -227,11 +214,9 @@ def get_approval_history(
 def get_approval_stats(
     hostel_id: Optional[int] = None,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
 ):
     """Get statistics for approval workflow"""
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
     
     query = db.query(MaintenanceRequest).filter(
         MaintenanceRequest.est_cost >= HIGH_VALUE_THRESHOLD

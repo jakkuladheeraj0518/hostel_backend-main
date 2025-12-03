@@ -3,8 +3,10 @@ from sqlalchemy.orm import Session
 from typing import Optional
 from datetime import datetime, date, timedelta
 from app.core.database import get_db
-from app.dependencies import get_current_user
+from app.core.security import get_current_user
+from app.models.user import User
 from app.core.roles import Role
+from app.api.deps import role_required
 from app.schemas.preventive_maintenance_schema import PreventiveMaintenanceScheduleCreate, PreventiveMaintenanceTaskCreate, PreventiveMaintenanceTaskUpdate
 from app.models.preventive_maintenance import PreventiveMaintenanceSchedule, PreventiveMaintenanceTask
 
@@ -14,10 +16,26 @@ from app.models.preventive_maintenance import PreventiveMaintenanceSchedule, Pre
 router = APIRouter(prefix="/preventive-maintenance", tags=["Admin Preventive Maintenance"])
 
 @router.post("/preventive-maintenance/schedules")
-def create_preventive_schedule(schedule_data: PreventiveMaintenanceScheduleCreate, 
-                              db: Session = Depends(get_db), user=Depends(get_current_user)):
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
+def create_preventive_schedule(
+    schedule_data: PreventiveMaintenanceScheduleCreate, 
+    db: Session = Depends(get_db), 
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
+):
+    # Validate hostel exists
+    from app.models.hostel import Hostel
+    hostel = db.query(Hostel).filter(Hostel.id == schedule_data.hostel_id).first()
+    if not hostel:
+        raise HTTPException(
+            status_code=404, 
+            detail=f"Hostel with id {schedule_data.hostel_id} not found"
+        )
+    
+    # Validate frequency_days is positive
+    if schedule_data.frequency_days <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Frequency days must be greater than 0"
+        )
     
     schedule = PreventiveMaintenanceSchedule(
         hostel_id=schedule_data.hostel_id,
@@ -29,14 +47,16 @@ def create_preventive_schedule(schedule_data: PreventiveMaintenanceScheduleCreat
     db.add(schedule)
     db.commit()
     db.refresh(schedule)
-    return {"id": schedule.id}
+    return {"id": schedule.id, "message": "Preventive maintenance schedule created successfully"}
 
 
 
 @router.get("/preventive-maintenance/schedules")
-def get_preventive_schedules(hostel_id: Optional[int] = None, db: Session = Depends(get_db), user=Depends(get_current_user)):
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
+def get_preventive_schedules(
+    hostel_id: Optional[int] = None, 
+    db: Session = Depends(get_db), 
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
+):
     
     query = db.query(PreventiveMaintenanceSchedule).filter(PreventiveMaintenanceSchedule.is_active == True)
     if hostel_id:
@@ -50,10 +70,12 @@ def get_preventive_schedules(hostel_id: Optional[int] = None, db: Session = Depe
 
 
 @router.get("/preventive-maintenance/due")
-def get_due_preventive_maintenance(days_ahead: int = 7, hostel_id: Optional[int] = None, 
-                                  db: Session = Depends(get_db), user=Depends(get_current_user)):
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
+def get_due_preventive_maintenance(
+    days_ahead: int = 7, 
+    hostel_id: Optional[int] = None, 
+    db: Session = Depends(get_db), 
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
+):
     
     from datetime import date, timedelta
     due_date = date.today() + timedelta(days=days_ahead)
@@ -72,10 +94,32 @@ def get_due_preventive_maintenance(days_ahead: int = 7, hostel_id: Optional[int]
 
 
 @router.post("/preventive-maintenance/tasks")
-def create_preventive_task(task_data: PreventiveMaintenanceTaskCreate, 
-                          db: Session = Depends(get_db), user=Depends(get_current_user)):
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
+def create_preventive_task(
+    task_data: PreventiveMaintenanceTaskCreate, 
+    db: Session = Depends(get_db), 
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
+):
+    # Validate schedule exists
+    schedule = db.query(PreventiveMaintenanceSchedule).filter(
+        PreventiveMaintenanceSchedule.id == task_data.schedule_id
+    ).first()
+    if not schedule:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Preventive maintenance schedule with id {task_data.schedule_id} not found"
+        )
+    
+    # Validate assigned user exists if provided
+    if task_data.assigned_to_id:
+        from app.models.user import User as UserModel
+        assigned_user = db.query(UserModel).filter(
+            UserModel.id == task_data.assigned_to_id
+        ).first()
+        if not assigned_user:
+            raise HTTPException(
+                status_code=404,
+                detail=f"User with id {task_data.assigned_to_id} not found"
+            )
     
     task = PreventiveMaintenanceTask(
         schedule_id=task_data.schedule_id,
@@ -85,15 +129,17 @@ def create_preventive_task(task_data: PreventiveMaintenanceTaskCreate,
     db.add(task)
     db.commit()
     db.refresh(task)
-    return {"id": task.id}
+    return {"id": task.id, "message": "Preventive maintenance task created successfully"}
 
 
 
 @router.put("/preventive-maintenance/tasks/{task_id}")
-def update_preventive_task(task_id: int, task_data: PreventiveMaintenanceTaskUpdate, 
-                          db: Session = Depends(get_db), user=Depends(get_current_user)):
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
+def update_preventive_task(
+    task_id: int, 
+    task_data: PreventiveMaintenanceTaskUpdate, 
+    db: Session = Depends(get_db), 
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
+):
     
     task = db.query(PreventiveMaintenanceTask).filter(PreventiveMaintenanceTask.id == task_id).first()
     if not task:

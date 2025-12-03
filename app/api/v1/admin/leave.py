@@ -2,8 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import Optional
 from app.core.database import get_db
-from app.dependencies import get_current_user
+from app.core.security import get_current_user
+from app.models.user import User
 from app.core.roles import Role
+from app.api.deps import role_required
 from app.models.leave import LeaveRequest
 
 
@@ -12,10 +14,14 @@ from app.models.leave import LeaveRequest
 router = APIRouter()  # No prefix/tags here - set in main.py registration
 
 @router.get("/leave/requests")
-def get_leave_requests(hostel_id: Optional[int] = None, status: Optional[str] = None, 
-                      skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user=Depends(get_current_user)):
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
+def get_leave_requests(
+    hostel_id: Optional[int] = None, 
+    status: Optional[str] = None, 
+    skip: int = 0, 
+    limit: int = 100, 
+    db: Session = Depends(get_db), 
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
+):
     
     query = db.query(LeaveRequest)
     if hostel_id:
@@ -31,9 +37,12 @@ def get_leave_requests(hostel_id: Optional[int] = None, status: Optional[str] = 
 
 
 @router.put("/leave/requests/{request_id}/status")
-def update_leave_request_status(request_id: int, status: str, db: Session = Depends(get_db), user=Depends(get_current_user)):
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
+def update_leave_request_status(
+    request_id: int, 
+    status: str, 
+    db: Session = Depends(get_db), 
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
+):
     
     request = db.query(LeaveRequest).filter(LeaveRequest.id == request_id).first()
     if not request:

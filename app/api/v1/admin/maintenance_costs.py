@@ -1,10 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import desc
 from typing import Optional
 from datetime import datetime
 from app.core.database import get_db
-from app.dependencies import get_current_user
+from app.core.security import get_current_user
+from app.models.user import User
 from app.core.roles import Role
+from app.api.deps import role_required
 from app.models.maintenance import MaintenanceCost
 
 
@@ -13,12 +16,17 @@ from app.models.maintenance import MaintenanceCost
 router = APIRouter(prefix="/maintenance-costs", tags=["Admin Maintenance Costs"])
 
 @router.get("/maintenance/costs")
-def get_all_maintenance_costs(hostel_id: Optional[int] = None, category: Optional[str] = None,
-                            payment_status: Optional[str] = None, start_date: Optional[str] = None,
-                            end_date: Optional[str] = None, skip: int = 0, limit: int = 100,
-                            db: Session = Depends(get_db), user=Depends(get_current_user)):
-    if user.get("role") not in [Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(403, "Forbidden")
+def get_all_maintenance_costs(
+    hostel_id: Optional[int] = None, 
+    category: Optional[str] = None,
+    payment_status: Optional[str] = None, 
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None, 
+    skip: int = 0, 
+    limit: int = 100,
+    db: Session = Depends(get_db), 
+    user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN))
+):
     
     from app.models.maintenance import MaintenanceCost
     query = db.query(MaintenanceCost)

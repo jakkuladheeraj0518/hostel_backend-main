@@ -5,21 +5,27 @@ Integrated from hemantPawade.zip - provides review submission and management for
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.dependencies import get_current_user
+from app.core.security import get_current_user
+from app.models.user import User
 from app.models.review import Review
 from app.schemas.review_schema import ReviewCreate
 from app.utils.content_filter import detect_spam, detect_inappropriate_content, content_quality_score
+from app.api.deps import role_required
+from app.core.roles import Role
 
 router = APIRouter(prefix="/student/reviews", tags=["Student Reviews"])
 
 @router.post("/{hostel_id}")
-def post_review(hostel_id: int, body: ReviewCreate, db: Session = Depends(get_db), user=Depends(get_current_user)):
+def post_review(
+    hostel_id: int, 
+    body: ReviewCreate, 
+    db: Session = Depends(get_db), 
+    user: User = Depends(role_required(Role.STUDENT))
+):
     """Submit a review for a hostel with automatic spam and content filtering"""
-    if user.get("role") != "STUDENT":
-        raise HTTPException(403, "Only students can post reviews")
     
     # Check if student already reviewed this hostel
-    existing = db.query(Review).filter(Review.hostel_id == hostel_id, Review.student_id == user.get("id")).first()
+    existing = db.query(Review).filter(Review.hostel_id == hostel_id, Review.student_id == user.id).first()
     if existing:
         raise HTTPException(400, "You have already reviewed this hostel")
     
@@ -36,7 +42,7 @@ def post_review(hostel_id: int, body: ReviewCreate, db: Session = Depends(get_db
     
     r = Review(
         hostel_id=hostel_id, 
-        student_id=user.get("id"), 
+        student_id=user.id, 
         rating=body.rating, 
         text=body.text, 
         photo_url=body.photo_url,
@@ -53,22 +59,24 @@ def post_review(hostel_id: int, body: ReviewCreate, db: Session = Depends(get_db
     return {"id": r.id, "message": message, "auto_approved": auto_approve}
 
 @router.get("/my")
-def get_my_reviews(db: Session = Depends(get_db), user=Depends(get_current_user)):
+def get_my_reviews(
+    db: Session = Depends(get_db), 
+    user: User = Depends(role_required(Role.STUDENT))
+):
     """Get all reviews submitted by the current student"""
-    if user.get("role") != "STUDENT":
-        raise HTTPException(403, "Only students can access this")
-    
-    reviews = db.query(Review).filter(Review.student_id == user.get("id")).all()
+    reviews = db.query(Review).filter(Review.student_id == user.id).all()
     return {"reviews": [{"id": r.id, "hostel_id": r.hostel_id, "rating": r.rating, "text": r.text, 
                         "is_approved": r.is_approved, "helpful_count": r.helpful_count} for r in reviews]}
 
 @router.put("/{review_id}")
-def update_review(review_id: int, body: ReviewCreate, db: Session = Depends(get_db), user=Depends(get_current_user)):
+def update_review(
+    review_id: int, 
+    body: ReviewCreate, 
+    db: Session = Depends(get_db), 
+    user: User = Depends(role_required(Role.STUDENT))
+):
     """Update an existing review"""
-    if user.get("role") != "STUDENT":
-        raise HTTPException(403, "Only students can update reviews")
-    
-    review = db.query(Review).filter(Review.id == review_id, Review.student_id == user.get("id")).first()
+    review = db.query(Review).filter(Review.id == review_id, Review.student_id == user.id).first()
     if not review:
         raise HTTPException(404, "Review not found or not owned by you")
     
@@ -80,11 +88,12 @@ def update_review(review_id: int, body: ReviewCreate, db: Session = Depends(get_
     return {"ok": True}
 
 @router.post("/{review_id}/helpful")
-def mark_review_helpful(review_id: int, db: Session = Depends(get_db), user=Depends(get_current_user)):
+def mark_review_helpful(
+    review_id: int, 
+    db: Session = Depends(get_db), 
+    user: User = Depends(role_required(Role.STUDENT))
+):
     """Mark a review as helpful"""
-    if user.get("role") != "STUDENT":
-        raise HTTPException(403, "Only students can mark reviews as helpful")
-    
     review = db.query(Review).filter(Review.id == review_id).first()
     if not review:
         raise HTTPException(404, "Review not found")
@@ -96,14 +105,14 @@ def mark_review_helpful(review_id: int, db: Session = Depends(get_db), user=Depe
     from app.models.review import ReviewHelpful
     existing = db.query(ReviewHelpful).filter(
         ReviewHelpful.review_id == review_id,
-        ReviewHelpful.user_id == user.get("id")
+        ReviewHelpful.user_id == user.id
     ).first()
     
     if existing:
         raise HTTPException(400, "You have already marked this review as helpful")
     
     # Add helpful vote
-    helpful_vote = ReviewHelpful(review_id=review_id, user_id=user.get("id"))
+    helpful_vote = ReviewHelpful(review_id=review_id, user_id=user.id)
     db.add(helpful_vote)
     
     # Update helpful count
@@ -112,12 +121,13 @@ def mark_review_helpful(review_id: int, db: Session = Depends(get_db), user=Depe
     return {"ok": True, "helpful_count": review.helpful_count}
 
 @router.delete("/{review_id}")
-def delete_my_review(review_id: int, db: Session = Depends(get_db), user=Depends(get_current_user)):
+def delete_my_review(
+    review_id: int, 
+    db: Session = Depends(get_db), 
+    user: User = Depends(role_required(Role.STUDENT))
+):
     """Delete a review"""
-    if user.get("role") != "STUDENT":
-        raise HTTPException(403, "Only students can delete their reviews")
-    
-    review = db.query(Review).filter(Review.id == review_id, Review.student_id == user.get("id")).first()
+    review = db.query(Review).filter(Review.id == review_id, Review.student_id == user.id).first()
     if not review:
         raise HTTPException(404, "Review not found or not owned by you")
     
@@ -126,14 +136,15 @@ def delete_my_review(review_id: int, db: Session = Depends(get_db), user=Depends
     return {"ok": True}
 
 @router.get("/can-review/{hostel_id}")
-def can_review_hostel(hostel_id: int, db: Session = Depends(get_db), user=Depends(get_current_user)):
+def can_review_hostel(
+    hostel_id: int, 
+    db: Session = Depends(get_db), 
+    user: User = Depends(role_required(Role.STUDENT))
+):
     """Check if student can review a specific hostel"""
-    if user.get("role") != "STUDENT":
-        raise HTTPException(403, "Only students can check review eligibility")
-    
     existing = db.query(Review).filter(
         Review.hostel_id == hostel_id, 
-        Review.student_id == user.get("id")
+        Review.student_id == user.id
     ).first()
     
     return {"can_review": existing is None, "has_existing_review": existing is not None}

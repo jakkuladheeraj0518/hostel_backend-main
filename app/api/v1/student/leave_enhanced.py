@@ -7,25 +7,28 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, extract
 from datetime import datetime
 from app.core.database import get_db
-from app.dependencies import get_current_user
+from app.core.security import get_current_user
+from app.models.user import User
 from app.models.leave import LeaveRequest
 from app.schemas.leave_schema import LeaveCreate
+from app.api.deps import role_required
+from app.core.roles import Role
 
 router = APIRouter(prefix="/student/leave-enhanced", tags=["Student Leave Enhanced"])
 
 @router.get("/balance")
-def get_leave_balance(db: Session = Depends(get_db), user=Depends(get_current_user)):
+def get_leave_balance(
+    db: Session = Depends(get_db), 
+    user: User = Depends(role_required(Role.STUDENT))
+):
     """Get student's leave balance and usage statistics"""
-    if user.get("role") != "STUDENT":
-        raise HTTPException(403, "Only students can access this")
-    
     # Calculate leave usage for current year
     current_year = datetime.now().year
     
     # Get all approved leave requests for current year
     approved_leaves = db.query(LeaveRequest).filter(
         and_(
-            LeaveRequest.student_id == user.get("id"),
+            LeaveRequest.student_id == user.id,
             LeaveRequest.status == "APPROVED",
             extract('year', LeaveRequest.start_date) == current_year
         )
@@ -45,7 +48,7 @@ def get_leave_balance(db: Session = Depends(get_db), user=Depends(get_current_us
     # Get pending requests
     pending_requests = db.query(LeaveRequest).filter(
         and_(
-            LeaveRequest.student_id == user.get("id"),
+            LeaveRequest.student_id == user.id,
             LeaveRequest.status == "PENDING",
             extract('year', LeaveRequest.start_date) == current_year
         )
@@ -60,14 +63,16 @@ def get_leave_balance(db: Session = Depends(get_db), user=Depends(get_current_us
     }
 
 @router.post("/apply")
-def apply_leave(leave_data: LeaveCreate, hostel_id: int, db: Session = Depends(get_db), user=Depends(get_current_user)):
+def apply_leave(
+    leave_data: LeaveCreate, 
+    hostel_id: int, 
+    db: Session = Depends(get_db), 
+    user: User = Depends(role_required(Role.STUDENT))
+):
     """Apply for leave"""
-    if user.get("role") != "STUDENT":
-        raise HTTPException(403, "Only students can apply for leave")
-    
     leave_request = LeaveRequest(
         hostel_id=hostel_id,
-        student_id=user.get("id"),
+        student_id=user.id,
         start_date=leave_data.start,
         end_date=leave_data.end,
         reason=leave_data.reason
@@ -78,22 +83,23 @@ def apply_leave(leave_data: LeaveCreate, hostel_id: int, db: Session = Depends(g
     return {"id": leave_request.id}
 
 @router.get("/my")
-def get_my_leave_requests(db: Session = Depends(get_db), user=Depends(get_current_user)):
+def get_my_leave_requests(
+    db: Session = Depends(get_db), 
+    user: User = Depends(role_required(Role.STUDENT))
+):
     """Get all leave requests for current student"""
-    if user.get("role") != "STUDENT":
-        raise HTTPException(403, "Only students can access this")
-    
-    requests = db.query(LeaveRequest).filter(LeaveRequest.student_id == user.get("id")).all()
+    requests = db.query(LeaveRequest).filter(LeaveRequest.student_id == user.id).all()
     return {"requests": [{"id": r.id, "hostel_id": r.hostel_id, "start_date": r.start_date, 
                          "end_date": r.end_date, "reason": r.reason, "status": r.status} for r in requests]}
 
 @router.put("/{request_id}/cancel")
-def cancel_leave_request(request_id: int, db: Session = Depends(get_db), user=Depends(get_current_user)):
+def cancel_leave_request(
+    request_id: int, 
+    db: Session = Depends(get_db), 
+    user: User = Depends(role_required(Role.STUDENT))
+):
     """Cancel a pending leave request"""
-    if user.get("role") != "STUDENT":
-        raise HTTPException(403, "Only students can cancel their leave")
-    
-    request = db.query(LeaveRequest).filter(LeaveRequest.id == request_id, LeaveRequest.student_id == user.get("id")).first()
+    request = db.query(LeaveRequest).filter(LeaveRequest.id == request_id, LeaveRequest.student_id == user.id).first()
     if not request:
         raise HTTPException(404, "Leave request not found or not owned by you")
     
