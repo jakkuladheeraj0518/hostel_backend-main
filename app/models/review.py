@@ -1,16 +1,17 @@
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import ForeignKey, Integer, String, Boolean, Text, DateTime, func
 from datetime import datetime
+from typing import Optional
 from app.config import Base
 
 class Review(Base):
     __tablename__ = "reviews"
     id: Mapped[int] = mapped_column(primary_key=True)
     hostel_id: Mapped[int] = mapped_column(ForeignKey("hostels.id", ondelete="CASCADE"), index=True)
-    student_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    student_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)
     rating: Mapped[int] = mapped_column(Integer)
     text: Mapped[str] = mapped_column(Text)
-    photo_url: Mapped[str | None] = mapped_column(String(512))
+    photo_url: Mapped[Optional[str]] = mapped_column(String(512))
     is_approved: Mapped[bool] = mapped_column(Boolean, default=False)
     helpful_count: Mapped[int] = mapped_column(Integer, default=0)
     is_spam: Mapped[bool] = mapped_column(Boolean, default=False)

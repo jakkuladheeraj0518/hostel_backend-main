@@ -9,6 +9,7 @@ from datetime import timedelta
 
 from app.core.database import get_db
 from app.core.security import verify_password, create_access_token, create_refresh_token
+from app.core.roles import Role
 from app.models.user import User
 from app.config import get_settings
 
@@ -37,18 +38,18 @@ async def supervisor_login(
         )
     
     # Verify password
-    if not verify_password(password, user.password):
+    if not verify_password(password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password"
         )
     
-    # Check if user is supervisor, admin, or super_admin
-    allowed_types = ["supervisor", "admin", "super_admin"]
-    if user.user_type not in allowed_types:
+    # Check if user is supervisor, admin, or superadmin - ROLE-BASED AUTHENTICATION
+    allowed_roles = [Role.SUPERVISOR.value, Role.ADMIN.value, Role.SUPERADMIN.value]
+    if user.role not in allowed_roles:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Supervisor access required"
+            detail=f"Supervisor access required. Your role: {user.role}"
         )
     
     # Check if user is active
@@ -61,7 +62,7 @@ async def supervisor_login(
     # Create access token
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": str(user.id), "email": user.email, "user_type": user.user_type},
+        data={"sub": str(user.id), "email": user.email, "role": user.role},
         expires_delta=access_token_expires
     )
     
@@ -82,7 +83,7 @@ async def supervisor_login(
             "name": user.name,
             "email": user.email,
             "phone": user.phone,
-            "user_type": user.user_type,
+            "role": user.role,
             "hostel_id": str(user.hostel_id) if user.hostel_id else None,
             "is_active": user.is_active,
             "is_verified": user.is_verified

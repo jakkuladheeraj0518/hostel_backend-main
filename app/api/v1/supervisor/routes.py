@@ -11,22 +11,24 @@ from datetime import datetime, date
 
 from app.core.database import get_db
 from app.core.security import get_current_user
+from app.core.roles import Role
+from app.api.deps import role_required
 from app.models.user import User
 from app.models.complaint import Complaint
-from app.models.reports import Attendance  # Use Attendance from reports (the one exported in __init__)
+from app.models.reports import Attendance  # Use Attendance from reports (now with attendance_date field)
 from app.models.leave import LeaveRequest  # Correct model name
 
 router = APIRouter()
 
 
 def get_supervisor_user(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Verify current user is a supervisor, admin, or super_admin"""
-    allowed_types = ["supervisor", "admin", "super_admin"]
+    """Verify current user is a supervisor, admin, or superadmin - ROLE-BASED AUTHENTICATION"""
+    allowed_roles = [Role.SUPERVISOR.value, Role.ADMIN.value, Role.SUPERADMIN.value]
     
-    if current_user.user_type not in allowed_types:
+    if current_user.role not in allowed_roles:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Supervisor access required"
+            detail=f"Access denied. Required roles: {', '.join(allowed_roles)}. Your role: {current_user.role}"
         )
     return current_user
 
@@ -44,8 +46,8 @@ async def get_supervisor_dashboard_metrics(
         # Active complaints
         active_complaints_query = db.query(Complaint).filter(
             or_(
-                Complaint.complaint_status == "open",
-                Complaint.complaint_status == "in_progress"
+                Complaint.status == "pending",
+                Complaint.status == "in_progress"
             )
         )
         if supervisor.hostel_id:
@@ -54,13 +56,13 @@ async def get_supervisor_dashboard_metrics(
         
         # Pending tasks (complaints assigned to supervisor)
         pending_tasks = db.query(Complaint).filter(
-            Complaint.assigned_to == supervisor.id,
-            Complaint.complaint_status == "in_progress"
+            Complaint.assigned_to_id == supervisor.id,
+            Complaint.status == "in_progress"
         ).count()
         
         # Today's attendance
         today_attendance_query = db.query(Attendance).filter(
-            Attendance.attendance_date == date.today()
+            Attendance.date == date.today()
         )
         if supervisor.hostel_id:
             today_attendance_query = today_attendance_query.filter(Attendance.hostel_id == supervisor.hostel_id)
@@ -68,7 +70,7 @@ async def get_supervisor_dashboard_metrics(
         
         # Students in hostel
         students_count_query = db.query(User).filter(
-            User.user_type == "student",
+            User.role == Role.STUDENT.value,
             User.is_active == True
         )
         if supervisor.hostel_id:
@@ -105,8 +107,8 @@ async def get_quick_stats(
     
     # Today's present count
     today_present_query = db.query(Attendance).filter(
-        Attendance.attendance_date == today,
-        Attendance.attendance_status == "present"
+        Attendance.date == today,
+        Attendance.is_present == True
     )
     if supervisor.hostel_id:
         today_present_query = today_present_query.filter(Attendance.hostel_id == supervisor.hostel_id)
@@ -114,8 +116,8 @@ async def get_quick_stats(
     
     # Today's absent count
     today_absent_query = db.query(Attendance).filter(
-        Attendance.attendance_date == today,
-        Attendance.attendance_status == "absent"
+        Attendance.date == today,
+        Attendance.is_present == False
     )
     if supervisor.hostel_id:
         today_absent_query = today_absent_query.filter(Attendance.hostel_id == supervisor.hostel_id)
@@ -127,12 +129,12 @@ async def get_quick_stats(
         pending_leaves_query = pending_leaves_query.filter(LeaveRequest.hostel_id == supervisor.hostel_id)
     pending_leaves = pending_leaves_query.count()
     
-    # Critical complaints
+    # Critical complaints (using URGENT priority)
     critical_complaints_query = db.query(Complaint).filter(
-        Complaint.priority == "critical",
+        Complaint.priority == "urgent",
         or_(
-            Complaint.complaint_status == "open",
-            Complaint.complaint_status == "in_progress"
+            Complaint.status == "pending",
+            Complaint.status == "in_progress"
         )
     )
     if supervisor.hostel_id:
@@ -183,13 +185,13 @@ async def get_complaints(
     
     # Apply filters
     if status:
-        query = query.filter(Complaint.complaint_status == status)
+        query = query.filter(Complaint.status == status)
     
     if priority:
         query = query.filter(Complaint.priority == priority)
     
     if assigned_to_me:
-        query = query.filter(Complaint.assigned_to == supervisor.id)
+        query = query.filter(Complaint.assigned_to_id == supervisor.id)
     
     # Get total count
     total = query.count()
@@ -205,7 +207,7 @@ async def get_complaints(
             "id": complaint.id,
             "complaint_title": complaint.complaint_title,
             "complaint_category": complaint.complaint_category,
-            "complaint_status": complaint.complaint_status,
+            "complaint_status": complaint.status,
             "priority": complaint.priority,
             "user_id": complaint.user_id,
             "user_name": user.name if user else "Unknown",
@@ -252,13 +254,13 @@ async def get_complaint(
         "complaint_title": complaint.complaint_title,
         "complaint_description": complaint.complaint_description,
         "complaint_category": complaint.complaint_category,
-        "complaint_status": complaint.complaint_status,
+        "complaint_status": complaint.status,
         "priority": complaint.priority,
         "user_id": complaint.user_id,
         "hostel_id": str(complaint.hostel_id) if complaint.hostel_id else None,
         "room_number": complaint.room_number,
         "location_details": complaint.location_details,
-        "assigned_to": complaint.assigned_to,
+        "assigned_to": complaint.assigned_to_id,
         "resolved_at": complaint.resolved_at.isoformat() if complaint.resolved_at else None,
         "attachments": complaint.attachments,
         "resolution_notes": complaint.resolution_notes,
@@ -298,7 +300,7 @@ async def assign_complaint(
     if role:
         # Find supervisor with matching role in the same hostel
         supervisor_user = db.query(User).filter(
-            User.user_type == "supervisor",
+            User.role == Role.SUPERVISOR.value,
             User.is_active == True
         )
         
@@ -318,7 +320,7 @@ async def assign_complaint(
     # If assigned_to is provided, verify the user
     elif assigned_to:
         assignee = db.query(User).filter(User.id == assigned_to).first()
-        if not assignee or assignee.user_type not in ["staff", "supervisor", "admin"]:
+        if not assignee or assignee.role not in [Role.SUPERVISOR.value, Role.ADMIN.value, Role.SUPERADMIN.value]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid assignee"
@@ -331,8 +333,8 @@ async def assign_complaint(
             detail="Either assigned_to or role must be provided"
         )
     
-    complaint.assigned_to = assignee_id
-    complaint.complaint_status = "in_progress"
+    complaint.assigned_to_id = assignee_id
+    complaint.status = "in_progress"
     if notes:
         complaint.resolution_notes = notes
     
@@ -359,13 +361,13 @@ async def resolve_complaint(
         )
     
     # Check if supervisor can resolve this complaint
-    if complaint.assigned_to != supervisor.id and supervisor.user_type not in ["admin", "super_admin"]:
+    if complaint.assigned_to_id != supervisor.id and supervisor.role not in [Role.ADMIN.value, Role.SUPERADMIN.value]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You can only resolve complaints assigned to you"
         )
     
-    complaint.complaint_status = "resolved"
+    complaint.status = "resolved"
     complaint.resolution_notes = resolution_notes
     complaint.resolution_attachments = resolution_attachments
     complaint.resolved_at = datetime.now()
@@ -398,19 +400,23 @@ async def get_attendance_records(
     
     # Apply filters
     if date_from:
-        query = query.filter(Attendance.attendance_date >= date_from)
+        query = query.filter(Attendance.date >= date_from)
     
     if date_to:
-        query = query.filter(Attendance.attendance_date <= date_to)
+        query = query.filter(Attendance.date <= date_to)
     
     if user_id:
-        query = query.filter(Attendance.user_id == user_id)
+        query = query.filter(Attendance.student_id == user_id)
     
     if status:
-        query = query.filter(Attendance.attendance_status == status)
+        # Map status to is_present boolean
+        if status.lower() == "present":
+            query = query.filter(Attendance.is_present == True)
+        elif status.lower() == "absent":
+            query = query.filter(Attendance.is_present == False)
     
     # Order by date descending
-    query = query.order_by(Attendance.attendance_date.desc())
+    query = query.order_by(Attendance.date.desc())
     
     total = query.count()
     attendance_records = query.offset((page - 1) * size).limit(size).all()
@@ -418,16 +424,16 @@ async def get_attendance_records(
     # Convert to response format
     attendance_responses = []
     for record in attendance_records:
-        user = db.query(User).filter(User.id == record.user_id).first()
+        user = db.query(User).filter(User.id == record.student_id).first()
         attendance_responses.append({
-            "user_id": record.user_id,
-            "user_name": user.name if user else "Unknown",
+            "user_id": record.student_id,
+            "user_name": user.name if user else record.student_name or "Unknown",
             "id": record.id,
-            "attendance_date": record.attendance_date.isoformat() if record.attendance_date else None,
-            "attendance_status": record.attendance_status,
-            "check_in_time": record.check_in_time.isoformat() if record.check_in_time else None,
-            "check_out_time": record.check_out_time.isoformat() if record.check_out_time else None,
-            "created_at": record.created_at.isoformat() if record.created_at else None
+            "attendance_date": record.date.isoformat() if record.date else None,
+            "attendance_status": "present" if record.is_present else "absent",
+            "check_in_time": record.marked_at.isoformat() if record.marked_at else None,
+            "marked_by": record.marked_by,
+            "notes": record.notes
         })
     
     return {
@@ -452,7 +458,7 @@ async def approve_leave(
     
     attendance = db.query(Attendance).filter(
         Attendance.id == attendance_id,
-        Attendance.user_id == user_id
+        Attendance.student_id == user_id
     ).first()
     
     if not attendance:
@@ -468,7 +474,8 @@ async def approve_leave(
             detail="Access denied"
         )
     
-    attendance.attendance_status = "excused"
+    attendance.is_present = True  # Mark as excused/present
+    attendance.notes = "Leave approved by supervisor"
     
     db.commit()
     
@@ -487,7 +494,7 @@ async def quick_mark_attendance(
     # Verify student belongs to supervisor's hostel
     student = db.query(User).filter(
         User.id == user_id,
-        User.user_type == "student"
+        User.role == Role.STUDENT.value
     ).first()
     
     if not student:
@@ -505,18 +512,20 @@ async def quick_mark_attendance(
     # Check if attendance already exists for today
     today = date.today()
     existing_attendance = db.query(Attendance).filter(
-        Attendance.user_id == user_id,
-        Attendance.attendance_date == today
+        Attendance.student_id == user_id,
+        Attendance.date == today
     ).first()
     
     if existing_attendance:
-        existing_attendance.attendance_status = attendance_status
+        existing_attendance.is_present = (attendance_status.lower() == "present")
     else:
         new_attendance = Attendance(
-            user_id=user_id,
+            student_id=user_id,
             hostel_id=student.hostel_id,
-            attendance_date=today,
-            attendance_status=attendance_status
+            date=today,
+            is_present=(attendance_status.lower() == "present"),
+            marked_by=str(supervisor.id),
+            student_name=student.name
         )
         db.add(new_attendance)
     
@@ -675,7 +684,7 @@ async def get_students(
 ):
     """Get students in supervisor's hostel"""
     
-    query = db.query(User).filter(User.user_type == "student")
+    query = db.query(User).filter(User.role == Role.STUDENT.value)
     
     # Filter by hostel
     if supervisor.hostel_id:
@@ -701,8 +710,8 @@ async def get_students(
             "id": student.id,
             "name": student.name,
             "email": student.email,
-            "phone": student.phone,
-            "user_type": student.user_type,
+            "phone": student.phone_number,
+            "role": student.role,
             "hostel_id": str(student.hostel_id) if student.hostel_id else None,
             "is_active": student.is_active,
             "is_verified": student.is_verified,

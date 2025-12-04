@@ -7,13 +7,34 @@ class Attendance(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     hostel_id = Column(Integer, nullable=False, index=True)
-    student_id = Column(Integer, nullable=False, index=True)
+    student_id = Column(Integer, nullable=False, index=True)  # Keep original field name
     student_name = Column(String(255))
-    date = Column(Date, nullable=False, index=True)
+    date = Column(Date, nullable=False, index=True)  # Keep original field name
     is_present = Column(Boolean, default=True)
     marked_by = Column(String(255))
     marked_at = Column(DateTime, default=datetime.utcnow)
     notes = Column(Text)
+    
+    # Add properties for compatibility with supervisor routes
+    @property
+    def user_id(self):
+        return self.student_id
+    
+    @property
+    def attendance_date(self):
+        return self.date
+    
+    @property
+    def attendance_status(self):
+        return 'present' if self.is_present else 'absent'
+    
+    @property
+    def check_in_time(self):
+        return self.marked_at
+    
+    @property
+    def check_out_time(self):
+        return None
 
 class FinancialTransaction(Base):
     __tablename__ = "financial_transactions"

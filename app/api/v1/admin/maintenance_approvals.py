@@ -4,7 +4,7 @@ Approval workflow for high-value repairs requiring admin authorization
 """
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 from typing import Optional
 from datetime import datetime
 from app.core.database import get_db
@@ -235,13 +235,13 @@ def get_approval_stats(
     
     # Calculate total estimated cost
     total_est_cost = db.query(
-        db.func.sum(MaintenanceRequest.est_cost)
+        func.sum(MaintenanceRequest.est_cost)
     ).filter(
         MaintenanceRequest.est_cost >= HIGH_VALUE_THRESHOLD
     ).scalar() or 0
     
     approved_cost = db.query(
-        db.func.sum(MaintenanceRequest.est_cost)
+        func.sum(MaintenanceRequest.est_cost)
     ).filter(
         MaintenanceRequest.est_cost >= HIGH_VALUE_THRESHOLD,
         MaintenanceRequest.approved == True
