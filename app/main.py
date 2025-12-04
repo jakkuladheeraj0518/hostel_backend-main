@@ -29,19 +29,8 @@ from app.api.v1.admin.push_router import router as supervisor_notification_route
 from app.api.v1.admin.routers import router as student_notification_router
 from app.api.v1.admin.routing_router import router as notification_webhook_router
 from app.api.v1.admin.sms_router import router as admin_sms_router
-# ---------------------------------------------------------
-
-
-# Routers (core / existing)
 
 from app.api.v1.router import api_router
-
-
-
-
-
-
-# NEW: Supervisor Module (Dashboard, Complaints, Attendance, Leave Management)
 from app.api.v1.supervisor import router as supervisor_module_router
 from app.api.v1.supervisor.auth import router as supervisor_auth_router
 
