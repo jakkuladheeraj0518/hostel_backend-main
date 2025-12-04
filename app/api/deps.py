@@ -63,12 +63,14 @@ def role_required(*allowed_roles):
     for r in allowed_roles:
         if isinstance(r, (list, tuple)):
             for x in r:
-                roles.append(getattr(x, "value", str(x)))
+                roles.append(getattr(x, "value", str(x)).strip().lower())
         else:
-            roles.append(getattr(r, "value", str(r)))
+            roles.append(getattr(r, "value", str(r)).strip().lower())
 
     def role_checker(current_user: User = Depends(get_current_user)) -> User:
-        if current_user.role not in roles:
+        # Normalize the user's role to a comparable lowercase string
+        user_role = getattr(current_user.role, "value", str(current_user.role)).strip().lower()
+        if user_role not in roles:
             raise AccessDeniedException(
                 f"Access denied. Required roles: {', '.join(roles)}"
             )

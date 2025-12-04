@@ -303,6 +303,7 @@ PERMISSION_MATRIX: Dict[str, Set[str]] = {
         Permission.MANAGE_BOOKINGS,
         Permission.MANAGE_WAITLIST,
         Permission.MANAGE_STUDENTS,
+        Permission.MANAGE_ATTENDANCE,
         Permission.VIEW_NOTIFICATIONS,
         Permission.READ_NOTIFICATIONS,
             Permission.VIEW_INVOICES,
@@ -338,6 +339,8 @@ PERMISSION_MATRIX: Dict[str, Set[str]] = {
         Permission.CREATE_USER,
         Permission.UPDATE_USER,
         Permission.READ_USER,
+        Permission.READ_SUPERVISORS,
+        Permission.READ_ROOMS,
         Permission.READ_HOSTEL,
         Permission.VIEW_AUDIT,
         Permission.CREATE_AUDIT,
@@ -388,7 +391,7 @@ PERMISSION_MATRIX: Dict[str, Set[str]] = {
         Permission.WRITE_REVIEW,
         Permission.VIEW_NOTIFICATIONS,
         Permission.READ_NOTIFICATIONS,
- 
+        Permission.MANAGE_ATTENDANCE,
     },
     Role.VISITOR: {
         Permission.READ_USER,
@@ -417,11 +420,34 @@ PERMISSION_MATRIX: Dict[str, Set[str]] = {
  
 def has_permission(role: str, permission: str) -> bool:
     """Check if a role has a specific permission"""
-    return permission in PERMISSION_MATRIX.get(role, set())
+    # Normalize role: accept Role enum or string (case-insensitive).
+    from app.core.roles import Role
+    # Normalize the role value: accept Role enum or string (case-insensitive),
+    # and strip whitespace to avoid mismatches like 'supervisor '.
+    if isinstance(role, Role):
+        r = role
+    else:
+        role_str = str(role).strip().lower()
+        try:
+            r = Role(role_str)
+        except Exception:
+            r = role_str
+
+    return permission in PERMISSION_MATRIX.get(r, set())
  
  
 def get_role_permissions(role: str) -> Set[str]:
     """Get all permissions for a role"""
-    return PERMISSION_MATRIX.get(role, set())
+    from app.core.roles import Role
+    if isinstance(role, Role):
+        r = role
+    else:
+        role_str = str(role).strip().lower()
+        try:
+            r = Role(role_str)
+        except Exception:
+            r = role_str
+
+    return PERMISSION_MATRIX.get(r, set())
  
  

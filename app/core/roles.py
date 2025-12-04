@@ -26,7 +26,17 @@ RoleHierarchy: Dict[str, int] = {
 
 def get_role_level(role: str) -> int:
     """Get hierarchy level of a role"""
-    return RoleHierarchy.get(role, 0)
+    # Accept either a Role enum or a plain string role value.
+    try:
+        # Normalize string inputs (strip + lower) to match Role enum values
+        if not isinstance(role, Role):
+            role_val = str(role).strip().lower()
+            r = Role(role_val)
+        else:
+            r = role
+    except Exception:
+        r = role
+    return RoleHierarchy.get(r, 0)
 
 
 def can_manage_role(manager_role: str, target_role: str) -> bool:
