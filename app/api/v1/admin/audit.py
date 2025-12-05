@@ -50,45 +50,6 @@ async def get_audit_logs(
     )
 
 
-@router.get("/audit/user/{user_id}", response_model=List[AuditLogResponse], status_code=status.HTTP_200_OK)
-async def get_user_audit_logs(
-    user_id: int,
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000),
-    current_user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN)),
-    db: Session = Depends(get_db)
-):
-    """Get audit logs for a specific user"""
-    audit_service = AuditService(db)
-    return audit_service.get_user_audit_logs(user_id, skip=skip, limit=limit)
-
-
-@router.get("/audit/users/{user_id}", response_model=List[AuditLogResponse], status_code=status.HTTP_200_OK)
-async def get_user_audit_logs_plural(
-    user_id: int,
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000),
-    current_user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN)),
-    db: Session = Depends(get_db)
-):
-    """Alias endpoint with plural users in path"""
-    audit_service = AuditService(db)
-    return audit_service.get_user_audit_logs(user_id, skip=skip, limit=limit)
-
-
-@router.get("/audit/target/{target_id}", response_model=List[AuditLogResponse], status_code=status.HTTP_200_OK)
-async def get_audit_by_target(
-    target_id: str,
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000),
-    current_user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN)),
-    db: Session = Depends(get_db)
-):
-    """Search audit logs by target identifier in resource or details"""
-    audit_service = AuditService(db)
-    return audit_service.get_target_audit_logs(target_id, skip=skip, limit=limit)
-
-
 @router.post("/audit/logs", response_model=AuditLogResponse, status_code=status.HTTP_201_CREATED)
 async def create_audit_log(
     payload: AuditLogBase = Body(...),

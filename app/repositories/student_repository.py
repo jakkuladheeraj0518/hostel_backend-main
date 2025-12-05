@@ -1,8 +1,8 @@
 from typing import List, Optional
 from datetime import date, datetime, time
 from sqlalchemy.orm import Session
-from sqlalchemy import text, func
-
+from sqlalchemy import text, func, or_
+ 
 from app.models.students import Student, StudentPayment, Attendance, StudentDocument
 from app.models.beds import Bed, BedStatus
 from app.repositories.bed_repository import find_bed_by_room_and_bed_number
@@ -10,8 +10,8 @@ from app.schemas.students import StudentCreate, StudentUpdate
 from app.repositories.user_repository import UserRepository
 from app.schemas.user import UserCreate as SchemaUserCreate
 from app.core.roles import Role as UserRole
-
-
+ 
+ 
 def list_students(
     db: Session,
     skip: int = 0,
@@ -40,15 +40,19 @@ def list_students(
     active_hostel_id: Optional[int] = None,
 ) -> List[Student]:
     query = db.query(Student)
-    
+   
+    # Identity filters: treat name / id / email / phone as alternatives (OR)
+    identity_filters = []
     if name:
-        query = query.filter(Student.student_name.ilike(f"%{name}%"))
+        identity_filters.append(Student.student_name.ilike(f"%{name}%"))
     if student_id:
-        query = query.filter(Student.student_id.ilike(f"%{student_id}%"))
+        identity_filters.append(Student.student_id.ilike(f"%{student_id}%"))
     if student_email:
-        query = query.filter(Student.student_email.ilike(f"%{student_email}%"))
+        identity_filters.append(Student.student_email.ilike(f"%{student_email}%"))
     if student_phone:
-        query = query.filter(Student.student_phone.ilike(f"%{student_phone}%"))
+        identity_filters.append(Student.student_phone.ilike(f"%{student_phone}%"))
+    if identity_filters:
+        query = query.filter(or_(*identity_filters))
     if room:
         # support numeric room ids as well as room_number strings
         try:
@@ -78,11 +82,11 @@ def list_students(
               .filter(Attendance.student_id == Student.student_id, Attendance.status == attendance_status)
               .exists()
         )
-    
+   
     # Tenant filtering (if user_hostel_ids provided)
     if user_hostel_ids:
         query = query.filter(Student.hostel_id.in_(user_hostel_ids))
-    
+   
     # Sort
     if sort_by:
         sort_col = getattr(Student, sort_by, Student.student_id)
@@ -92,10 +96,10 @@ def list_students(
             query = query.order_by(sort_col.asc())
     else:
         query = query.order_by(Student.student_id)
-
+ 
     return query.offset(skip).limit(limit).all()
-
-
+ 
+ 
 def get_student(db: Session, student_id: str) -> Optional[Student]:
     student = db.query(Student).filter(Student.student_id == student_id).first()
     if student and hasattr(student, 'hostel_id') and isinstance(student.hostel_id, str):
@@ -104,8 +108,8 @@ def get_student(db: Session, student_id: str) -> Optional[Student]:
         except Exception:
             student.hostel_id = None
     return student
-
-
+ 
+ 
 def create_student(db: Session, student_in: StudentCreate) -> Student:
     data = student_in.dict()
     # extract password fields if present
@@ -117,16 +121,16 @@ def create_student(db: Session, student_in: StudentCreate) -> Student:
     ).first()
     if existing:
         return existing
-
+ 
     # Try to find an existing user by email or phone; if found, reuse and ensure role
     from app.models.user import User as UserModel
-
+ 
     existing_user = None
     if student_in.student_email:
         existing_user = db.query(UserModel).filter(UserModel.email == student_in.student_email).first()
     if not existing_user and student_in.student_phone:
         existing_user = db.query(UserModel).filter(UserModel.phone_number == student_in.student_phone).first()
-
+ 
     user_repo = UserRepository(db)
     if existing_user:
         # Ensure role is student
@@ -135,6 +139,16 @@ def create_student(db: Session, student_in: StudentCreate) -> Student:
             db.add(existing_user)
             db.commit()
             db.refresh(existing_user)
+        # Activate and verify existing user created by admin/student import
+        existing_user.is_active = True
+        if getattr(existing_user, "email", None):
+            existing_user.is_email_verified = True
+        if getattr(existing_user, "phone_number", None):
+            existing_user.is_phone_verified = True
+        existing_user.is_verified = True
+        db.add(existing_user)
+        db.commit()
+        db.refresh(existing_user)
         user = existing_user
     else:
         # Build a username and ensure it's unique to avoid DB unique constraint failures
@@ -145,7 +159,7 @@ def create_student(db: Session, student_in: StudentCreate) -> Student:
         while db.query(UserModel).filter(UserModel.username == username).first():
             suffix += 1
             username = f"{base_username}{suffix}"
-
+ 
         user_payload = SchemaUserCreate(
             email=student_in.student_email,
             phone_number=student_in.student_phone,
@@ -156,34 +170,45 @@ def create_student(db: Session, student_in: StudentCreate) -> Student:
             hostel_id=student_in.hostel_id,
             password=password,
         )
-
+ 
         try:
             user = user_repo.create(user_payload)
         except Exception as e:
             # Surface a clearer message for upstream handling
             raise ValueError(f"Failed to create linked user: {e}")
-
+ 
+        # Newly created user: ensure active and verified so student can login immediately
+        user.is_active = True
+        if getattr(user, "email", None):
+            user.is_email_verified = True
+        if getattr(user, "phone_number", None):
+            user.is_phone_verified = True
+        user.is_verified = True
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+ 
     obj = Student(**data, user_id=user.id)
     db.add(obj)
     db.commit()
     db.refresh(obj)
     return obj
-
-
+ 
+ 
 def update_student(db: Session, student_id: str, student_in: StudentUpdate) -> Optional[Student]:
     obj = get_student(db, student_id)
     if not obj:
         return None
-    
+   
     for field, value in student_in.dict(exclude_unset=True).items():
         setattr(obj, field, value)
-
+ 
     db.add(obj)
     db.commit()
     db.refresh(obj)
     return obj
-
-
+ 
+ 
 def delete_student(db: Session, student_id: str) -> bool:
     obj = get_student(db, student_id)
     if not obj:
@@ -201,23 +226,23 @@ def delete_student(db: Session, student_id: str) -> bool:
     db.execute(text("DELETE FROM student_status_history WHERE student_id = :sid"), {"sid": student_id})
     # Make complaints reference explicit - set student_id to NULL to preserve complaint rows and attachments
     db.execute(text("UPDATE complaints SET student_id = NULL WHERE student_id = :sid"), {"sid": student_id})
-
+ 
     db.delete(obj)
     db.commit()
     return True
-
-
+ 
+ 
 def set_status(db: Session, student_id: str, new_status: str, notes: Optional[str] = None) -> Optional[Student]:
     obj = get_student(db, student_id)
     if not obj:
         return None
-
+ 
     old_status = obj.status
     obj.status = new_status
     db.add(obj)
     db.commit()
     db.refresh(obj)
-
+ 
     db.execute(
         text("""
             INSERT INTO student_status_history (
@@ -233,18 +258,18 @@ def set_status(db: Session, student_id: str, new_status: str, notes: Optional[st
         }
     )
     db.commit()
-
+ 
     return obj
-
-
+ 
+ 
 def transfer(db: Session, student_id: str, new_room: Optional[str], new_bed: Optional[str], notes: Optional[str]) -> Optional[Student]:
     obj = get_student(db, student_id)
     if not obj:
         return None
-
+ 
     old_room = obj.room_assignment
     old_bed = obj.bed_assignment
-
+ 
     # If new_bed is provided try to look up the bed (support id or room/bed numbers)
     bed_obj = None
     if new_bed is not None:
@@ -256,7 +281,7 @@ def transfer(db: Session, student_id: str, new_room: Optional[str], new_bed: Opt
             # attempt to locate by room number + bed number when new_room provided
             if new_room:
                 bed_obj = find_bed_by_room_and_bed_number(db, new_room, new_bed)
-
+ 
     # If bed_obj provided, perform a proper bed transfer and status updates
     if bed_obj:
         # free old bed if present
@@ -265,17 +290,17 @@ def transfer(db: Session, student_id: str, new_room: Optional[str], new_bed: Opt
             if old_bed_obj:
                 old_bed_obj.bed_status = BedStatus.AVAILABLE
                 db.add(old_bed_obj)
-
+ 
         # occupy new bed
         bed_obj.bed_status = BedStatus.OCCUPIED
         db.add(bed_obj)
-
+ 
         # update student fk references and legacy text fields
         obj.bed_id = bed_obj.id
         obj.room_id = bed_obj.room_id
         obj.room_assignment = bed_obj.room_number
         obj.bed_assignment = bed_obj.bed_number
-
+ 
     else:
         # fallback: update textual room/bed assignments only
         obj.room_assignment = new_room
@@ -283,7 +308,7 @@ def transfer(db: Session, student_id: str, new_room: Optional[str], new_bed: Opt
     db.add(obj)
     db.commit()
     db.refresh(obj)
-
+ 
     db.execute(
         text("""
             INSERT INTO student_status_history (
@@ -301,10 +326,10 @@ def transfer(db: Session, student_id: str, new_room: Optional[str], new_bed: Opt
         }
     )
     db.commit()
-
+ 
     return obj
-
-
+ 
+ 
 def list_history(db: Session, student_id: str) -> List[dict]:
     rows = db.execute(
         text("""
@@ -317,10 +342,10 @@ def list_history(db: Session, student_id: str) -> List[dict]:
         {"sid": student_id}
     )
     return [dict(r._mapping) for r in rows]
-
-
+ 
+ 
 # ------- Payments -------
-
+ 
 def create_payment(
     db: Session,
     student_id: str,
@@ -354,16 +379,16 @@ def create_payment(
     db.commit()
     db.refresh(p)
     return p
-
-
+ 
+ 
 def list_payments(db: Session, student_id: str) -> List[StudentPayment]:
     return db.query(StudentPayment).filter(
         StudentPayment.student_id == student_id
     ).order_by(StudentPayment.created_at.desc()).all()
-
-
+ 
+ 
 # ------- Attendance -------
-
+ 
 def create_attendance(
     db: Session,
     student_id: str,
@@ -376,9 +401,9 @@ def create_attendance(
     notes: Optional[str],
     date_val: Optional[date] = None,
 ) -> Attendance:
-
+ 
     final_date = attendance_date if attendance_date else date_val
-
+ 
     a = Attendance(
         student_id=student_id,
         attendance_date=final_date,
@@ -390,32 +415,34 @@ def create_attendance(
         status=status,
         notes=notes
     )
-
+ 
     db.add(a)
     db.commit()
     db.refresh(a)
     return a
-
-
+ 
+ 
 def list_attendance(db: Session, student_id: str) -> List[Attendance]:
     return db.query(Attendance).filter(
         Attendance.student_id == student_id
     ).order_by(
         func.coalesce(Attendance.attendance_date, Attendance.date).desc()
     ).all()
-
-
+ 
+ 
 # ------- Student Documents -------
-
+ 
 def create_student_document(db: Session, student_id: str, doc_type: Optional[str], doc_url: str) -> StudentDocument:
     d = StudentDocument(student_id=student_id, doc_type=doc_type, doc_url=doc_url)
     db.add(d)
     db.commit()
     db.refresh(d)
     return d
-
-
+ 
+ 
 def list_student_documents(db: Session, student_id: str) -> List[StudentDocument]:
     return db.query(StudentDocument).filter(
         StudentDocument.student_id == student_id
     ).order_by(StudentDocument.uploaded_at.desc()).all()
+ 
+ 

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Optional
 from datetime import datetime
 from sqlalchemy import select
-
+ 
 from app.core.database import get_db
 from app.core.roles import Role
 from app.core.permissions import Permission
@@ -26,10 +26,10 @@ from app.schemas.complaint import (
     ComplaintUpdate,
     ComplaintAnalytics
 )
-
+ 
 router = APIRouter(prefix="/admin/complaints", tags=["Admin Complaints"])
-
-
+ 
+ 
 # ------------------------------------------------------------------------------------
 # LIST ALL COMPLAINTS
 # ------------------------------------------------------------------------------------
@@ -62,10 +62,10 @@ async def list_all_complaints(
         page=page,
         page_size=page_size
     )
-
+ 
     service = ComplaintService(ComplaintRepository(db))
     complaints, total = await service.list_complaints(filters)
-
+ 
     return {
         "total": total,
         "page": page,
@@ -73,30 +73,30 @@ async def list_all_complaints(
         "total_pages": (total + page_size - 1) // page_size,
         "complaints": complaints
     }
-
-
+ 
+ 
 # ------------------------------------------------------------------------------------
 # GET SINGLE COMPLAINT
 # ------------------------------------------------------------------------------------
 @router.get("/{complaint_id}", response_model=ComplaintDetailResponse)
 async def get_complaint(complaint_id: int,
-    current_user: User = Depends(role_required(Role.ADMIN)), 
+    current_user: User = Depends(role_required(Role.ADMIN)),
     db: Session = Depends(get_db)):
     service = ComplaintService(ComplaintRepository(db))
     result = await service.get_complaint_with_details(complaint_id)
-
+ 
     if not result:
         raise HTTPException(404, "Complaint not found")
-
+ 
     complaint = result["complaint"]
-
+ 
     return {
         **complaint.__dict__,
         "attachments": result["attachments"],
         "notes": result["notes"]
     }
-
-
+ 
+ 
 # ------------------------------------------------------------------------------------
 # UPDATE COMPLAINT
 # ------------------------------------------------------------------------------------
@@ -104,32 +104,32 @@ async def get_complaint(complaint_id: int,
 async def update_complaint(complaint_id: int, update_data: ComplaintUpdate,current_user: User = Depends(role_required(Role.ADMIN)), db: Session = Depends(get_db)):
     service = ComplaintService(ComplaintRepository(db))
     complaint = await service.update_complaint(complaint_id, update_data)
-
+ 
     if not complaint:
         raise HTTPException(404, "Complaint not found")
-
+ 
     return complaint
-
-
+ 
+ 
 # ------------------------------------------------------------------------------------
 # REASSIGN COMPLAINT
 # ------------------------------------------------------------------------------------
 @router.post("/{complaint_id}/reassign", response_model=ComplaintResponse)
 async def reassign_complaint(complaint_id: int, assignment_data: ComplaintAssignment, current_user: User = Depends(role_required(Role.ADMIN)),db: Session = Depends(get_db)):
     service = ComplaintService(ComplaintRepository(db))
-
+ 
     complaint = await service.reassign_complaint(
         complaint_id,
         assignment_data.assigned_to_name,
         assignment_data.assigned_to_email
     )
-
+ 
     if not complaint:
         raise HTTPException(404, "Complaint not found")
-
+ 
     return complaint
-
-
+ 
+ 
 # ------------------------------------------------------------------------------------
 # ANALYTICS — OVERVIEW
 # ------------------------------------------------------------------------------------
@@ -144,8 +144,8 @@ async def get_complaint_analytics(
     service = ComplaintService(ComplaintRepository(db))
     result = await service.get_analytics(hostel_name, start_date, end_date)
     return result
-
-
+ 
+ 
 # ------------------------------------------------------------------------------------
 # ANALYTICS — CROSS HOSTEL
 # ------------------------------------------------------------------------------------
@@ -157,32 +157,32 @@ async def get_cross_hostel_analytics(
     db: Session = Depends(get_db)
 ):
     service = ComplaintService(ComplaintRepository(db))
-
+ 
     hostels = [row[0] for row in db.execute(select(Complaint.hostel_name).distinct()).all()]
     cross_hostel_data = []
-
+ 
     for hostel_name in hostels:
         analytics = await service.get_analytics(hostel_name, start_date, end_date)
         cross_hostel_data.append({"hostel_name": hostel_name, "analytics": analytics})
-
+ 
     category_counts = {}
     for hostel_data in cross_hostel_data:
         for category, count in hostel_data["analytics"]["category_distribution"].items():
             category_counts[category] = category_counts.get(category, 0) + count
-
+ 
     systemic_issues = sorted(
         [{"category": k, "total_complaints": v} for k, v in category_counts.items()],
         key=lambda x: x["total_complaints"],
         reverse=True
     )
-
+ 
     return {
         "hostel_analytics": cross_hostel_data,
         "systemic_issues": systemic_issues,
         "total_hostels": len(hostels)
     }
-
-
+ 
+ 
 # ------------------------------------------------------------------------------------
 # ANALYTICS — SUPERVISOR PERFORMANCE
 # ------------------------------------------------------------------------------------
@@ -195,41 +195,41 @@ async def get_all_supervisor_performance(
     db: Session = Depends(get_db)
 ):
     service = ComplaintService(ComplaintRepository(db))
-
+ 
     query = select(
         Complaint.assigned_to_email,
         Complaint.assigned_to_name
     ).distinct().where(Complaint.assigned_to_email.isnot(None))
-
+ 
     if hostel_name:
         query = query.where(Complaint.hostel_name.ilike(f"%{hostel_name}%"))
-
+ 
     supervisors = db.execute(query).all()
     performance_data = []
-
+ 
     for supervisor_email, supervisor_name in supervisors:
         if not supervisor_email:
             continue
-
+ 
         performance = await service.get_supervisor_performance(
             supervisor_email,
             start_date,
             end_date
         )
-
+ 
         performance["supervisor_name"] = supervisor_name
         performance_data.append(performance)
-
+ 
     performance_data.sort(
         key=lambda x: x["average_resolution_time_hours"] or float("inf")
     )
-
+ 
     return {
         "total_supervisors": len(performance_data),
         "supervisors": performance_data
     }
-
-
+ 
+ 
 # ------------------------------------------------------------------------------------
 # ANALYTICS — SLA VIOLATIONS
 # ------------------------------------------------------------------------------------
@@ -240,18 +240,18 @@ async def get_sla_violations(
     db: Session = Depends(get_db)
 ):
     now = datetime.utcnow()
-
+ 
     query = select(Complaint).where(
         Complaint.sla_deadline.isnot(None),
         Complaint.sla_deadline < now,
         Complaint.status.notin_([ComplaintStatus.RESOLVED, ComplaintStatus.CLOSED])
     )
-
+ 
     if hostel_name:
         query = query.where(Complaint.hostel_name.ilike(f"%{hostel_name}%"))
-
+ 
     violations = db.execute(query.order_by(Complaint.sla_deadline.asc())).scalars().all()
-
+ 
     data = []
     for complaint in violations:
         hours_overdue = (now - complaint.sla_deadline).total_seconds() / 3600
@@ -267,10 +267,10 @@ async def get_sla_violations(
             "hours_overdue": round(hours_overdue, 2),
             "created_at": complaint.created_at
         })
-
+ 
     return {"total_violations": len(data), "violations": data}
-
-
+ 
+ 
 # ------------------------------------------------------------------------------------
 # ANALYTICS — ESCALATED COMPLAINTS
 # ------------------------------------------------------------------------------------
@@ -288,10 +288,10 @@ async def get_escalated_complaints(
         page=page,
         page_size=page_size
     )
-
+ 
     service = ComplaintService(ComplaintRepository(db))
     complaints, total = await service.list_complaints(filters)
-
+ 
     return {
         "total": total,
         "page": page,
@@ -299,18 +299,22 @@ async def get_escalated_complaints(
         "total_pages": (total + page_size - 1) // page_size,
         "complaints": complaints
     }
-
-
+ 
+ 
 # ------------------------------------------------------------------------------------
 # DELETE COMPLAINT
 # ------------------------------------------------------------------------------------
 @router.delete("/{complaint_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_complaint(complaint_id: int,current_user: User = Depends(role_required(Role.ADMIN)), db: Session = Depends(get_db)):
     repo = ComplaintRepository(db)
-    complaint = repo.get_by_id(complaint_id)
-
+    complaint = await repo.get_by_id(complaint_id)
+ 
     if not complaint:
         raise HTTPException(404, "Complaint not found")
-
-    repo.delete(complaint)
+ 
+    success = await repo.delete(complaint_id)
+    if not success:
+        raise HTTPException(500, "Failed to delete complaint")
+   
     return None
+ 

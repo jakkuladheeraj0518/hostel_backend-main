@@ -348,6 +348,8 @@ PERMISSION_MATRIX: Dict[str, Set[str]] = {
         Permission.MANAGE_COMPLAINTS,
         Permission.MANAGE_MAINTENANCE,
         Permission.MANAGE_ANNOUNCEMENTS,
+        Permission.MANAGE_STUDENTS,
+
         # Supervisor operational rights (scoped to assigned hostel)
         Permission.SUPERVISOR_DASHBOARD_VIEW,
         Permission.SUPERVISOR_RECORD_ATTENDANCE,

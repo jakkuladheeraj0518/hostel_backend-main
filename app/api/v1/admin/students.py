@@ -17,6 +17,7 @@ from app.api.deps import (
     get_repository_context,
 )
 from app.models.user import User
+from app.models.students import Student
 
 from app.schemas.students import (
     StudentCreate,
@@ -257,6 +258,7 @@ def read_student(
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
     return student
+
 
 
 # --------------------------------------------------------------------

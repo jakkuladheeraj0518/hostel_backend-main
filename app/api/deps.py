@@ -4,32 +4,32 @@ Dependency functions (get_current_user, role_required)
 from typing import Optional, List
 from fastapi import Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
-
+ 
 from app.core.security import get_current_user
 from app.core.roles import Role
 from app.core.permissions import has_permission
 from app.core.exceptions import AccessDeniedException
 from app.models.user import User
 from app.core.database import get_db
-
-
+ 
+ 
 def get_db_session(db: Session = Depends(get_db)) -> Session:
     """Get database session"""
     return db
-
-
+ 
+ 
 def get_active_hostel_id(request: Request) -> Optional[int]:
     """Get active hostel_id from request state (set by TenantFilterMiddleware)"""
     if hasattr(request.state, "bypass_tenant_filter") and request.state.bypass_tenant_filter:
         return None  # Superadmin bypass
     return getattr(request.state, "active_hostel_id", None)
-
-
+ 
+ 
 def get_user_hostel_ids(user_id: int, user_role: str, db: Session) -> List[int]:
     """Get list of hostel IDs user has access to"""
     from app.repositories.hostel_repository import HostelRepository
     from app.repositories.user_repository import UserRepository
-    
+   
     if user_role == Role.SUPERADMIN:
         # Superadmin has access to all hostels
         hostel_repo = HostelRepository(db)
@@ -40,6 +40,31 @@ def get_user_hostel_ids(user_id: int, user_role: str, db: Session) -> List[int]:
         hostel_repo = HostelRepository(db)
         hostels = hostel_repo.get_by_admin(user_id)
         return [h.id for h in hostels]
+    elif user_role == Role.SUPERVISOR:
+        # Supervisor may be assigned to multiple hostels via supervisor_hostels table
+        # Try several ways to locate the supervisor record so older data (pre-linking)
+        # still works: 1) match Supervisor.user_id, 2) fallback to matching supervisor_email/phone
+        from app.models.supervisors import Supervisor, SupervisorHostel
+        from app.repositories.user_repository import UserRepository
+ 
+        # Try direct link first
+        sup = db.query(Supervisor).filter(Supervisor.user_id == user_id).first()
+ 
+        # Fallback: try matching by email/phone from the User record (handles pre-linked rows)
+        if not sup:
+            user_repo = UserRepository(db)
+            user = user_repo.get_by_id(user_id)
+            if user:
+                if user.email:
+                    sup = db.query(Supervisor).filter(Supervisor.supervisor_email == user.email).first()
+                if not sup and getattr(user, "phone_number", None):
+                    sup = db.query(Supervisor).filter(Supervisor.supervisor_phone == user.phone_number).first()
+ 
+        if not sup:
+            return []
+ 
+        rows = db.query(SupervisorHostel).filter(SupervisorHostel.employee_id == sup.employee_id).all()
+        return [r.hostel_id for r in rows]
     else:
         # Other roles have access to their own hostel
         user_repo = UserRepository(db)
@@ -47,11 +72,11 @@ def get_user_hostel_ids(user_id: int, user_role: str, db: Session) -> List[int]:
         if user and user.hostel_id:
             return [user.hostel_id]
         return []
-
-
+ 
+ 
 def role_required(*allowed_roles):
     """Dependency to check if user has required role.
-
+ 
     Accepts roles as multiple string args or as lists/tuples. Examples:
     - `role_required('admin', 'superadmin')`
     - `role_required(['admin', 'superadmin'])`
@@ -63,22 +88,20 @@ def role_required(*allowed_roles):
     for r in allowed_roles:
         if isinstance(r, (list, tuple)):
             for x in r:
-                roles.append(getattr(x, "value", str(x)).strip().lower())
+                roles.append(getattr(x, "value", str(x)))
         else:
-            roles.append(getattr(r, "value", str(r)).strip().lower())
-
+            roles.append(getattr(r, "value", str(r)))
+ 
     def role_checker(current_user: User = Depends(get_current_user)) -> User:
-        # Normalize the user's role to a comparable lowercase string
-        user_role = getattr(current_user.role, "value", str(current_user.role)).strip().lower()
-        if user_role not in roles:
+        if current_user.role not in roles:
             raise AccessDeniedException(
                 f"Access denied. Required roles: {', '.join(roles)}"
             )
         return current_user
-
+ 
     return role_checker
-
-
+ 
+ 
 def permission_required(permission: str):
     """Dependency to check if user has required permission"""
     def permission_checker(current_user: User = Depends(get_current_user)) -> User:
@@ -88,8 +111,8 @@ def permission_required(permission: str):
             )
         return current_user
     return permission_checker
-
-
+ 
+ 
 def get_current_active_user(
     current_user: User = Depends(get_current_user)
 ) -> User:
@@ -100,8 +123,8 @@ def get_current_active_user(
             detail="User account is inactive"
         )
     return current_user
-
-
+ 
+ 
 def get_repository_context(
     request: Request,
     current_user: User = Depends(get_current_active_user),
@@ -110,24 +133,26 @@ def get_repository_context(
     """Get context for repositories (user role, active hostel, accessible hostels)"""
     active_hostel_id = get_active_hostel_id(request)
     user_hostel_ids = get_user_hostel_ids(current_user.id, current_user.role, db)
-    
+   
     return {
         "user_role": current_user.role,
         "active_hostel_id": active_hostel_id,
         "user_hostel_ids": user_hostel_ids
     }
-
-
+ 
+ 
 def get_repository_context_direct(
     current_user: User,
     db: Session
 ) -> dict:
     """Get context for repositories (direct call without Request)"""
     user_hostel_ids = get_user_hostel_ids(current_user.id, current_user.role, db)
-    
+   
     return {
         "user_role": current_user.role,
         "active_hostel_id": None,  # No request context available
         "user_hostel_ids": user_hostel_ids
     }
-
+ 
+ 
+ 

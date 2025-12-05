@@ -24,7 +24,7 @@ env_path = Path(__file__).parent.parent / ".env"
 
 class Settings(BaseSettings):
     # Database
-    DATABASE_URL: str = "postgresql://postgres:1234@localhost:5432/hostelB"
+    DATABASE_URL: str = "postgresql://postgres:12345678@localhost:5432/hostelB"
     COMMISSION_RATE: float = 0.15
 
     ELASTICSEARCH_URL: Optional[str] = None

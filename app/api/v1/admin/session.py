@@ -38,15 +38,6 @@ async def set_active_hostel(
     return session_service.switch_session(current_user.id, current_user.role, request)
 
 
-@router.post("/session/switch-hostel", response_model=SessionContextResponse, status_code=status.HTTP_200_OK)
-async def switch_hostel_alias(
-    request: SwitchSessionRequest,
-    current_user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN)),
-    db: Session = Depends(get_db)
-):
-    """Alias to switch active hostel."""
-    session_service = SessionService(db)
-    return session_service.switch_session(current_user.id, current_user.role, request)
 
 
 @router.get("/session/active", response_model=SessionContextResponse, status_code=status.HTTP_200_OK)
@@ -65,17 +56,7 @@ async def get_active_session(
     return session
 
 
-@router.get("/session/active-hostel", response_model=SessionContextResponse, status_code=status.HTTP_200_OK)
-async def get_active_hostel(
-    current_user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN)),
-    db: Session = Depends(get_db)
-):
-    """Alias to get the active hostel session."""
-    session_service = SessionService(db)
-    session = session_service.get_active_session(current_user.id)
-    if not session:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No active session found")
-    return session
+
 
 
 @router.get("/session/recent", response_model=List[SessionContextResponse], status_code=status.HTTP_200_OK)
@@ -89,25 +70,6 @@ async def get_recent_sessions(
     return session_service.get_recent_sessions(current_user.id, limit)
 
 
-@router.get("/session/recent-hostels", response_model=List[SessionContextResponse], status_code=status.HTTP_200_OK)
-async def get_recent_hostels(
-    limit: int = 5,
-    current_user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN)),
-    db: Session = Depends(get_db)
-):
-    """Alias for recently accessed hostels (keeps same behavior)."""
-    session_service = SessionService(db)
-    return session_service.get_recent_sessions(current_user.id, limit)
-
-
-@router.get("/session/assigned-hostels", response_model=List[dict], status_code=status.HTTP_200_OK)
-async def get_assigned_hostels(
-    current_user: User = Depends(role_required(Role.ADMIN, Role.SUPERADMIN)),
-    db: Session = Depends(get_db)
-):
-    """Return list of hostels the user has access to (SuperAdmin: all, Admin: assigned, others: own hostel)."""
-    tenant_service = TenantService(db)
-    return tenant_service.get_user_hostels(current_user.id, current_user.role)
 
 
 @router.post("/session/clear", status_code=status.HTTP_200_OK)

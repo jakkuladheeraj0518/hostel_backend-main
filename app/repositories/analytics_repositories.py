@@ -29,24 +29,59 @@ def get_hostel_occupancy_and_revenue(db: Session, hostel_id: int):
         # Fallback to a direct query.
         fallback_query = text(
             """
-            SELECT o.occupancy_rate, r.revenue
-            FROM (
+            SELECT o.occupancy_rate, r.revenue, h.hostel_name
+            FROM hostels h
+            LEFT JOIN (
                 SELECT occupancy_rate, hostel_id
                 FROM occupancies
                 WHERE hostel_id = :hostel_id
                 ORDER BY month DESC
                 LIMIT 1
-            ) o
-            FULL JOIN (
+            ) o ON h.id = o.hostel_id
+            LEFT JOIN (
                 SELECT revenue, hostel_id
                 FROM revenues
                 WHERE hostel_id = :hostel_id
                 ORDER BY month DESC
                 LIMIT 1
-            ) r ON o.hostel_id = r.hostel_id
+            ) r ON h.id = r.hostel_id
+            WHERE h.id = :hostel_id
             """
         )
         result = db.execute(fallback_query, {"hostel_id": hostel_id}).fetchall()
  
+    # Fetch hostel canonical values once to use as fallback when proc/fallback
+    # returns NULLs.
+    hostel_row = db.execute(
+        text("SELECT hostel_name, current_occupancy, monthly_revenue FROM hostels WHERE id = :hostel_id"),
+        {"hostel_id": hostel_id}
+    ).fetchone()
+ 
+    hostel_name = hostel_row[0] if hostel_row is not None else None
+    hostel_current = hostel_row[1] if hostel_row is not None else None
+    hostel_revenue = hostel_row[2] if hostel_row is not None else None
+ 
     # Convert to list of dictionaries for easy JSON serialization
-    return [{"occupancy_rate": row[0], "revenue": row[1]} for row in result]
+    out = []
+    for row in result:
+        # Stored proc may return (occupancy, revenue) or (occupancy, revenue, hostel_name)
+        occ = row[0] if len(row) > 0 else None
+        rev = row[1] if len(row) > 1 else None
+        name = row[2] if len(row) > 2 else None
+ 
+        # Fill missing values from hostels table
+        if occ is None:
+            occ = hostel_current
+        if rev is None:
+            rev = hostel_revenue
+        if not name:
+            name = hostel_name
+ 
+        out.append({
+            "current_occupancy": occ,
+            "monthly_revenue": rev,
+            "hostel_name": name,
+        })
+ 
+    return out
+ 

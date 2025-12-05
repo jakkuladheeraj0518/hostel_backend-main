@@ -27,6 +27,7 @@ from app.api.v1.admin import (
 # Super-admin module routers (alias to avoid name collisions with admin package)
 from app.api.v1.super_admin import (
     reports as super_admin_reports,
+    locations as super_admin_locations,
     hostels as super_admin_hostels,
     dashboard as super_admin_dashboard,
     subscription as super_admin_subscription,
@@ -99,7 +100,6 @@ api_router = APIRouter()
 # Enhanced auth routes
 api_router.include_router(login_enhanced.router, prefix="/auth", tags=["auth"])
 # Auth routes
-api_router.include_router(refresh.router, prefix="/auth", tags=["auth"])
 api_router.include_router(roles.router, prefix="/auth", tags=["auth"])
 api_router.include_router(password_reset.router, prefix="/auth", tags=["auth"])
 api_router.include_router(password_strength.router, prefix="/auth", tags=["auth"])
@@ -109,14 +109,12 @@ api_router.include_router(me.router, prefix="/auth", tags=["auth"])
 #=============================================================
 #superadmin dashboard
 #superadmin dashboard
+api_router.include_router(super_admin_locations.router)
 api_router.include_router(super_admin_hostels.router)
 api_router.include_router(admin_admins.router, prefix="/admin", tags=["admin"])
-api_router.include_router(permissions.router, prefix="/admin", tags=["admin"])
-api_router.include_router(rbac.router, prefix="/admin", tags=["admin"])
 api_router.include_router(admin_hostels.router, prefix="/admin", tags=["admin"])
  
 # Include super-admin routers as they define their own prefixes/tags internally.
-
 api_router.include_router(super_admin_dashboard.router)
 api_router.include_router(super_admin_subscription.router)
 api_router.include_router(super_admin_reports.router)
@@ -160,7 +158,6 @@ api_router.include_router(reminder_template_router)
 #=============================================================
 #supervisor dashboard
 api_router.include_router(supervisor_audit.router, prefix="/supervisor", tags=["supervisor"])
-api_router.include_router(supervisor_permissions.router, prefix="/supervisor", tags=["supervisor"])
 api_router.include_router(supervisor_approvals.router, prefix="/supervisor", tags=["supervisor"])
 
 api_router.include_router(supervisor_complaints.router)

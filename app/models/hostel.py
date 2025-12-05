@@ -38,7 +38,6 @@ class Hostel(Base):
 
     # Address info (merged)
     full_address = Column(Text, nullable=True)
-    address = Column(Text, nullable=True)
     city = Column(String(100), nullable=True)
     pincode = Column(String(20), nullable=True)
 
